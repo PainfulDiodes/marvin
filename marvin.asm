@@ -10,6 +10,13 @@ STACK .equ 0xffff       ; this should really be 0x0000 as the CPU will dec SP be
 start:
     ld de,0             ; point DE to zero - this is the default location for the read command
     ld sp, STACK
+ready_chk:
+    in a,(SIO_CTRL)     ; read the serial control register
+    bit 1,a             ; check bit 0 - ready to write
+    jp z,ready_chk      ; loop back if not ready
+welcome:
+    ld hl,start_msg
+    call prt_str
 new_prompt:
     ld hl,BUFFER        ; point HL to the beginning of the input buffer
     ld a,">"
@@ -78,4 +85,15 @@ prt_hex_n:
     add a,"0"           ; for numeric add the base ascii for '0'
     out (SIO_DATA),a
     ret
+prt_str:                ; print a zero-terminated string, start pointed to by hl
+    ld a,(hl)
+    cp 0h
+    ret z
+    out(SIO_DATA),a 
+    inc hl
+    jp prt_str
+start_msg   .db "MARVIN\n"
+            .db "A super simple monitor program for Z80 homebrew\n"
+            .db "(c) Stephen Willcock 2024\n"
+            .db "https://github.com/PainfulDiodes\n\n",0
 end:
