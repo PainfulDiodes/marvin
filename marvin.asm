@@ -13,7 +13,7 @@ start:
 ready_chk:
     in a,(SIO_CTRL)     ; read the serial control register
     bit 1,a             ; check bit 0 - ready to write
-    jp z,ready_chk      ; loop back if not ready
+    jp nz,ready_chk     ; loop back if not ready
 welcome:
     ld hl,start_msg
     call prt_str
@@ -24,7 +24,7 @@ new_prompt:
 get_char:
     in a,(SIO_CTRL)     ; read the serial control register
     bit 0,a             ; check bit 0 - receive character available
-    jp z,get_char       ; loop back if nothing to read
+    jp nz,get_char      ; loop back if nothing to read
     in a,(SIO_DATA)     ; read a character
     out (SIO_DATA),a    ; echo the character
     ld(hl),a            ; add to the buffer
