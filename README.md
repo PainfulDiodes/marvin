@@ -4,17 +4,17 @@ Technically this could be 0x0000 as the first PUSH will decrement the SP to 0xff
 
 ## Assumptions
 
-Memory map:
-0000 - 1FFF : 8k ROM
-2000 - 7FFF : EMPTY
-8000 - FFFF : 32k RAM
+Memory map:  
+0000 - 1FFF : 8k ROM  
+2000 - 7FFF : EMPTY  
+8000 - FFFF : 32k RAM  
 
 The program assumes use of an UM245R where:
 
-Ports:
-00 : Serial I/O status (read only)
-01 : Serial I/O data (read / write)
+Ports:  
+00 : Serial I/O status (read only)  
+01 : Serial I/O data (read / write)   
 
-Serial I/O status bits:
-0 : data available in read buffer when high
-1 : device ready for data to be written when high
+Serial I/O status bits:  
+0 : data available in read buffer when high  
+1 : device ready for data to be written when high  
