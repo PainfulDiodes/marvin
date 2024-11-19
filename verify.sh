@@ -1,2 +1,2 @@
 minipro -p AT28C64B -r verify.bin
-hexdump verify.bin > verify.hex
+hexdump -C verify.bin > verify.hex
