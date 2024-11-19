@@ -1,1 +1,1 @@
-minipro -s -p AT28C64B -w bin
+minipro -u -s -p AT28C64B -w bin
