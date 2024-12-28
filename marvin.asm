@@ -12,7 +12,7 @@ start:
     ld sp, STACK
 ready_chk:
     in a,(SIO_CTRL)     ; read the serial control register
-    bit 1,a             ; check bit 0 - ready to write
+    bit 0,a             ; check bit 0 - ready to write
     jp nz,ready_chk     ; loop back if not ready
 welcome:
     ld hl,start_msg
@@ -23,7 +23,7 @@ new_prompt:
     out (SIO_DATA),a 
 get_char:
     in a,(SIO_CTRL)     ; read the serial control register
-    bit 0,a             ; check bit 0 - receive character available
+    bit 1,a             ; check bit 1 - receive character available
     jp nz,get_char      ; loop back if nothing to read
     in a,(SIO_DATA)     ; read a character
     out (SIO_DATA),a    ; echo the character
