@@ -5,7 +5,6 @@
 start:
     ld de,$0000             ; point DE to zero - this is the default memory pointer for command arguments
 
-welcome:
     ld hl,welcome_msg
     call puts
 
@@ -23,7 +22,7 @@ get_cmd:
     jr nz, get_cmd          ; no - loop for next character
                             ; yes - end of line - drop though to next instruction
 
-proc_cmd:               
+                            ; process command from buffer
     ld hl,BUFFER            ; point to start of buffer
     ld a,(hl)               ; load character from buffer
     cp "r"                  ; r = read
@@ -69,7 +68,7 @@ putchar_hex:
 putchar_hex_dgt:
     cp 0x0a                 ; is it an alpha or numeric?
     jr c,putchar_hex_n      ; numeric
-putchar_hex_a:              ; or drop through to alpha
+                            ; or drop through to alpha
     add a,"W"               ; for alpha add the base ascii for 'a' but then sub 10 as hex 'a' is 10d => 'W'
     call putchar
     ret
@@ -81,4 +80,3 @@ welcome_msg: .db "MARVIN\n"
              .db "A super simple monitor program for Z80 homebrew\n"
              .db "(c) Stephen Willcock 2024\n"
              .db "https://github.com/PainfulDiodes\n\n",0
-end:
