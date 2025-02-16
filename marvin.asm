@@ -52,6 +52,7 @@ cmd_read_loop:
     ld a, "\n"              ; otherwise, new line
     call putchar    
     jp prompt               ; and back to prompt
+
 putchar_hex:
     ld b,a                  ; copy into B
     srl a                   ; shift A right x4 e.g. transform 10110010 to 00001011
@@ -74,8 +75,10 @@ putchar_hex_n:
     add a,"0"               ; for numeric add the base ascii for '0'
     call putchar
     ret
+
 welcome_msg:    .db "MARVIN\n"
                 .db "A super simple monitor program for Z80 homebrew\n"
                 .db "(c) Stephen Willcock 2024\n"
                 .db "https://github.com/PainfulDiodes\n\n",0
+
 bad_cmd_msg:    .db "Command not recognised\n",0
