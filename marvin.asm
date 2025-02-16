@@ -27,10 +27,8 @@ get_cmd:
     ld a,(hl)               ; load character from buffer
     cp "r"                  ; r = read
     jr z,cmd_read
-    ld a, "?"               ; otherwise error
-    call putchar
-    ld a, "\n"
-    call putchar
+    ld hl,bad_cmd_msg       ; otherwise error
+    call puts
     jp prompt               ; loop back to the prompt
 
 cmd_read:                   ; read bytes from memory and send hex values to console
@@ -76,7 +74,8 @@ putchar_hex_n:
     add a,"0"               ; for numeric add the base ascii for '0'
     call putchar
     ret
-welcome_msg: .db "MARVIN\n"
-             .db "A super simple monitor program for Z80 homebrew\n"
-             .db "(c) Stephen Willcock 2024\n"
-             .db "https://github.com/PainfulDiodes\n\n",0
+welcome_msg:    .db "MARVIN\n"
+                .db "A super simple monitor program for Z80 homebrew\n"
+                .db "(c) Stephen Willcock 2024\n"
+                .db "https://github.com/PainfulDiodes\n\n",0
+bad_cmd_msg:    .db "Command not recognised\n",0
