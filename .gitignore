@@ -2,5 +2,6 @@
 bin
 hex
 lst
-*.hex
 *.bin
+*.hex
+*.lst
