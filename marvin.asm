@@ -25,6 +25,7 @@ get_cmd:
                             ; process command from buffer
     ld hl,BUFFER            ; point to start of buffer
     ld a,(hl)               ; load character from buffer
+    inc hl                  ; advance the buffer pointer
     cp "r"                  ; r = read
     jr z,cmd_read
     ld hl,bad_cmd_msg       ; otherwise error
@@ -32,6 +33,27 @@ get_cmd:
     jp prompt               ; loop back to the prompt
 
 cmd_read:                   ; read bytes from memory and send hex values to console
+    ld a,(hl)               ; load character from buffer
+    inc hl                  ; advance the buffer pointer
+    cp "\n"                 ; is new line?
+    jr z,cmd_read_start     ; yes - continue with current pointer
+
+    call hex_to_num         ; no - there's an argument - so convert first hex digit
+    ld e,a                  ; copy result to pointer
+;
+;    ld a,(hl)               ; load character from buffer
+;    inc hl                  ; advance the buffer pointer
+;    cp "\n"                 ; is new line?
+;    jr z,cmd_read_start     ; yes - continue with current pointer 
+;
+;    sll e                   ; shift left x4 to move number to top nibble
+;    sll e
+;    sll e
+;    sll e
+;    call hex_to_num         ; convert next hex digit
+;    add e,a
+
+cmd_read_start:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
     ld a,d                  ; print DE content: the read address
     call putchar_hex
@@ -52,6 +74,15 @@ cmd_read_loop:
     ld a, "\n"              ; otherwise, new line
     call putchar    
     jp prompt               ; and back to prompt
+
+hex_to_num:                  ; convert an ASCII char in A to a number (lower 4 bits)
+    cp "a"                   ; is it alphabetic?
+    jr c,hex_to_num_n        ; no - numeric
+    sub "W"                ; yes - alphabetic
+    ret
+hex_to_num_n:
+    sub "0"                ; numeric
+    ret
 
 putchar_hex:
     ld b,a                  ; copy into B
