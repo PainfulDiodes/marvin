@@ -35,12 +35,13 @@ get_cmd:
 cmd_read:                   ; read bytes from memory and send hex values to console
     ld a,(hl)               ; load character from buffer
     inc hl                  ; advance the buffer pointer
+    cp "\r"                 ; is CR?
+    jr z,cmd_read_start     ; yes - continue with current pointer
     cp "\n"                 ; is new line?
     jr z,cmd_read_start     ; yes - continue with current pointer
-
     call hex_to_num         ; no - there's an argument - so convert first hex digit
     ld e,a                  ; copy result to pointer
-;
+
 ;    ld a,(hl)               ; load character from buffer
 ;    inc hl                  ; advance the buffer pointer
 ;    cp "\n"                 ; is new line?
