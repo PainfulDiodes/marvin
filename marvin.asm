@@ -46,7 +46,17 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
     sla d
     sla d
     sla d
-
+cmd_read2:
+    ld a,(hl)               ; load 2nd character from buffer
+    inc hl                  ; advance the buffer pointer
+    cp "\r"                 ; is CR?
+    jr z,cmd_read2           ; yes - skip this
+    cp "\n"                 ; no - is new line?
+    jr z,cmd_read_row       ; yes - continue 
+    call hex_to_num         ; no - convert second hex digit
+    add a,d                 ; add first and second digits
+    ld d,a                  ; and store as high byte
+    
 cmd_read_row:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
     ld a,d                  ; print DE content: the read address
