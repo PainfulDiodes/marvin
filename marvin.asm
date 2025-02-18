@@ -39,9 +39,13 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
     jr z,cmd_read           ; yes - skip this
     cp "\n"                 ; no - is new line?
     jr z,cmd_read_row       ; yes - continue without argument
+    ld de,0                 ; reset the address
     call hex_to_num         ; no - there's an argument - so convert first hex digit
-    ld e,a                  ; copy result to pointer
-
+    ld d,a                  ; copy result to pointer
+    sla d                   ; shift left 4 bits to put value into top nibble
+    sla d
+    sla d
+    sla d
 
 cmd_read_row:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
