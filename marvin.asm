@@ -16,6 +16,8 @@ prompt:
 get_cmd:
     call getchar            ; get character from console
     call putchar            ; echo the character to console
+    cp "\r"                 ; is CR?
+    jr z,get_cmd            ; yes - skip this
     ld(hl),a                ; add character to the buffer
     inc hl                  ; move pointer to next buffer location - we're not checking for overrun           
     cp "\n"                 ; end of line?
@@ -35,10 +37,8 @@ get_cmd:
 cmd_read:                   ; read bytes from memory and send hex values to console
     ld a,(hl)               ; load character from buffer
     inc hl                  ; advance the buffer pointer
-    cp "\r"                 ; is CR?
-    jr z,cmd_read           ; yes - skip this
-    cp "\n"                 ; no - is new line?
-    jr z,cmd_read_row       ; yes - continue without argument
+    cp "\n"                 ; is new line?
+    jr z,cmd_read_row       ; yes - continue to read row
     ld de,0                 ; reset the address
     call hex_to_num         ; no - there's an argument - so convert first hex digit
     ld d,a                  ; copy result to pointer
@@ -49,10 +49,8 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
 cmd_read2:
     ld a,(hl)               ; load 2nd character from buffer
     inc hl                  ; advance the buffer pointer
-    cp "\r"                 ; is CR?
-    jr z,cmd_read2           ; yes - skip this
-    cp "\n"                 ; no - is new line?
-    jr z,cmd_read_row       ; yes - continue 
+    cp "\n"                 ; is new line?
+    jr z,cmd_read_row       ; yes - continue to read row
     call hex_to_num         ; no - convert second hex digit
     add a,d                 ; add first and second digits
     ld d,a                  ; and store as high byte
