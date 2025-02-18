@@ -36,23 +36,12 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
     ld a,(hl)               ; load character from buffer
     inc hl                  ; advance the buffer pointer
     cp "\r"                 ; is CR?
-    jr z,cmd_read_start     ; yes - continue with current pointer
-    cp "\n"                 ; is new line?
-    jr z,cmd_read_start     ; yes - continue with current pointer
+    jr z,cmd_read           ; yes - skip this
+    cp "\n"                 ; no - is new line?
+    jr z,cmd_read_start     ; yes - continue without argument
     call hex_to_num         ; no - there's an argument - so convert first hex digit
     ld e,a                  ; copy result to pointer
 
-;    ld a,(hl)               ; load character from buffer
-;    inc hl                  ; advance the buffer pointer
-;    cp "\n"                 ; is new line?
-;    jr z,cmd_read_start     ; yes - continue with current pointer 
-;
-;    sll e                   ; shift left x4 to move number to top nibble
-;    sll e
-;    sll e
-;    sll e
-;    call hex_to_num         ; convert next hex digit
-;    add e,a
 
 cmd_read_start:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
