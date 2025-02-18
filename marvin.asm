@@ -38,12 +38,12 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
     cp "\r"                 ; is CR?
     jr z,cmd_read           ; yes - skip this
     cp "\n"                 ; no - is new line?
-    jr z,cmd_read_start     ; yes - continue without argument
+    jr z,cmd_read_row       ; yes - continue without argument
     call hex_to_num         ; no - there's an argument - so convert first hex digit
     ld e,a                  ; copy result to pointer
 
 
-cmd_read_start:
+cmd_read_row:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
     ld a,d                  ; print DE content: the read address
     call putchar_hex
