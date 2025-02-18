@@ -51,10 +51,28 @@ cmd_read2:
     inc hl                  ; advance the buffer pointer
     cp "\n"                 ; is new line?
     jr z,cmd_read_row       ; yes - continue to read row
-    call hex_to_num         ; no - convert second hex digit
+    call hex_to_num         ; no - convert 2nd hex digit
     add a,d                 ; add first and second digits
     ld d,a                  ; and store as high byte
-    
+cmd_read3:
+    ld a,(hl)               ; load 3rd character from buffer
+    inc hl                  ; advance the buffer pointer
+    cp "\n"                 ; is new line?
+    jr z,cmd_read_row       ; yes - continue to read row
+    call hex_to_num         ; no - convert 3rd hex digit
+    ld e,a                  ; copy result to pointer
+    sla e                   ; shift left 4 bits to put value into top nibble
+    sla e
+    sla e
+    sla e
+cmd_read4:
+    ld a,(hl)               ; load 4th character from buffer
+    inc hl                  ; advance the buffer pointer
+    cp "\n"                 ; is new line?
+    jr z,cmd_read_row       ; yes - continue to read row
+    call hex_to_num         ; no - convert 4th hex digit
+    add a,e                 ; add first and second digits
+    ld e,a                  ; and store as high byte    
 cmd_read_row:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
     ld a,d                  ; print DE content: the read address
