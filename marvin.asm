@@ -27,6 +27,8 @@ get_cmd:
                             ; process command from buffer
     ld hl,BUFFER            ; point to start of buffer
     ld a,(hl)               ; load character from buffer
+    cp "\n"                 ; is new line?
+    jr z,prompt             ; yes - empty line - go back to prompt
     inc hl                  ; advance the buffer pointer
     cp "r"                  ; r = read
     jr z,cmd_read
@@ -36,9 +38,9 @@ get_cmd:
 
 cmd_read:                   ; read bytes from memory and send hex values to console
     ld a,(hl)               ; load character from buffer
-    inc hl                  ; advance the buffer pointer
     cp "\n"                 ; is new line?
     jr z,cmd_read_row       ; yes - continue to read row
+    inc hl                  ; advance the buffer pointer
     ld de,0                 ; reset the address
     call hex_to_num         ; no - there's an argument - so convert first hex digit
     ld d,a                  ; copy result to pointer
@@ -48,17 +50,17 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
     sla d
 cmd_read2:
     ld a,(hl)               ; load 2nd character from buffer
-    inc hl                  ; advance the buffer pointer
     cp "\n"                 ; is new line?
     jr z,cmd_read_row       ; yes - continue to read row
+    inc hl                  ; advance the buffer pointer
     call hex_to_num         ; no - convert 2nd hex digit
     add a,d                 ; add first and second digits
     ld d,a                  ; and store as high byte
 cmd_read3:
     ld a,(hl)               ; load 3rd character from buffer
-    inc hl                  ; advance the buffer pointer
     cp "\n"                 ; is new line?
     jr z,cmd_read_row       ; yes - continue to read row
+    inc hl                  ; advance the buffer pointer
     call hex_to_num         ; no - convert 3rd hex digit
     ld e,a                  ; copy result to pointer
     sla e                   ; shift left 4 bits to put value into top nibble
@@ -67,9 +69,9 @@ cmd_read3:
     sla e
 cmd_read4:
     ld a,(hl)               ; load 4th character from buffer
-    inc hl                  ; advance the buffer pointer
     cp "\n"                 ; is new line?
     jr z,cmd_read_row       ; yes - continue to read row
+    inc hl                  ; advance the buffer pointer
     call hex_to_num         ; no - convert 4th hex digit
     add a,e                 ; add first and second digits
     ld e,a                  ; and store as high byte    
