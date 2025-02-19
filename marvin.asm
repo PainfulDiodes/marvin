@@ -3,7 +3,7 @@
 ; **********************************************************************
 
 start:
-    ld de,$0000             ; point DE to zero - this is the default memory pointer for command arguments
+    ld de,$0000             ; point DE to zero - this is the default address argument for commands
 
     ld hl,welcome_msg
     call puts
@@ -95,13 +95,13 @@ cmd_read_loop:
     call putchar    
     jp prompt               ; and back to prompt
 
-hex_to_num:                  ; convert an ASCII char in A to a number (lower 4 bits)
-    cp "a"                   ; is it alphabetic?
-    jr c,hex_to_num_n        ; no - numeric
-    sub "W"                ; yes - alphabetic
+hex_to_num:                 ; convert an ASCII char in A to a number (lower 4 bits)
+    cp "a"                  ; is it alphabetic?
+    jr c,hex_to_num_n       ; no - numeric
+    sub "W"                 ; yes - alphabetic
     ret
 hex_to_num_n:
-    sub "0"                ; numeric
+    sub "0"                 ; numeric
     ret
 
 putchar_hex:
