@@ -1,6 +1,11 @@
 ; **********************************************************************
-; *  Marvin - a tiny Z80 monitor program                             
+; *  Marvin - a tiny monitor program for Z80 homebrew             
+; * (c) Stephen Willcock 2024
+; * https://github.com/PainfulDiodes
 ; **********************************************************************
+
+
+; MAIN PROGRAM LOOP
 
 start:
     ld de,$0000             ; point DE to zero - this is the default address argument for commands
@@ -25,6 +30,7 @@ get_cmd:
                             ; yes - end of line - drop though to next instruction
 
                             ; process command from buffer
+
     ld hl,BUFFER            ; point to start of buffer
     ld a,(hl)               ; load character from buffer
     cp "\n"                 ; is new line?
@@ -98,6 +104,9 @@ cmd_read_byte:
     call putchar    
     jp prompt               ; and back to prompt
 
+
+; SUBROUTINES
+
 hex_to_num:                 ; convert an ASCII char in A to a number (lower 4 bits)
     cp "a"                  ; is it alphabetic?
     jr c,hex_to_num_n       ; no - numeric
@@ -129,6 +138,9 @@ putchar_hex_n:
     add a,"0"               ; for numeric add the base ascii for '0'
     call putchar
     ret
+
+
+; STRINGS
 
 welcome_msg:    .db "MARVIN\n"
                 .db "A super simple monitor program for Z80 homebrew\n"
