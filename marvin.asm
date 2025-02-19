@@ -83,14 +83,14 @@ cmd_read_row:
     call putchar
     ld a," "
     call putchar
-cmd_read_loop:            
+cmd_read_byte:            
     ld a,(de)               ; get a byte
     call putchar_hex        ; and print it
     ld a," "                ; add space between bytes
     call putchar
     inc de                  ; next address
     dec c                   ; reduce byte counter
-    jr nz, cmd_read_loop    ; repeat if the counter is not 0
+    jr nz, cmd_read_byte    ; repeat if the counter is not 0
     ld a, "\n"              ; otherwise, new line
     call putchar    
     jp prompt               ; and back to prompt
