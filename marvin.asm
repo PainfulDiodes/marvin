@@ -75,6 +75,7 @@ cmd_read4:
     call hex_to_num         ; no - convert 4th hex digit
     add a,e                 ; add first and second digits
     ld e,a                  ; and store as high byte    
+
 cmd_read_row:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
     ld a,d                  ; print DE content: the read address
