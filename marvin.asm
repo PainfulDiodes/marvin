@@ -42,45 +42,15 @@ get_cmd:
     call puts
     jp prompt               ; loop back to the prompt
 
+
 cmd_read:                   ; read bytes from memory and send hex values to console
-    ld a,(hl)               ; load character from buffer
+    ld a,(hl)               ; load 1st character from memory
     cp "\n"                 ; is new line?
-    jr z,cmd_read_row       ; yes - continue to read row
-    inc hl                  ; advance the buffer pointer
-    ld de,0                 ; reset the address
-    call hex_to_num         ; convert first hex digit
-    ld d,a                  ; copy result to pointer
-    sla d                   ; shift left 4 bits to put value into top nibble
-    sla d
-    sla d
-    sla d
-cmd_read2:
-    ld a,(hl)               ; load 2nd character from buffer
-    cp "\n"                 ; is new line?
-    jr z,cmd_read_row       ; yes - continue to read row
-    inc hl                  ; advance the buffer pointer
-    call hex_to_num         ; convert 2nd hex digit
-    add a,d                 ; add first and second digits
-    ld d,a                  ; and store as high byte
-cmd_read3:
-    ld a,(hl)               ; load 3rd character from buffer
-    cp "\n"                 ; is new line?
-    jr z,cmd_read_row       ; yes - continue to read row
-    inc hl                  ; advance the buffer pointer
-    call hex_to_num         ; convert 3rd hex digit
-    ld e,a                  ; copy result to pointer
-    sla e                   ; shift left 4 bits to put value into top nibble
-    sla e
-    sla e
-    sla e
-cmd_read4:
-    ld a,(hl)               ; load 4th character from buffer
-    cp "\n"                 ; is new line?
-    jr z,cmd_read_row       ; yes - continue to read row
-    inc hl                  ; advance the buffer pointer
-    call hex_to_num         ; convert 4th hex digit
-    add a,e                 ; add first and second digits
-    ld e,a                  ; and store as high byte    
+    jr z, cmd_read_row      ; yes - no address argument, so skip to read row
+    call hex_byte           ; parse first pair of characters
+    ld d,a                  ; load into upper byte of memory pointer
+    call hex_byte           ; parse econd pair of characters
+    ld e,a                  ; load into lower byte of memory pointer
 
 cmd_read_row:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
@@ -106,6 +76,31 @@ cmd_read_byte:
 
 
 ; SUBROUTINES
+
+hex_byte:                   ; read 2 bytes from HL pointer, return converted value in A and advance pointer
+    push bc                 ; preserve BC
+    ld a,(hl)               ; load 1st character from memory
+    cp "\n"                 ; is new line? /// shouldn't need to check this as we check before calling sub
+    jr z,hex_byte_zero      ; yes - no value, so return zero
+    inc hl                  ; advance the buffer pointer
+    call hex_to_num         ; convert first hex digit
+    sla a                   ; shift left 4 bits to put value into top nibble
+    sla a
+    sla a
+    sla a
+    ld b,a                  ; cache the result
+    ld a,(hl)               ; load 2nd character from memory
+    cp "\n"                 ; is new line?
+    jr z,hex_byte_zero      ; yes - incomplete byte, so return zero 
+    inc hl                  ; advance the buffer pointer
+    call hex_to_num         ; no - convert 2nd hex digit
+    add a,b                 ; add first and second digits
+    pop bc                  ; restore BC
+    ret
+hex_byte_zero:
+    ld a,0                  ; zero return value
+    pop bc                  ; restore BC
+    ret
 
 hex_to_num:                 ; convert an ASCII char in A to a number (lower 4 bits)
     cp "a"                  ; is it alphabetic?
