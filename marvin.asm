@@ -48,7 +48,7 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
     jr z,cmd_read_row       ; yes - continue to read row
     inc hl                  ; advance the buffer pointer
     ld de,0                 ; reset the address
-    call hex_to_num         ; no - there's an argument - so convert first hex digit
+    call hex_to_num         ; convert first hex digit
     ld d,a                  ; copy result to pointer
     sla d                   ; shift left 4 bits to put value into top nibble
     sla d
@@ -59,7 +59,7 @@ cmd_read2:
     cp "\n"                 ; is new line?
     jr z,cmd_read_row       ; yes - continue to read row
     inc hl                  ; advance the buffer pointer
-    call hex_to_num         ; no - convert 2nd hex digit
+    call hex_to_num         ; convert 2nd hex digit
     add a,d                 ; add first and second digits
     ld d,a                  ; and store as high byte
 cmd_read3:
@@ -67,7 +67,7 @@ cmd_read3:
     cp "\n"                 ; is new line?
     jr z,cmd_read_row       ; yes - continue to read row
     inc hl                  ; advance the buffer pointer
-    call hex_to_num         ; no - convert 3rd hex digit
+    call hex_to_num         ; convert 3rd hex digit
     ld e,a                  ; copy result to pointer
     sla e                   ; shift left 4 bits to put value into top nibble
     sla e
@@ -78,7 +78,7 @@ cmd_read4:
     cp "\n"                 ; is new line?
     jr z,cmd_read_row       ; yes - continue to read row
     inc hl                  ; advance the buffer pointer
-    call hex_to_num         ; no - convert 4th hex digit
+    call hex_to_num         ; convert 4th hex digit
     add a,e                 ; add first and second digits
     ld e,a                  ; and store as high byte    
 
