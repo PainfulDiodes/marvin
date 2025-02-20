@@ -22,17 +22,20 @@ get_cmd:
     call putchar            ; echo the character to console
     cp "\r"                 ; is CR?
     jr z,get_cmd            ; yes - skip this
-    ld(hl),a                ; add character to the buffer
-    inc hl                  ; move pointer to next buffer location - we're not checking for overrun           
     cp "\n"                 ; end of line?
-    jr nz, get_cmd          ; no - loop for next character
-                            ; yes - end of line - drop though to next instruction
+    jr z, get_cmd_end       ; yes
+    ld(hl),a                ; no - add character to the buffer
+    inc hl                  ; move pointer to next buffer location - we're not checking for overrun
+    jr get_cmd              ; next character
+get_cmd_end:
+    ld a,0                  ; string terminator
+    ld(hl),a                ; add terminator to end of buffer
 
                             ; process command from buffer
 
     ld hl,BUFFER            ; point to start of buffer
     ld a,(hl)               ; load character from buffer
-    cp "\n"                 ; is new line?
+    cp 0                    ; end of string
     jr z,prompt             ; yes - empty line - go back to prompt
     inc hl                  ; advance the buffer pointer
     cp "r"                  ; r = read
@@ -44,7 +47,7 @@ get_cmd:
 
 cmd_read:                   ; read bytes from memory and send hex values to console
     ld a,(hl)               ; load 1st character from memory
-    cp "\n"                 ; is new line?
+    cp 0                    ; end of string?
     jr z, cmd_read_row      ; yes - no address argument, so skip to read row
     call hex_byte           ; parse first pair of characters
     ld d,a                  ; load into upper byte of memory pointer
@@ -79,7 +82,7 @@ cmd_read_byte:
 hex_byte:                   ; read 2 bytes from HL pointer, return converted value in A and advance pointer
     push bc                 ; preserve BC
     ld a,(hl)               ; load 1st character from memory
-    cp "\n"                 ; is new line? /// shouldn't need to check this as we check before calling sub
+    cp 0                    ; end of string? /// shouldn't need to check this as we check before calling sub
     jr z,hex_byte_zero      ; yes - no value, so return zero
     inc hl                  ; advance the buffer pointer
     call hex_to_num         ; convert first hex digit
@@ -89,7 +92,7 @@ hex_byte:                   ; read 2 bytes from HL pointer, return converted val
     sla a
     ld b,a                  ; cache the result
     ld a,(hl)               ; load 2nd character from memory
-    cp "\n"                 ; is new line?
+    cp 0                    ; end of string?
     jr z,hex_byte_zero      ; yes - incomplete byte, so return zero 
     inc hl                  ; advance the buffer pointer
     call hex_to_num         ; no - convert 2nd hex digit
