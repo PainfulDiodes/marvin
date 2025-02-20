@@ -1,9 +1,8 @@
-; **********************************************************************
+; ****************************************************
 ; *  Marvin - a tiny monitor program for Z80 homebrew             
 ; * (c) Stephen Willcock 2024
 ; * https://github.com/PainfulDiodes
-; **********************************************************************
-
+; ****************************************************
 
 ; MAIN PROGRAM LOOP
 
@@ -49,7 +48,7 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
     jr z, cmd_read_row      ; yes - no address argument, so skip to read row
     call hex_byte           ; parse first pair of characters
     ld d,a                  ; load into upper byte of memory pointer
-    call hex_byte           ; parse econd pair of characters
+    call hex_byte           ; parse second pair of characters
     ld e,a                  ; load into lower byte of memory pointer
 
 cmd_read_row:
