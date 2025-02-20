@@ -22,11 +22,17 @@ get_cmd:
     call putchar            ; echo the character to console
     cp "\r"                 ; is CR?
     jr z,get_cmd            ; yes - skip this
+    cp "\e"                 ; escape?
+    jr z, get_cmd_esc       ; yes
     cp "\n"                 ; end of line?
     jr z, get_cmd_end       ; yes
     ld(hl),a                ; no - add character to the buffer
     inc hl                  ; move pointer to next buffer location - we're not checking for overrun
     jr get_cmd              ; next character
+get_cmd_esc:                ; do escape
+    ld a,"\n"               ; new line
+    call putchar
+    jr prompt               ; back to prompt
 get_cmd_end:
     ld a,0                  ; string terminator
     ld(hl),a                ; add terminator to end of buffer
