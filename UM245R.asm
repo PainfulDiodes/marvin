@@ -24,11 +24,14 @@ putcharloop:
     ret
 
 puts:                       ; print a zero-terminated string, pointed to by hl
+    push hl
+puts_loop:
     ld a,(hl)               ; get character from string
     cp 0                    ; is it zero?
-    jr nz, puts_putchar     ; no - put the char
-    ret                     ; yes - end of string
-puts_putchar:
-    call putchar            ; no - send character
+    jr z, puts_end          ; yes - return
+    out(UM245R_DATA),a      ; no - send character
     inc hl                  ; next character position
-    jr puts                 ; loop for next character
+    jp puts_loop            ; loop for next character
+puts_end:
+    pop hl
+    ret
