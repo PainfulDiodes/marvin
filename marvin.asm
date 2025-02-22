@@ -48,10 +48,12 @@ get_cmd_end:
     cp 0                    ; end of string
     jr z,prompt             ; yes - empty line - go back to prompt
     inc hl                  ; advance the buffer pointer
-    cp "r"                  ; r = read
+    cp "r"                  ; r = Read
     jr z,cmd_read
-    cp "w"                  ; w = write
+    cp "w"                  ; w = Write
     jr z,cmd_write
+    cp "x"                  ; x = eXecute
+    jr z,cmd_execute
     ld hl,bad_cmd_msg       ; otherwise error
     call puts
     jp prompt               ; loop back to the prompt
@@ -115,6 +117,19 @@ cmd_write_null:             ; w with no data
     ld hl,cmd_w_null_msg
     call puts
     jp prompt               ; and back to prompt
+
+; EXECUTE
+
+cmd_execute:                ; start executing from given address
+    ld a,(hl)               ; load character from buffer
+    cp 0                    ; end of string?
+    jp z, prompt            ; yes - no data
+    call hex_byte           ; parse first pair of characters - address high
+    ld d,a                  ; load into upper byte of memory pointer
+    call hex_byte           ; parse second pair of characters - address low
+    ld e,a                  ; load into lower byte of memory pointer
+    ld hl,de
+    jp (hl)                 ; execute from address
 
 ; SUBROUTINES
 
