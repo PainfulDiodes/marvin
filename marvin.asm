@@ -22,6 +22,10 @@ get_cmd:
     call putchar            ; echo the character to console
     cp "\r"                 ; is CR?
     jr z,get_cmd            ; yes - skip this
+    cp "\t"                 ; is tab?
+    jr z,get_cmd            ; yes - skip this
+    cp " "                  ; is space?
+    jr z,get_cmd            ; yes - skip this
     cp "\e"                 ; escape?
     jr z, get_cmd_esc       ; yes
     cp "\n"                 ; end of line?
@@ -46,6 +50,8 @@ get_cmd_end:
     inc hl                  ; advance the buffer pointer
     cp "r"                  ; r = read
     jr z,cmd_read
+    cp "w"                  ; w = write
+    jr z,cmd_write
     ld hl,bad_cmd_msg       ; otherwise error
     call puts
     jp prompt               ; loop back to the prompt
@@ -53,8 +59,10 @@ get_cmd_end:
 
 ; COMMANDS
 
+; READ
+
 cmd_read:                   ; read bytes from memory and send hex values to console
-    ld a,(hl)               ; load 1st character from memory
+    ld a,(hl)               ; load character from buffer
     cp 0                    ; end of string?
     jr z, cmd_read_row      ; yes - no address argument, so skip to read row
     call hex_byte           ; parse first pair of characters
@@ -83,6 +91,30 @@ cmd_read_byte:
     call putchar    
     jp prompt               ; and back to prompt
 
+; WRITE
+
+cmd_write:                  ; write bytes to memory interpreting hex values from console
+    ld a,(hl)               ; load character from buffer
+    cp 0                    ; end of string?
+    jr z, cmd_write_null    ; yes - no data
+    call hex_byte           ; parse first pair of characters - address high
+    ld d,a                  ; load into upper byte of memory pointer
+    call hex_byte           ; parse second pair of characters - address low
+    ld e,a                  ; load into lower byte of memory pointer
+cmd_write_data:
+    ld a,(hl)               ; load character from buffer
+    cp 0                    ; end of string?
+    jr z, cmd_write_end     ; yes - we're done
+    call hex_byte           ; parse data byte
+    ld (de),a               ; write byte to memory
+    inc de                  ; advance destination pointer
+    jr cmd_write_data
+cmd_write_end:              ; 
+    jp prompt               ; and back to prompt
+cmd_write_null:             ; w with no data
+    ld hl,cmd_w_null_msg
+    call puts
+    jp prompt               ; and back to prompt
 
 ; SUBROUTINES
 
@@ -152,3 +184,5 @@ welcome_msg:    .db "MARVIN\n"
                 .db "https://github.com/PainfulDiodes\n\n",0
 
 bad_cmd_msg:    .db "Command not recognised\n",0
+
+cmd_w_null_msg  .db "No data to write\n",0
