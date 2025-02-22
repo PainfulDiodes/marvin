@@ -97,11 +97,14 @@ cmd_write:                  ; write bytes to memory interpreting hex values from
     ld d,a                  ; load into upper byte of memory pointer
     call hex_byte           ; parse second pair of characters - address low
     ld e,a                  ; load into lower byte of memory pointer
+cmd_write_data:
     ld a,(hl)               ; load character from buffer
     cp 0                    ; end of string?
     jr z, cmd_write_end     ; yes - we're done
     call hex_byte           ; parse data byte
     ld (de),a               ; write byte to memory
+    inc de                  ; advance destination pointer
+    jr cmd_write_data
 cmd_write_end:              ; 
     jp prompt               ; and back to prompt
 cmd_write_null:             ; w with no data
