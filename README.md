@@ -18,3 +18,35 @@ Port 1 : data (read / write)
 Status byte:  
 Bit 0 : device ready for data to be written (active low)  
 Bit 1 : data available in read buffer (active low)  
+
+## Commands
+Commands ignore whitespace.  
+Backspace is not supported.  
+Esc will abandon a command and return to the prompt.  
+Hex input values are 0-9, a-f (upper case not recognised).  
+
+### r: read
+r alone will read from the current memory cursor position and print 16 bytes in hex format (the cursor defaults to 0x0000 on reset)  
+
+r followed by an address as 4 hex digits will start reading from the provided address  
+
+r followed by 2 hex digits will treat those digits as the upper byte of the address and effectively append 0x00 as the lower byte  
+
+### w: write
+w requires a 4 digit hex address followed by a stream of hex pairs representing consecutive data bytes
+
+E.g.
+
+    w 9000 3e 0a d3 01 3e
+
+This command will write to memory as:
+
+    Addr Value
+    9000 3E
+    9001 0A
+    9002 d3
+    9003 01
+    9004 3E
+    
+### x: execute
+x requires a 4 digit hex address, and will commence executing code at that address.
