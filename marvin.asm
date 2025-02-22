@@ -22,6 +22,10 @@ get_cmd:
     call putchar            ; echo the character to console
     cp "\r"                 ; is CR?
     jr z,get_cmd            ; yes - skip this
+    cp "\t"                 ; is tab?
+    jr z,get_cmd            ; yes - skip this
+    cp " "                  ; is space?
+    jr z,get_cmd            ; yes - skip this
     cp "\e"                 ; escape?
     jr z, get_cmd_esc       ; yes
     cp "\n"                 ; end of line?
