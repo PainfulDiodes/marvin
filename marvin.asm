@@ -55,6 +55,8 @@ get_cmd_end:
 
 ; COMMANDS
 
+; READ
+
 cmd_read:                   ; read bytes from memory and send hex values to console
     ld a,(hl)               ; load character from buffer
     cp 0                    ; end of string?
@@ -85,11 +87,22 @@ cmd_read_byte:
     call putchar    
     jp prompt               ; and back to prompt
 
+; WRITE
+
 cmd_write:                  ; write bytes to memory interpreting hex values from console
     ld a,(hl)               ; load character from buffer
     cp 0                    ; end of string?
     jr z, cmd_write_null    ; yes - no data
-
+    call hex_byte           ; parse first pair of characters - address high
+    ld d,a                  ; load into upper byte of memory pointer
+    call hex_byte           ; parse second pair of characters - address low
+    ld e,a                  ; load into lower byte of memory pointer
+    ld a,(hl)               ; load character from buffer
+    cp 0                    ; end of string?
+    jr z, cmd_write_end     ; yes - we're done
+    call hex_byte           ; parse data byte
+    ld (de),a               ; write byte to memory
+cmd_write_end:              ; 
     jp prompt               ; and back to prompt
 cmd_write_null:             ; w with no data
     ld hl,cmd_w_null_msg
