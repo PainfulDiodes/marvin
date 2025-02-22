@@ -51,6 +51,8 @@ get_cmd_end:
     jp prompt               ; loop back to the prompt
 
 
+; COMMANDS
+
 cmd_read:                   ; read bytes from memory and send hex values to console
     ld a,(hl)               ; load 1st character from memory
     cp 0                    ; end of string?
@@ -59,7 +61,6 @@ cmd_read:                   ; read bytes from memory and send hex values to cons
     ld d,a                  ; load into upper byte of memory pointer
     call hex_byte           ; parse second pair of characters
     ld e,a                  ; load into lower byte of memory pointer
-
 cmd_read_row:
     ld c, 0x10              ; initialise byte counter - each row will have this many bytes
     ld a,d                  ; print DE content: the read address
