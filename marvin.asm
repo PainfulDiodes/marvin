@@ -46,6 +46,8 @@ get_cmd_end:
     inc hl                  ; advance the buffer pointer
     cp "r"                  ; r = read
     jr z,cmd_read
+    cp "w"                  ; w = write
+    jr z,cmd_write
     ld hl,bad_cmd_msg       ; otherwise error
     call puts
     jp prompt               ; loop back to the prompt
@@ -54,7 +56,7 @@ get_cmd_end:
 ; COMMANDS
 
 cmd_read:                   ; read bytes from memory and send hex values to console
-    ld a,(hl)               ; load 1st character from memory
+    ld a,(hl)               ; load character from buffer
     cp 0                    ; end of string?
     jr z, cmd_read_row      ; yes - no address argument, so skip to read row
     call hex_byte           ; parse first pair of characters
@@ -83,6 +85,16 @@ cmd_read_byte:
     call putchar    
     jp prompt               ; and back to prompt
 
+cmd_write:                  ; write bytes to memory interpreting hex values from console
+    ld a,(hl)               ; load character from buffer
+    cp 0                    ; end of string?
+    jr z, cmd_write_null    ; yes - no data
+
+    jp prompt               ; and back to prompt
+cmd_write_null:             ; w with no data
+    ld hl,cmd_w_null_msg
+    call puts
+    jp prompt               ; and back to prompt
 
 ; SUBROUTINES
 
@@ -152,3 +164,5 @@ welcome_msg:    .db "MARVIN\n"
                 .db "https://github.com/PainfulDiodes\n\n",0
 
 bad_cmd_msg:    .db "Command not recognised\n",0
+
+cmd_w_null_msg  .db "No data to write\n",0
