@@ -54,6 +54,8 @@ get_cmd_end:
     jr z,cmd_write
     cp "x"                  ; x = eXecute
     jr z,cmd_execute
+    cp ":"                  ; : = load from intel hex format
+    jr z,cmd_load
     ld hl,bad_cmd_msg       ; otherwise error
     call puts
     jp prompt               ; loop back to the prompt
@@ -131,6 +133,35 @@ cmd_execute:                ; start executing from given address
     ld hl,de
     jp (hl)                 ; execute from address
 
+; LOAD
+
+cmd_load:                   ; load from INTEL HEX - records are read from the buffer
+    ld a,(hl)               ; load character from buffer
+    cp 0                    ; end of string?
+    jp z, cmd_load_end      ; yes - no data - quit
+    call hex_byte           ; parse first pair of characters - byte count
+    cp 0 
+    jp z, cmd_load_end      ; yes - zero byte count - quit 
+    ld c,a                  ; load byte count into C
+    call hex_byte           ; parse address high
+    ld d,a                  ; load into upper byte of memory pointer
+    call hex_byte           ; parse address low
+    ld e,a                  ; load into lower byte of memory pointer
+    call hex_byte           ; parse record type
+    cp 0                    ; record type zero?
+    jp nz, cmd_load_end     ; no - quit 
+cmd_load_data:
+    ld a,(hl)               ; load character from buffer
+    cp 0                    ; end of string?
+    jr z, cmd_load_end      ; yes - we're done
+    call hex_byte           ; parse data byte
+    ld (de),a               ; write byte to memory
+    inc de                  ; advance destination pointer
+    dec c                   ; decrement byte counter
+    jr nz,cmd_load_data     ; if byte counter not zero then go again
+cmd_load_end:               ; 
+    jp prompt               ; and back to prompt
+
 ; SUBROUTINES
 
 hex_byte:                   ; read 2 bytes from HL pointer, return converted value in A and advance pointer
@@ -159,9 +190,14 @@ hex_byte_zero:
     ret
 
 hex_to_num:                 ; convert an ASCII char in A to a number (lower 4 bits)
-    cp "a"                  ; is it alphabetic?
+    cp "a"                  ; is it lowercase alphabetic?
+    jr c,hex_to_num_un      ; no - uppercase/numeric
+    sub "a"-0x0a            ; yes - alphabetic
+    ret
+hex_to_num_un:
+    cp "A"                  ; is it uppercase alphabetic?
     jr c,hex_to_num_n       ; no - numeric
-    sub "W"                 ; yes - alphabetic
+    sub "A"-0x0a            ; numeric
     ret
 hex_to_num_n:
     sub "0"                 ; numeric
