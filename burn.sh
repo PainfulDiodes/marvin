@@ -1,2 +1,5 @@
-# usage: ./build.sh myfile.bin
-minipro -u -s -p AT28C64B -w $1
+# usage: ./build.sh myfile
+#        ./build.sh myfile.bin
+set -x      #echo on
+f=${1%.*}   #extract base filename
+minipro -u -s -p AT28C64B -w $f.bin
