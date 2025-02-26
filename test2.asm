@@ -1,4 +1,4 @@
-org 0x9000
+org 0x8000
 MARVIN equ 0               ; MARVIN start address
 UM245R_DATA equ 1          ; serial data port
 
