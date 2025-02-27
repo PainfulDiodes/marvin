@@ -1,7 +1,7 @@
 # marvin - a tiny Z80 monitor program
-A simple monitor program for the [BeanZee](https://github.com/PainfulDiodes/BeanZee) Z80 development board. Also works with my earlier [z80-breadboard-computer](https://github.com/PainfulDiodes/z80-breadboard-computer).
+A simple monitor program for the [BeanZee](https://github.com/PainfulDiodes/BeanZee) Z80 development board. Also works with [z80-breadboard-computer](https://github.com/PainfulDiodes/z80-breadboard-computer).
 
-This project has been assembled using [sjasmplus](https://github.com/z00m128/sjasmplus)
+Builds with [sjasmplus](https://github.com/z00m128/sjasmplus)
 
 ## Assumptions and dependencies
 
