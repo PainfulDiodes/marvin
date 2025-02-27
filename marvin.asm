@@ -167,7 +167,7 @@ cmd_load_end:               ;
 hex_byte:                   ; read 2 bytes from HL pointer, return converted value in A and advance pointer
     push bc                 ; preserve BC
     ld a,(hl)               ; load 1st character from memory
-    cp 0                    ; end of string? /// shouldn't need to check this as we check before calling sub
+    cp 0                    ; end of string?
     jr z,hex_byte_zero      ; yes - no value, so return zero
     inc hl                  ; advance the buffer pointer
     call hex_to_num         ; convert first hex digit
