@@ -4,6 +4,8 @@
 ; * https://github.com/PainfulDiodes
 ; ****************************************************
 
+include "escapestring.asm"
+
 ; MAIN PROGRAM LOOP
 
 start:
@@ -14,27 +16,27 @@ start:
 
 prompt:
     ld hl,BUFFER            ; point HL to the beginning of the input buffer
-    ld a,">"
+    ld a,'>'
     call putchar 
 
 get_cmd:
     call getchar            ; get character from console
     call putchar            ; echo the character to console
-    cp "\r"                 ; is CR?
+    cp _r                   ; is CR?
     jr z,get_cmd            ; yes - skip this
-    cp "\t"                 ; is tab?
+    cp _t                   ; is tab?
     jr z,get_cmd            ; yes - skip this
-    cp " "                  ; is space?
+    cp ' '                  ; is space?
     jr z,get_cmd            ; yes - skip this
-    cp "\e"                 ; escape?
+    cp _e                   ; escape?
     jr z, get_cmd_esc       ; yes
-    cp "\n"                 ; end of line?
+    cp _n                   ; end of line?
     jr z, get_cmd_end       ; yes
     ld(hl),a                ; no - add character to the buffer
     inc hl                  ; move pointer to next buffer location - we're not checking for overrun
     jr get_cmd              ; next character
 get_cmd_esc:                ; do escape
-    ld a,"\n"               ; new line
+    ld a,_n                 ; new line
     call putchar
     jr prompt               ; back to prompt
 get_cmd_end:
@@ -48,13 +50,13 @@ get_cmd_end:
     cp 0                    ; end of string
     jr z,prompt             ; yes - empty line - go back to prompt
     inc hl                  ; advance the buffer pointer
-    cp "r"                  ; r = Read
+    cp 'r'                  ; r = Read
     jr z,cmd_read
-    cp "w"                  ; w = Write
+    cp 'w'                  ; w = Write
     jr z,cmd_write
-    cp "x"                  ; x = eXecute
+    cp 'x'                  ; x = eXecute
     jr z,cmd_execute
-    cp ":"                  ; : = load from intel hex format
+    cp ':'                  ; : = load from intel hex format
     jr z,cmd_load
     ld hl,bad_cmd_msg       ; otherwise error
     call puts
@@ -79,19 +81,19 @@ cmd_read_row:
     call putchar_hex
     ld a,e
     call putchar_hex
-    ld a,":"                ; separator between address and data
+    ld a,':'                ; separator between address and data
     call putchar
-    ld a," "
+    ld a,' '
     call putchar
 cmd_read_byte:            
     ld a,(de)               ; get a byte
     call putchar_hex        ; and print it
-    ld a," "                ; add space between bytes
+    ld a,' '                ; add space between bytes
     call putchar
     inc de                  ; next address
     dec c                   ; reduce byte counter
     jr nz, cmd_read_byte    ; repeat if the counter is not 0
-    ld a, "\n"              ; otherwise, new line
+    ld a,_n                 ; otherwise, new line
     call putchar    
     jp prompt               ; and back to prompt
 
@@ -190,17 +192,17 @@ hex_byte_zero:
     ret
 
 hex_to_num:                 ; convert an ASCII char in A to a number (lower 4 bits)
-    cp "a"                  ; is it lowercase alphabetic?
+    cp 'a'                  ; is it lowercase alphabetic?
     jr c,hex_to_num_un      ; no - uppercase/numeric
-    sub "a"-0x0a            ; yes - alphabetic
+    sub 'a'-0x0a            ; yes - alphabetic
     ret
 hex_to_num_un:
-    cp "A"                  ; is it uppercase alphabetic?
+    cp 'A'                  ; is it uppercase alphabetic?
     jr c,hex_to_num_n       ; no - numeric
-    sub "A"-0x0a            ; numeric
+    sub 'A'-0x0a            ; numeric
     ret
 hex_to_num_n:
-    sub "0"                 ; numeric
+    sub '0'                 ; numeric
     ret
 
 putchar_hex:
@@ -218,22 +220,22 @@ putchar_hex_dgt:
     cp 0x0a                 ; is it an alpha or numeric?
     jr c,putchar_hex_n      ; numeric
                             ; or drop through to alpha
-    add a,"W"               ; for alpha add the base ascii for 'a' but then sub 10 as hex 'a' is 10d => 'W'
+    add a,'W'               ; for alpha add the base ascii for 'a' but then sub 10 as hex 'a' is 10d => 'W'
     call putchar
     ret
 putchar_hex_n:
-    add a,"0"               ; for numeric add the base ascii for '0'
+    add a,'0'               ; for numeric add the base ascii for '0'
     call putchar
     ret
 
 
 ; STRINGS
 
-welcome_msg:    .db "MARVIN\n"
-                .db "A super simple monitor program for Z80 homebrew\n"
-                .db "(c) Stephen Willcock 2024\n"
-                .db "https://github.com/PainfulDiodes\n\n",0
+welcome_msg:    db "MARVIN\n"
+                db "A super simple monitor program for Z80 homebrew\n"
+                db "(c) Stephen Willcock 2024\n"
+                db "https://github.com/PainfulDiodes\n\n",0
 
-bad_cmd_msg:    .db "Command not recognised\n",0
+bad_cmd_msg:    db "Command not recognised\n",0
 
-cmd_w_null_msg  .db "No data to write\n",0
+cmd_w_null_msg: db "No data to write\n",0
