@@ -4,6 +4,8 @@
 ; * https://github.com/PainfulDiodes
 ; ****************************************************
 
+include "escapestring.asm"
+
 ; MAIN PROGRAM LOOP
 
 start:
@@ -20,21 +22,21 @@ prompt:
 get_cmd:
     call getchar            ; get character from console
     call putchar            ; echo the character to console
-    cp '\r'                 ; is CR?
+    cp _r                   ; is CR?
     jr z,get_cmd            ; yes - skip this
-    cp '\t'                 ; is tab?
+    cp _t                   ; is tab?
     jr z,get_cmd            ; yes - skip this
     cp ' '                  ; is space?
     jr z,get_cmd            ; yes - skip this
-    cp '\e'                 ; escape?
+    cp _e                   ; escape?
     jr z, get_cmd_esc       ; yes
-    cp '\n'                 ; end of line?
+    cp _n                   ; end of line?
     jr z, get_cmd_end       ; yes
     ld(hl),a                ; no - add character to the buffer
     inc hl                  ; move pointer to next buffer location - we're not checking for overrun
     jr get_cmd              ; next character
 get_cmd_esc:                ; do escape
-    ld a,'\n'               ; new line
+    ld a,_n                 ; new line
     call putchar
     jr prompt               ; back to prompt
 get_cmd_end:
@@ -91,7 +93,7 @@ cmd_read_byte:
     inc de                  ; next address
     dec c                   ; reduce byte counter
     jr nz, cmd_read_byte    ; repeat if the counter is not 0
-    ld a, '\n'              ; otherwise, new line
+    ld a,_n                 ; otherwise, new line
     call putchar    
     jp prompt               ; and back to prompt
 
