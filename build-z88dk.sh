@@ -5,7 +5,7 @@
 # provide an org value to pack a HEX file
 #  ./build-z88dk.sh beanzee 0x8000
 
-# set -x      #echo on
+set -x      #echo on
 
 f=${1%.*}   #extract base filename
 z88dk-z80asm -l -b $f.asm
