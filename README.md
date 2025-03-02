@@ -96,6 +96,6 @@ This command takes an [Intel HEX](https://en.wikipedia.org/wiki/Intel_HEX) forma
 
     Hello!
 
-I have been using [z88dk](https://github.com/z88dk/z88dk)-appmake to pack Intel HEX files from binaries assembled using sjasmplus.
+I have been using [z88dk](https://github.com/z88dk/z88dk)-appmake to pack Intel HEX files from binaries assembled using either z88dk-z80asm or sjasmplus.
 
-A couple of test examples are included in the repo - see the release binaries for the assembled files.
+A couple of test examples are included in the repo - assembled files are attached to the release.
