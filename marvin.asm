@@ -231,8 +231,8 @@ putchar_hex_n:
 
 ; STRINGS
 
-welcome_msg:    db "MARVIN\n"
-                db "A super simple monitor program for Z80 homebrew\n"
+welcome_msg:    db "MARVIN v1.0.1\n"
+                db "A simple monitor program for Z80 homebrew\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n\n",0
 
