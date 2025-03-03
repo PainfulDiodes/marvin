@@ -7,6 +7,8 @@ Marvin builds with:
 [sjasmplus](https://github.com/z00m128/sjasmplus)  
 [z88dk-z80asm](https://github.com/z88dk/z88dk/wiki/Tool---z80asm)  
 
+See also [PainfulDiodes Blog post](https://painfuldiodes.wordpress.com/2025/03/02/marvin-v1/)
+
 ## Using Marvin with BeanZee
 
 The BeanZee board has 32k RAM and 32k ROM. Marvin (and other potential firmware) is loaded into the ROM. The top 4k of the RAM is reserved for system use (which currently is just the stack and an input buffer), but the remainder of the RAM is available for user programs.  
