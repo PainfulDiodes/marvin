@@ -6,5 +6,5 @@ lst
 *.hex
 *.lst
 *.lis
-*.hdp
+*.ihx
 *.o
