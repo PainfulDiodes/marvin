@@ -9,6 +9,8 @@ Marvin builds with:
 
 See also [PainfulDiodes Blog post](https://painfuldiodes.wordpress.com/2025/03/02/marvin-v1/)
 
+Example programs to run on BeanZee can be found in [BeanZeeBytes](https://github.com/PainfulDiodes/BeanZeeBytes)
+
 ## Using Marvin with BeanZee
 
 The BeanZee board has 32k RAM and 32k ROM. Marvin (and other potential firmware) is loaded into the ROM. The top 4k of the RAM is reserved for system use (which currently is just the stack and an input buffer), but the remainder of the RAM is available for user programs.  
@@ -178,4 +180,5 @@ Note the “org” option is used to add the load address for each row.
 
 z88dk-appmake can therefore prepare Intel HEX files that can be sent to Marvin for loading.
 
-A couple of test examples are included in the repo.
+## BeanZeeBytes
+Example programs that can be loaded and run on BeanZee can be found in [BeanZeeBytes](https://github.com/PainfulDiodes/BeanZeeBytes).
