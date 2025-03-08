@@ -4,6 +4,8 @@
 ; As per:
 ; https://github.com/PainfulDiodes/z80-breadboard-computer/tree/v1.0.0
 
+ALIGN $10
+
 getchar:                    ; get character and return in A
     in a,(UM245R_CTRL)      ; get the USB status
     bit 1,a                 ; data to read? (active low)
@@ -14,6 +16,8 @@ getchar:                    ; get character and return in A
     ld a, _n                ; convert CR to LF
     ret 
 
+ALIGN $10
+
 putchar:
     cp _n                   ; newline?
     jr nz, doputc           ; no - just send the char
@@ -23,6 +27,8 @@ putchar:
 doputc:
     call putc
     ret
+
+ALIGN $10
 
 putc:                       ; transmit character in A
     push bc
@@ -35,6 +41,8 @@ putcloop:
     out  (UM245R_DATA),a    ; transmit the character
     pop bc
     ret
+
+ALIGN $10
 
 puts:                       ; print a zero-terminated string, pointed to by hl
     push hl
