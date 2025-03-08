@@ -8,3 +8,5 @@ lst
 *.lis
 *.ihx
 *.o
+*.map
+*.sym
