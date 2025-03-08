@@ -107,6 +107,8 @@ The e(x)ecute command causes the CPU to jump to and continue executing from a gi
     https://github.com/PainfulDiodes
     >
 
+Doing an e(x)ecute Without an address will execute from the bottom of user RAM (RAMSTART).
+
 ## w command
 
 The (w)rite command will write a number of bytes from the console into a given memory location.
