@@ -8,6 +8,8 @@ include "escapestring.asm"
 
 ; MAIN PROGRAM LOOP
 
+ALIGN $10
+
 start:
     ld de,$0000             ; point DE to zero - this is the default address argument for commands
 
@@ -234,7 +236,7 @@ putchar_hex_n:
 
 ; STRINGS
 
-welcome_msg:    db "MARVIN v1.0.1\n"
+welcome_msg:    db "MARVIN v1.0.2\n"
                 db "A simple monitor program for Z80 homebrew\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n\n",0
