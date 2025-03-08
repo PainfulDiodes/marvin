@@ -2,6 +2,8 @@
 ; https://github.com/PainfulDiodes/BeanZee/tree/v1.0.0
 ; https://github.com/PainfulDiodes/z80-breadboard-computer/tree/v1.0.0
 
+ORG 0x0000
+
 BUFFER equ 0xf000          ; input buffer - start of system RAM
 STACK  equ 0xffff          ; this should really be 0x0000 as the CPU will dec SP before PUSH
 
