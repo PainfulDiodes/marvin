@@ -127,12 +127,15 @@ cmd_write_null:             ; w with no data
 cmd_execute:                ; start executing from given address
     ld a,(hl)               ; load character from buffer
     cp 0                    ; end of string?
-    jp z, prompt            ; yes - no data
+    jp z, cmd_exec_df       ; yes - no data
     call hex_byte           ; parse first pair of characters - address high
     ld d,a                  ; load into upper byte of memory pointer
     call hex_byte           ; parse second pair of characters - address low
     ld e,a                  ; load into lower byte of memory pointer
     ld hl,de
+    jp (hl)                 ; execute from address
+cmd_exec_df:                ; start executing from default address
+    ld hl,RAMSTART
     jp (hl)                 ; execute from address
 
 ; LOAD
