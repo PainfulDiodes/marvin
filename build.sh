@@ -8,7 +8,7 @@
 set -x #echo on
 
 f=${1%.*} #extract base filename
-z88dk-z80asm -l -b $f.asm
+z88dk-z80asm -l -b -m $f.asm
 hexdump -C $f.bin > $f.hex
 if [ $# -gt 1 ]
 then
