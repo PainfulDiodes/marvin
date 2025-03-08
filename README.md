@@ -4,8 +4,8 @@ Marvin is a simple monitor program designed to work with the [BeanZee](https://g
 BeanZee is a board for experimentation and learning. The primary function of Marvin is to be able to load,  execute Z80 programs on BeanZee - programs that typically have been written and cross-assembled or cross-compiled on a host computer.
 
 Marvin builds with:  
+[z88dk-z80asm](https://github.com/z88dk/z88dk/wiki/Tool---z80asm) (default), or  
 [sjasmplus](https://github.com/z00m128/sjasmplus)  
-[z88dk-z80asm](https://github.com/z88dk/z88dk/wiki/Tool---z80asm)  
 
 See also [PainfulDiodes Blog post](https://painfuldiodes.wordpress.com/2025/03/02/marvin-v1/)
 
@@ -179,6 +179,8 @@ z88dk-appmake from the https://github.com/z88dk/z88dk tool set takes compiled or
 Note the “org” option is used to add the load address for each row.
 
 z88dk-appmake can therefore prepare Intel HEX files that can be sent to Marvin for loading.
+
+For this reason, although the project has been adapted to assemble using either sjasmplus or z88dk-z80asm, z88dk is the default.
 
 ## BeanZeeBytes
 Example programs that can be loaded and run on BeanZee can be found in [BeanZeeBytes](https://github.com/PainfulDiodes/BeanZeeBytes).
