@@ -5,8 +5,8 @@
 ORG 0x0000
 
 RAMSTART equ 0x8000        ; start of user RAM
-BUFFER equ 0xf000          ; input buffer - start of system RAM
-STACK  equ 0xffff          ; this should really be 0x0000 as the CPU will dec SP before PUSH
+BUFFER   equ 0xf000        ; input buffer - start of system RAM
+STACK    equ 0xffff        ; this should really be 0x0000 as the CPU will dec SP before PUSH
 
     ld sp, STACK
     jp start
