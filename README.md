@@ -1,5 +1,5 @@
 # marvin Z80 monitor program
-Marvin is a simple monitor program designed to work with the [BeanZee](https://github.com/PainfulDiodes/BeanZee) Z80 development board and my earlier [breadboard computer](https://github.com/PainfulDiodes/z80-breadboard-computer), but it should be easy to adapt for other Z80 hardware.  
+Marvin is a simple monitor program designed to work with the [BeanZee](https://github.com/PainfulDiodes/BeanZee) Z80 development board. It will also work with my [breadboard computer](https://github.com/PainfulDiodes/z80-breadboard-computer), and should be easy to adapt for other Z80 designs.  
 
 BeanZee is a board for experimentation and learning. The primary function of Marvin is to be able to load,  execute Z80 programs on BeanZee - programs that typically have been written and cross-assembled or cross-compiled on a host computer.
 
@@ -45,13 +45,15 @@ When BeanZee is reset it responds with a Marvin welcome message and a prompt:
     https://github.com/PainfulDiodes
     >
 
-Commands are sent character by character, and Marvin waits for a new line character (\n) before processing a command. Marvin ignores carriage return (\r) characters.
+Marvin interprets inputs character-by-character, echoing each character back to the terminal, and waits for a carriage return character (\r) before processing a command. 
 
-The usual options for end-of-line are: \n, \r\n and \r.
+Newline (\n) characters are also interpreted as an end-of-command, and so a \r\n combination will result in an additional empty command. This is harmless, but will be visible as an additional prompt line.
 
-\r on its own is not commonly seen and so for simplicity this option is not currently supported by Marvin.
+When sending responses back to the terminal, Marvin will terminate lines with \r\n. 
 
-Again for simplicity, backspace for correcting a command is also not currently supported. However, hitting the escape key (\e) is recognised and it will cause everything on the current line to be ignored, and move to a new line and new prompt.
+This behaviour has been found to work with VT100/ANSI terminal emulation, e.g. GNU screen.
+
+For simplicity, backspace for correcting a command is also not currently supported. However, hitting the escape key (\e) is recognised and it will cause everything on the current line to be ignored, and move to a new line and new prompt.
 
 Whitespace on a command is also ignored. This allows for very compact commands, or for commands to be spaced out to make them easier to read.
 
