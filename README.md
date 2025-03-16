@@ -1,4 +1,4 @@
-# marvin Z80 monitor program
+# Marvin Z80 monitor program
 Marvin is a simple monitor program designed to work with the [BeanZee](https://github.com/PainfulDiodes/BeanZee) Z80 development board. It will also work with my [breadboard computer](https://github.com/PainfulDiodes/z80-breadboard-computer), and should be easy to adapt for other Z80 designs.  
 
 BeanZee is a board for experimentation and learning. The primary function of Marvin is to be able to load,  execute Z80 programs on BeanZee - programs that typically have been written and cross-assembled or cross-compiled on a host computer.
