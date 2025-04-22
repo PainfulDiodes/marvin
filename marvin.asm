@@ -1,5 +1,5 @@
 ; ****************************************************
-; *  Marvin - a tiny monitor program for Z80 homebrew             
+; *  Marvin - a Z80 homebrew monitor program
 ; * (c) Stephen Willcock 2024
 ; * https://github.com/PainfulDiodes
 ; ****************************************************
