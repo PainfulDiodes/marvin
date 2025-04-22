@@ -19,6 +19,12 @@ getchar:                    ; get character and return in A
 ALIGN $10
 
 putchar:
+
+    ; TEMPORARY - test LCD output
+    push af
+    call lcd_putchar
+    pop af
+
     cp _n                   ; newline?
     jr nz, doputc           ; no - just send the char
     ld a, _r
