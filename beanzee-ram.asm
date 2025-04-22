@@ -1,6 +1,6 @@
-; MARVIN build for beanzee / Z80 breadboard computer
-; https://github.com/PainfulDiodes/BeanZee/tree/v1.0.0
-; https://github.com/PainfulDiodes/z80-breadboard-computer/tree/v1.0.0
+; MARVIN build for beanzee / Z80 breadboard computer - RAM version
+; https://github.com/PainfulDiodes/BeanZee
+; https://github.com/PainfulDiodes/z80-breadboard-computer
 
 ORG 0x8000
 
