@@ -11,6 +11,8 @@ lcd_init:
 	call lcd_putcmd
 	ld a,LCD_CLEAR_DISPLAY
 	call lcd_putcmd
+    ld a,0
+    call lcd_putchar
 ; restore registers
     pop af
     ret
