@@ -10,6 +10,8 @@ include "escapestring.asm"
 
 ALIGN $10
 
+; TODO consider making these labels unique? start, prompt... m_start marvin_start ?
+
 start:
     ld de,$0000             ; point DE to zero - this is the default address argument for commands
 
