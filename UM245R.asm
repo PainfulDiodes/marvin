@@ -7,6 +7,12 @@
 ALIGN $10
 
 getchar:                    ; get character and return in A
+
+    ; TEMPORARY - test keyscan input
+    call keyscan
+    cp 0
+    ret nz
+
     in a,(UM245R_CTRL)      ; get the USB status
     bit 1,a                 ; data to read? (active low)
     jr nz,getchar           ; no, the buffer is empty
