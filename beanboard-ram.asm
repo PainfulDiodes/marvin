@@ -24,6 +24,7 @@ LCD_DATA    equ 5               ; LCD data port
     call keyscan_init
     jp start
 
+include "console.asm"
 include "UM245R.asm"
 include "marvin.asm"
 include "HD44780LCD.inc"
