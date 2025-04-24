@@ -243,8 +243,9 @@ alt_welcome_msg:    db "MARVIN v1.1.beta\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n\n",0
 
-welcome_msg: db "MARVIN Z80 monitor\n"
-                db "v1.1.beta\n\n",0
+welcome_msg:    db "PainfulDiodes\n"
+                db "MARVIN Z80 monitor\n"
+                db "v1.1.beta\n",0
 
 bad_cmd_msg:    db "Command not recognised\n",0
 
