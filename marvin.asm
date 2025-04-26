@@ -31,11 +31,11 @@ _get_cmd:
     ; echo the character to console
     call putchar
     ; is CR?
-    cp _r
+    cp ESC_R
     ; yes: skip this
     jr z,_get_cmd
     ; is tab?
-    cp _t
+    cp ESC_T
     ; yes: skip this
     jr z,_get_cmd
     ; is space?
@@ -43,11 +43,11 @@ _get_cmd:
     ; yes - skip this
     jr z,_get_cmd
     ; escape?
-    cp _e
+    cp ESC_E
     ; yes
     jr z, _get_cmd_esc
     ; end of line?
-    cp _n
+    cp ESC_N
     ; yes
     jr z, _get_cmd_end       
     ; no: add character to the buffer
@@ -59,7 +59,7 @@ _get_cmd:
     ; do escape
 _get_cmd_esc:
     ; new line
-    ld a,_n
+    ld a,ESC_N
     call putchar
     ; back to prompt
     jr prompt
@@ -142,7 +142,7 @@ _cmd_read_byte:
     ; repeat if the counter is not 0
     jr nz, _cmd_read_byte
     ; otherwise, new line
-    ld a,_n
+    ld a,ESC_N
     call putchar
     ; and back to prompt
     jp prompt
