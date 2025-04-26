@@ -25,7 +25,7 @@ prompt:
     ld a,'>'
     call putchar 
 
-get_cmd:
+_get_cmd:
     ; get character from console
     call getchar
     ; echo the character to console
@@ -33,44 +33,42 @@ get_cmd:
     ; is CR?
     cp _r
     ; yes: skip this
-    jr z,get_cmd
+    jr z,_get_cmd
     ; is tab?
     cp _t
     ; yes: skip this
-    jr z,get_cmd
+    jr z,_get_cmd
     ; is space?
     cp ' '
     ; yes - skip this
-    jr z,get_cmd
+    jr z,_get_cmd
     ; escape?
     cp _e
     ; yes
-    jr z, get_cmd_esc
+    jr z, _get_cmd_esc
     ; end of line?
     cp _n
     ; yes
-    jr z, get_cmd_end       
+    jr z, _get_cmd_end       
     ; no: add character to the buffer
     ld(hl),a
     ; move pointer to next buffer location - we're not checking for overrun
     inc hl
     ; next character
-    jr get_cmd
+    jr _get_cmd
     ; do escape
-get_cmd_esc:
+_get_cmd_esc:
     ; new line
     ld a,_n
     call putchar
     ; back to prompt
     jr prompt
-get_cmd_end:
+_get_cmd_end:
     ; string terminator
     ld a,0                  
     ; add terminator to end of buffer
     ld(hl),a
-
-    ; process command from buffer
-
+; process command from buffer
     ; point to start of buffer
     ld hl,BUFFER
     ; load character from buffer
@@ -82,14 +80,14 @@ get_cmd_end:
     ; advance the buffer pointer
     inc hl
     cp 'r'
-    jr z,cmd_read
+    jr z,_cmd_read
     cp 'w'
-    jr z,cmd_write
+    jr z,_cmd_write
     cp 'x'
-    jr z,cmd_execute
+    jr z,_cmd_execute
     ; ':' = load from intel hex format
     cp ':' 
-    jr z,cmd_load
+    jr z,_cmd_load
     ; otherwise error
     ld hl,bad_cmd_msg
     call puts
@@ -100,13 +98,13 @@ get_cmd_end:
 
 ; READ
 ; read bytes from memory and send hex values to console
-cmd_read:                   
+_cmd_read:                   
     ; load character from buffer
     ld a,(hl)
     ; end of string?
     cp 0
     ; yes: no address argument, so skip to read row
-    jr z, cmd_read_row
+    jr z, _cmd_read_row
     ; parse first pair of characters
     call hex_byte
     ; load into upper byte of memory pointer
@@ -115,7 +113,7 @@ cmd_read:
     call hex_byte
     ; load into lower byte of memory pointer
     ld e,a
-cmd_read_row:
+_cmd_read_row:
     ; initialise byte counter - each row will have this many bytes
     ld c, 0x10
     ; print DE content: the read address
@@ -129,8 +127,7 @@ cmd_read_row:
     ld a,' '
     call putchar
     ; get a byte
-    ; TODO _ for local labels
-cmd_read_byte:            
+_cmd_read_byte:            
     ld a,(de)
     ; and print it
     call putchar_hex
@@ -143,7 +140,7 @@ cmd_read_byte:
     ; TODO djnz ?
     dec c
     ; repeat if the counter is not 0
-    jr nz, cmd_read_byte
+    jr nz, _cmd_read_byte
     ; otherwise, new line
     ld a,_n
     call putchar
@@ -153,13 +150,13 @@ cmd_read_byte:
 ; WRITE
 
 ; write bytes to memory interpreting hex values from console
-cmd_write:
+_cmd_write:
     ; load character from buffer
     ld a,(hl)
     ; end of string?
     cp 0
     ; yes: no data
-    jr z, cmd_write_null
+    jr z, _cmd_write_null
     ; parse first pair of characters - address high
     call hex_byte
     ; load into upper byte of memory pointer
@@ -168,24 +165,24 @@ cmd_write:
     call hex_byte
     ; load into lower byte of memory pointer
     ld e,a
-cmd_write_data:
+_cmd_write_data:
     ; load character from buffer
     ld a,(hl)
     ; end of string?
     cp 0
     ; yes: we're done
-    jr z, cmd_write_end
+    jr z, _cmd_write_end
     ; parse data byte
     call hex_byte
     ; write byte to memory
     ld (de),a
     ; advance destination pointer
     inc de
-    jr cmd_write_data
-cmd_write_end:
+    jr _cmd_write_data
+_cmd_write_end:
     jp prompt
     ; w with no data
-cmd_write_null:        
+_cmd_write_null:        
     ld hl,cmd_w_null_msg
     call puts
     ; and back to prompt
@@ -194,13 +191,13 @@ cmd_write_null:
 ; EXECUTE
 
 ; start executing from given address
-cmd_execute:                
+_cmd_execute:                
     ; load character from buffer
     ld a,(hl)
     ; end of string?
     cp 0
     ; yes - no data
-    jp z, cmd_exec_df
+    jp z, _cmd_exec_df
     ; parse first pair of characters - address high
     call hex_byte
     ; load into upper byte of memory pointer
@@ -213,7 +210,7 @@ cmd_execute:
     ; execute from address
     jp (hl)
     ; start executing from default address
-cmd_exec_df:
+_cmd_exec_df:
     ld hl,RAMSTART
     ; execute from address
     jp (hl)
@@ -221,18 +218,18 @@ cmd_exec_df:
 ; LOAD
 
 ; load from INTEL HEX - records are read from the buffer
-cmd_load:
+_cmd_load:
     ; load character from buffer
     ld a,(hl)
     ; end of string?
     cp 0
     ; yes: no data - quit
-    jp z, cmd_load_end
+    jp z, _cmd_load_end
     ; parse first pair of characters - byte count
     call hex_byte
     cp 0 
     ; yes - zero byte count - quit 
-    jp z, cmd_load_end
+    jp z, _cmd_load_end
     ; load byte count into C
     ld c,a
     ; parse address high
@@ -248,14 +245,14 @@ cmd_load:
     ; record type zero?
     cp 0
     ; no: quit 
-    jp nz, cmd_load_end
-cmd_load_data:
+    jp nz, _cmd_load_end
+_cmd_load_data:
     ; load character from buffer
     ld a,(hl)
     ; end of string?
     cp 0
     ; yes: we're done
-    jr z, cmd_load_end
+    jr z, _cmd_load_end
     ; no:
     ; parse data byte
     call hex_byte
@@ -267,8 +264,8 @@ cmd_load_data:
     ; TODO djnz
     dec c
     ; if byte counter not zero then go again
-    jr nz,cmd_load_data
-cmd_load_end:
+    jr nz,_cmd_load_data
+_cmd_load_end:
     jp prompt
 
 ; SUBROUTINES
@@ -282,7 +279,7 @@ hex_byte:
     ; end of string?
     cp 0
     ; yes: no value - return zero
-    jr z,hex_byte_zero
+    jr z,_hex_byte_zero
     ; no:
     ; advance the buffer pointer
     inc hl
@@ -300,7 +297,7 @@ hex_byte:
     ; end of string?
     cp 0
     ; yes: incomplete byte - return zero 
-    jr z,hex_byte_zero
+    jr z,_hex_byte_zero
     ; advance the buffer pointer
     inc hl
     ; and convert 2nd hex digit
@@ -310,31 +307,31 @@ hex_byte:
     ; restore BC
     pop bc
     ret
-hex_byte_zero:
+_hex_byte_zero:
     ; zero return value
     ld a,0
     ; restore BC
     pop bc
     ret
 
-; convert an ASCII char in A to a number (lower 4 bits)
+; convert an ASCII hex char in A to a number value (lower 4 bits)
 hex_to_num:
     ; is it lowercase alphabetic?
     cp 'a'                  
     ; no: uppercase/numeric
-    jr c,hex_to_num_un
+    jr c,_hex_to_num_un
     ; yes: alphabetic
     sub 'a'-0x0a
     ret
-hex_to_num_un:
+_hex_to_num_un:
     ; is it uppercase alphabetic?
     cp 'A'
     ; no: numeric
-    jr c,hex_to_num_n       
+    jr c,_hex_to_num_n       
     ; y:
     sub 'A'-0x0a
     ret
-hex_to_num_n:
+_hex_to_num_n:
     ; numeric
     sub '0'
     ret
@@ -348,31 +345,32 @@ putchar_hex:
     srl a
     srl a
     ; most significant digit
-    call putchar_hex_dgt
+    call _putchar_hex_dgt
     ; recover from stash
     ld a,b
     ; clear the top 4 bits
     and %00001111
     ; least significant digit
-    call putchar_hex_dgt
+    call _putchar_hex_dgt
     ret
-putchar_hex_dgt:
+_putchar_hex_dgt:
     ; TODO hex using $ notation
     ; is it an alpha or numeric?
     cp 0x0a
     ; numeric
-    jr c,putchar_hex_n
+    jr c,_putchar_hex_n
     ; alpha
     ; TODO arithmetic in assembler formula as well as in comment
     ; for alpha add the base ascii for 'a' but then sub 10 as hex 'a' is 10d => 'W'
     add a,'W'
     call putchar
     ret
-putchar_hex_n:
+_putchar_hex_n:
     ; for numeric add the base ascii for '0'
     add a,'0'
     call putchar
     ret
+
 ; TODO move functions into separate file
 
 ; STRINGS
