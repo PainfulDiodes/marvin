@@ -66,7 +66,10 @@ _hex_val_n:
     sub '0'
     ret
 
+; convert value in A into an ASCII pair and send to console
 putchar_hex:
+    push af
+    push bc
     ; stash in B
     ld b,a
     ; shift A right x4 e.g. transform 10110010 to 00001011
@@ -82,6 +85,8 @@ putchar_hex:
     and %00001111
     ; least significant digit
     call _putchar_hex_dgt
+    pop bc
+    pop af
     ret
 _putchar_hex_dgt:
     ; is it an alpha or numeric?
