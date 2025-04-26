@@ -21,7 +21,7 @@ start:
 
 prompt:
     ; point HL to the beginning of the input buffer
-    ld hl,BUFFER            
+    ld hl,CMD_BUFFER            
     ld a,'>'
     call putchar 
 
@@ -70,7 +70,7 @@ _get_cmd_end:
     ld(hl),a
 ; process command from buffer
     ; point to start of buffer
-    ld hl,BUFFER
+    ld hl,CMD_BUFFER
     ; load character from buffer
     ld a,(hl)
     ; end of string?
@@ -354,7 +354,6 @@ putchar_hex:
     call _putchar_hex_dgt
     ret
 _putchar_hex_dgt:
-    ; TODO hex using $ notation
     ; is it an alpha or numeric?
     cp $0a
     ; numeric
