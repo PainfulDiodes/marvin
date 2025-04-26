@@ -3,8 +3,16 @@
 ; /RXF = bit 1 
 ; As per:
 ; https://github.com/PainfulDiodes/z80-breadboard-computer
+; 
+; line endings are translated:
+; incoming line endings from the terminal are expected to be \r 
+; and are tranlslated to \n
+; (\r\n would count as 2 line endings)
+; and outgoing line endings are sent as \r\n
+; externally this is consistent with VT100/ANSI terminal behaviour
+; and internally line endings are always \n
 
-usb_read_char:              ; get character and return in A
+usb_readchar:               ; get character and return in A
     in a,(UM245R_CTRL)      ; get the USB status
     bit 1,a                 ; data to read? (active low)
     jr nz,_usb_no_char      ; no, the buffer is empty
@@ -16,18 +24,7 @@ usb_read_char:              ; get character and return in A
 _usb_no_char:
     ld a,0
     ret
-
-; TODO
-usb_has_char:               ; get character and return in A
-;    in a,(UM245R_CTRL)      ; get the USB status
-;    bit 1,a                 ; data to read? (active low)
-;    jr nz,usb_getchar       ; no, the buffer is empty
-;    in a,(UM245R_DATA)      ; yes, read the received char
-;    cp _r                   ; is CR?
-;    ret nz                  ; no - return
-;    ld a, _n                ; convert CR to LF
-    ret 
-
+    
 usb_putchar:
     cp _n                   ; newline?
     jr nz,_do_usb_put       ; no - just send the char
