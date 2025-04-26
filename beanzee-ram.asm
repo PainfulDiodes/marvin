@@ -7,7 +7,7 @@ ORG $8000
 ; start of user RAM
 RAMSTART equ $9000
 ; input buffer - start of system RAM
-BUFFER   equ $f000
+CMD_BUFFER   equ $f000
 ; stack should really be $0000 as the CPU will dec SP before PUSH
 STACK    equ $ffff
 

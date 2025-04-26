@@ -10,8 +10,7 @@ RAMSTART equ $9000
 KEYSCAN_BUFFER equ $f000
 
 ; input buffer - start of system RAM 
-; TODO rename
-BUFFER equ $f010
+CMD_BUFFER equ $f010
 
 ; this should really be $0000 as the CPU will dec SP before PUSH
 STACK equ $ffff
