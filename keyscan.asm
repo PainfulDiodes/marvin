@@ -160,33 +160,33 @@ _colscanend:
 
 ; define values for control keys
 ; modifiers have zero value
-QWERTY_CURS_UP equ 1
-QWERTY_CURS_DOWN equ 2
-QWERTY_CURS_LEFT equ 3
-QWERTY_CURS_RIGHT equ 4
-QWERTY_CAPS equ 5
 QWERTY_SHIFT_L equ 0
 QWERTY_SHIFT_R equ 0
 QWERTY_FN equ 0
 QWERTY_CTRL equ 0
 QWERTY_ALT equ 0
 QWERTY_CMD equ 0
+QWERTY_CURS_UP equ 1
+QWERTY_CURS_DOWN equ 2
+QWERTY_CURS_LEFT equ 3
+QWERTY_CURS_RIGHT equ 4
+QWERTY_CAPS equ 5
 QWERTY_UNDEFINED equ 12
 
 QWERTY_KEYMAP_L:
-    db '\e','1','2','3','4','5','6','7'
-    db '8','9','0','-','=','\b',QWERTY_CURS_UP,QWERTY_CURS_DOWN
-    db '\t','q','w','e','r','t','y','u'
-    db 'i','o','p','[',']','\n',QWERTY_CURS_LEFT,QWERTY_CURS_RIGHT
+    db ESC_E,'1','2','3','4','5','6','7'
+    db '8','9','0','-','=',ESC_B,QWERTY_CURS_UP,QWERTY_CURS_DOWN
+    db ESC_T,'q','w','e','r','t','y','u'
+    db 'i','o','p','[',']',ESC_N,QWERTY_CURS_LEFT,QWERTY_CURS_RIGHT
     db QWERTY_CAPS,'a','s','d','f','g','h','j'
-    db 'k','l',';','\'','\\',QWERTY_FN,QWERTY_CTRL,QWERTY_ALT
+    db 'k','l',';',QUOTE,SLASH,QWERTY_FN,QWERTY_CTRL,QWERTY_ALT
     db QWERTY_SHIFT_L,'`','z','x','c','v','b','n'
     db 'm',',','.','/',QWERTY_SHIFT_R,QWERTY_CMD,' ',QWERTY_UNDEFINED
 QWERTY_KEYMAP_U:
-    db '\e','!','@','#','$','%','^','&'
-    db '*','(',')','_','+','\b',QWERTY_CURS_UP,QWERTY_CURS_DOWN
-    db '\t','Q','W','E','R','T','Y','U'
-    db 'I','O','P','{','}','\n',QWERTY_CURS_LEFT,QWERTY_CURS_RIGHT
+    db ESC_E,'!','@','#','$','%','^','&'
+    db '*','(',')','_','+',ESC_B,QWERTY_CURS_UP,QWERTY_CURS_DOWN
+    db ESC_T,'Q','W','E','R','T','Y','U'
+    db 'I','O','P','{','}',ESC_N,QWERTY_CURS_LEFT,QWERTY_CURS_RIGHT
     db QWERTY_CAPS,'A','S','D','F','G','H','J'
     db 'K','L',':','"','|',QWERTY_FN,QWERTY_CTRL,QWERTY_ALT
     db QWERTY_SHIFT_L,'~','Z','X','C','V','B','N'

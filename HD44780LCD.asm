@@ -51,7 +51,7 @@ lcd_getchar:
 ; transmit character in A to the data port
 lcd_putchar:
     ; newline char?
-    cp '\n'
+    cp ESC_N
     jp nz,_lcd_putchar_printable
     ; newline - fill out the line until EOL
 _lcd_putchar_pad:

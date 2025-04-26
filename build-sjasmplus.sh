@@ -5,7 +5,7 @@
 # provide an org value to pack a HEX file
 #  ./build-sjasmplus.sh beanzee $8000
 
-set -x #echo on
+# set -x #echo on
 
 f=${1%.*} #extract base filename
 sjasmplus --lst=$f.lis --lstlab --raw=$f.bin --dirbol $f.asm

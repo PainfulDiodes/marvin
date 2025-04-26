@@ -4,8 +4,6 @@
 ; * https://github.com/PainfulDiodes
 ; ****************************************************
 
-include "escapestring.asm"
-
 ; MAIN PROGRAM LOOP
 
 ALIGN $10

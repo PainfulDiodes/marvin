@@ -7,3 +7,5 @@ ESC_T equ $09 ; \t
 ESC_N equ $0a ; \n
 ESC_R equ $0d ; \r
 ESC_E equ $1b ; \e
+SLASH equ $5c ; \\
+QUOTE equ $27 ; \'
