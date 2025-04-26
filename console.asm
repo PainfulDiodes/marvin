@@ -26,7 +26,11 @@ readchar:
 ALIGN $10
 
 putchar:
+    ; A is not guaranteed to be preserved in these calls, 
+    ; so preserve across the first call
+    push af
     call lcd_putchar
+    pop af
     call usb_putchar
     ret
 
