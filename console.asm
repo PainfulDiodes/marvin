@@ -1,40 +1,53 @@
 ALIGN $10
 
-getchar:                    ; get character and return in A
+; wait for a character and return in A
+getchar:
+    call readchar
+    cp 0
+    ret nz
+    jr getchar 
 
+ALIGN $10
+
+; read a character from the console and return it, 
+; or 0 if there is no character
+readchar:
+    ; check keyboard
     call keyscan
+    ; is there a character? 
     cp 0
+    ; yes: return it
     ret nz
-
-    call usb_read_char
-    cp 0
-    ret nz
-
-    jr getchar
+    ; no: check usb
+    call usb_readchar
+    ; return the result - 0 if no char
+    ret
 
 ALIGN $10
 
 putchar:
-
-    ; TODO push/pop needed? move them?
-    push af
     call lcd_putchar
-    pop af
-
     call usb_putchar
     ret
 
 ALIGN $10
 
-puts:                       ; print a zero-terminated string, pointed to by hl
+; print a zero-terminated string, pointed to by hl
+puts:
     push hl
 _puts_loop:
-    ld a,(hl)               ; get character from string
-    cp 0                    ; is it zero?
-    jr z, _puts_end          ; yes - return
-    call putchar            ; no - send character
-    inc hl                  ; next character position
-    jp _puts_loop            ; loop for next character
+    ; get character from string
+    ld a,(hl)
+    ; is it zero?
+    cp 0
+    ; yes
+    jr z, _puts_end
+    ; no: send character
+    call putchar
+    ; next character position
+    inc hl
+    ; loop for next character
+    jp _puts_loop
 _puts_end:
     pop hl
     ret
