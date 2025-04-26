@@ -3,7 +3,7 @@
 #  ./build.sh beanzee
 #  ./build.sh beanzee.asm
 # provide an org value to pack an Intel HEX file
-#  ./build.sh beanzee 0x8000
+#  ./build.sh beanzee $8000
 
 # set -x #echo on
 

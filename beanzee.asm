@@ -2,14 +2,14 @@
 ; https://github.com/PainfulDiodes/BeanZee/tree/v1.0.0
 ; https://github.com/PainfulDiodes/z80-breadboard-computer/tree/v1.0.0
 
-ORG 0x0000
+ORG $0000
 
 ; start of user RAM
-RAMSTART equ 0x8000
+RAMSTART equ $8000
 ; input buffer - start of system RAM
-BUFFER   equ 0xf000
-; stack should really be 0x0000 as the CPU will dec SP before PUSH
-STACK    equ 0xffff
+BUFFER   equ $f000
+; stack should really be $0000 as the CPU will dec SP before PUSH
+STACK    equ $ffff
 
     ld sp, STACK
     jp start

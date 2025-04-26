@@ -178,7 +178,7 @@ Marvin only supports a subset of the Intel HEX specification. For example:
 
 z88dk-appmake from the https://github.com/z88dk/z88dk tool set takes compiled or assembled binaries and prepares them for specific target environments. This tool supports creation of Intel HEX files, for example:
 
-    z88dk-appmake +hex --org 0x8000 -b myprogram.bin -o myprogram.hex
+    z88dk-appmake +hex --org $8000 -b myprogram.bin -o myprogram.hex
 
 Note the “org” option is used to add the load address for each row.
 
