@@ -22,13 +22,13 @@ lcd_putcmd:
     push bc
 ; save the transmit character
     ld b,a
-lcd_putcmd_loop: 
+_lcd_putcmd_loop: 
 ; get the LCD status
     in a,(LCD_CTRL)
 ; busy ?
     bit 7,a
 ; yes
-    jr nz,lcd_putcmd_loop
+    jr nz,_lcd_putcmd_loop
 ; no, restore the transmit character
     ld a,b
 ; transmit the character
@@ -50,55 +50,60 @@ lcd_getchar:
 
 ; transmit character in A to the data port
 lcd_putchar:
+    ; TODO necessary?
+    push af
     ; newline char?
     cp '\n'
-    jp nz,lcd_putchar_printable
+    jp nz,_lcd_putchar_printable
     ; newline - fill out the line until EOL
-lcd_putchar_pad:
+_lcd_putchar_pad:
     ld a,' '
-    call _lcd_putdata
+    call lcd_putdata
     cp LCD_EOL_0                
-    jp z,lcd_putchar_eol0
+    jp z,_lcd_putchar_eol0
     cp LCD_EOL_1                
-    jp z,lcd_putchar_eol1
+    jp z,_lcd_putchar_eol1
     cp LCD_EOL_2                
-    jp z,lcd_putchar_eol2
+    jp z,_lcd_putchar_eol2
     cp LCD_EOL_3                
-    jp z,lcd_putchar_eol3
-    jr lcd_putchar_pad ; loop until EOL
-lcd_putchar_printable:
-    call _lcd_putdata
+    jp z,_lcd_putchar_eol3
+    ; loop until EOL
+    jr _lcd_putchar_pad 
+_lcd_putchar_printable:
+    call lcd_putdata
 ; check for overflow - DDRAM address returned in A
     cp LCD_EOL_0                
-    jp z,lcd_putchar_eol0
+    jp z,_lcd_putchar_eol0
     cp LCD_EOL_1                
-    jp z,lcd_putchar_eol1
+    jp z,_lcd_putchar_eol1
     cp LCD_EOL_2                
-    jp z,lcd_putchar_eol2
+    jp z,_lcd_putchar_eol2
     cp LCD_EOL_3                
-    jp z,lcd_putchar_eol3
-    jp lcd_putchar_end
-lcd_putchar_eol0:
+    jp z,_lcd_putchar_eol3
+    jp _lcd_putchar_end
+_lcd_putchar_eol0:
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
 	call lcd_putcmd
-    jr lcd_putchar_end
-lcd_putchar_eol1:
+    jr _lcd_putchar_end
+_lcd_putchar_eol1:
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
 	call lcd_putcmd
-    jr lcd_putchar_end
-lcd_putchar_eol2:
+    jr _lcd_putchar_end
+_lcd_putchar_eol2:
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
 	call lcd_putcmd
-    jr lcd_putchar_end
-lcd_putchar_eol3:
+    jr _lcd_putchar_end
+_lcd_putchar_eol3:
     call lcd_scroll
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
 	call lcd_putcmd
-lcd_putchar_end:
+_lcd_putchar_end:
+    pop af
     ret
 
-; transmit character in A to the data port, return the DDRAM address where the character was sent
-_lcd_putdata:                     
+; transmit character in A to the data port, 
+; return in A the DDRAM address where the character was sent
+lcd_putdata:                     
     push bc
 ; save the transmit character
     ld b,a
@@ -155,7 +160,7 @@ _lcd_scroll_line_loop:
     dec a ; but we're zero based index so less 1
     call lcd_putcmd 
     ld a,c ; recover the value
-    call _lcd_putdata
+    call lcd_putdata
     djnz _lcd_scroll_line_loop
     ret
 _lcd_scroll_clear_line:
@@ -165,26 +170,6 @@ _lcd_scroll_clear_line:
     call lcd_putcmd 
 _lcd_scroll_clear_line_loop:
     ld a,' '
-    call _lcd_putdata
+    call lcd_putdata
     djnz _lcd_scroll_clear_line_loop
-    ret
-
-; print a zero-terminated string, pointed to by hl
-lcd_puts:
-    push hl
-lcd_puts_loop:
-; get character from string
-    ld a,(hl)
-; is it zero?
-    cp 0
-; yes - return
-    jr z, lcd_puts_end
-; no - send character
-    call lcd_putchar
-; next character position
-    inc hl
-; loop for next character
-    jp lcd_puts_loop
-lcd_puts_end:
-    pop hl
     ret
