@@ -37,7 +37,8 @@ keyscan:
     ld de,QWERTY_KEYMAP_U
 _keyscanloop:
     call _rowscan
-    call _colscan ; ASCII returned in A - or 0
+    ; ASCII returned in A, or 0
+    call _colscan 
     cp 0
     jp nz,_delay
     ; move the pointer of previous values to the next row slot
@@ -50,7 +51,7 @@ _keyscanloop:
     rl b                        
     ; loop if not done all rows
     jr nc,_keyscanloop          
-; key debounce
+    ; key debounce
 _delay:                         
     ; set a to the length of the delay
     ld b,DEBOUNCE_DELAY         
