@@ -10,8 +10,6 @@ include "escapestring.asm"
 
 ALIGN $10
 
-; TODO consider making these labels unique? start, prompt... m_start marvin_start ?
-
 start:
     ; point DE to zero - this is the default address argument for commands
     ld de,$0000
@@ -359,9 +357,8 @@ _putchar_hex_dgt:
     ; numeric
     jr c,_putchar_hex_n
     ; alpha
-    ; TODO arithmetic in assembler formula as well as in comment
-    ; for alpha add the base ascii for 'a' but then sub 10 as hex 'a' is 10d => 'W'
-    add a,'W'
+    ; for alpha add the base ascii for 'a' but then sub 10 / $0a as hex 'a' = 10d
+    add a,'a'-$0a
     call putchar
     ret
 _putchar_hex_n:
@@ -374,15 +371,19 @@ _putchar_hex_n:
 
 ; STRINGS
 
-alt_welcome_msg:    db "MARVIN v1.1.beta\n"
+alt_welcome_msg:
+                db "MARVIN v1.1.beta\n"
                 db "A simple Z80 homebrew monitor program\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n\n",0
 
-welcome_msg:    db "PainfulDiodes\n"
+welcome_msg:    
+                db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
                 db "v1.1.beta\n",0
 
-bad_cmd_msg:    db "Command not recognised\n",0
+bad_cmd_msg:    
+                db "Command not recognised\n",0
 
-cmd_w_null_msg: db "No data to write\n",0
+cmd_w_null_msg: 
+                db "No data to write\n",0
