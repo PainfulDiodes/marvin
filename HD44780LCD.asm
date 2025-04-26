@@ -69,7 +69,7 @@ _lcd_putchar_pad:
     jr _lcd_putchar_pad 
 _lcd_putchar_printable:
     call lcd_putdata
-; check for overflow - DDRAM address returned in A
+    ; check for overflow - DDRAM address returned in A
     cp LCD_EOL_0                
     jp z,_lcd_putchar_eol0
     cp LCD_EOL_1                
@@ -102,22 +102,22 @@ _lcd_putchar_end:
 ; return in A the DDRAM address where the character was sent
 lcd_putdata:                     
     push bc
-; save the transmit character
+    ; save the transmit character
     ld b,a
 _lcd_putdata_loop: 
-; get the LCD status
+    ; get the LCD status
     in a,(LCD_CTRL)
-; busy ?
+    ; busy ?
     bit 7,a
-; yes
+    ; yes
     jr nz,_lcd_putdata_loop
-; no, reset the 'busy' bit and preserve the DDRAM address
+    ; no, reset the 'busy' bit and preserve the DDRAM address
     and %01111111
     ld c,a
-; restore the transmit character and send it
+    ; restore the transmit character and send it
     ld a,b
     out (LCD_DATA),a
-; restore the DDRAM address
+    ; restore the DDRAM address
     ld a,c
     pop bc
     ret
@@ -146,17 +146,25 @@ _lcd_scroll_line:
     ; e = destination line to copy to
     ld b,LCD_LINE_LEN
 _lcd_scroll_line_loop:
-    ld a,d ; source
-    add b ; character counter is an offset
-    dec a ; but we're zero based index so less 1
+    ; load source
+    ld a,d 
+    ; character counter is an offset
+    add b 
+    ; zero based index so -1
+    dec a 
     call lcd_putcmd 
     call lcd_getchar
-    ld c,a ; stash the value
-    ld a,e ; destination
-    add b ; character counter is an offset
-    dec a ; but we're zero based index so less 1
+    ; stash the value
+    ld c,a 
+    ; load destination
+    ld a,e 
+    ; character counter is an offset
+    add b 
+    ; zero based index so -1
+    dec a
     call lcd_putcmd 
-    ld a,c ; recover the value
+    ; recover the stashed value
+    ld a,c 
     call lcd_putdata
     djnz _lcd_scroll_line_loop
     ret

@@ -4,15 +4,18 @@
 
 ORG 0x8000
 
-RAMSTART equ 0x9000        ; start of user RAM
-BUFFER   equ 0xf000        ; input buffer - start of system RAM
-STACK    equ 0xffff        ; this should really be 0x0000 as the CPU will dec SP before PUSH
+; start of user RAM
+RAMSTART equ 0x9000
+; input buffer - start of system RAM
+BUFFER   equ 0xf000
+; stack should really be 0x0000 as the CPU will dec SP before PUSH
+STACK    equ 0xffff
 
     ld sp, STACK
     jp start
 
 include "UM245R.asm"
-UM245R_CTRL equ 0          ; serial control port
-UM245R_DATA equ 1          ; serial data port
+UM245R_CTRL equ 0 ; serial control port
+UM245R_DATA equ 1 ; serial data port
 
 include "marvin.asm"

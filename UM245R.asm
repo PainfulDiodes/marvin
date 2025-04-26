@@ -12,22 +12,32 @@
 ; externally this is consistent with VT100/ANSI terminal behaviour
 ; and internally line endings are always \n
 
-usb_readchar:               ; get character and return in A
-    in a,(UM245R_CTRL)      ; get the USB status
-    bit 1,a                 ; data to read? (active low)
-    jr nz,_usb_no_char      ; no, the buffer is empty
-    in a,(UM245R_DATA)      ; yes, read the received char
-    cp _r                   ; is CR?
-    ret nz                  ; no - return
-    ld a, _n                ; convert CR to LF
+; get character and return in A
+usb_readchar:
+    ; get the USB status
+    in a,(UM245R_CTRL)
+    ; data to read? (active low)
+    bit 1,a
+    ; no, the buffer is empty
+    jr nz,_usb_no_char
+    ; yes, read the received char
+    in a,(UM245R_DATA)
+    ; is CR?
+    cp _r
+    ; no:
+    ret nz
+    ; yes: convert CR to LF
+    ld a, _n
     ret 
 _usb_no_char:
     ld a,0
     ret
     
 usb_putchar:
-    cp _n                   ; newline?
-    jr nz,_do_usb_put       ; no - just send the char
+    ; newline?
+    cp _n
+    ; no: just send the char
+    jr nz,_do_usb_put
     ld a, _r
     call _usb_put
     ld a, _n
@@ -35,14 +45,21 @@ _do_usb_put:
     call _usb_put
     ret
 
-_usb_put:                   ; transmit character in A
+; transmit character in A
+_usb_put:
     push bc
-    ld b,a                  ; save the transmit character
+    ; stash the transmit character
+    ld b,a
 _usb_put_loop: 
-    in a,(UM245R_CTRL)      ; get the USB status
-    bit 0,a                 ; ready to transmit? (active low)
-    jr nz,_usb_put_loop     ; no, bit is high
-    ld a,b                  ; yes, restore the transmit character
-    out (UM245R_DATA),a     ; transmit the character
+    ; get the USB status
+    in a,(UM245R_CTRL)
+    ; ready to transmit? (active low)
+    bit 0,a
+    ; no: bit is high
+    jr nz,_usb_put_loop
+    ; yes: restore the stashed transmit character
+    ld a,b
+    ; transmit the character
+    out (UM245R_DATA),a
     pop bc
     ret
