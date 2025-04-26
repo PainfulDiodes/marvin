@@ -115,7 +115,7 @@ _cmd_read:
     ld e,a
 _cmd_read_row:
     ; initialise byte counter - each row will have this many bytes
-    ld c, 0x10
+    ld c, $10
     ; print DE content: the read address
     ld a,d
     call putchar_hex
@@ -321,7 +321,7 @@ hex_to_num:
     ; no: uppercase/numeric
     jr c,_hex_to_num_un
     ; yes: alphabetic
-    sub 'a'-0x0a
+    sub 'a'-$0a
     ret
 _hex_to_num_un:
     ; is it uppercase alphabetic?
@@ -329,7 +329,7 @@ _hex_to_num_un:
     ; no: numeric
     jr c,_hex_to_num_n       
     ; y:
-    sub 'A'-0x0a
+    sub 'A'-$0a
     ret
 _hex_to_num_n:
     ; numeric
@@ -356,7 +356,7 @@ putchar_hex:
 _putchar_hex_dgt:
     ; TODO hex using $ notation
     ; is it an alpha or numeric?
-    cp 0x0a
+    cp $0a
     ; numeric
     jr c,_putchar_hex_n
     ; alpha
