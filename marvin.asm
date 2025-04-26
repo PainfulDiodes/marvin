@@ -264,8 +264,6 @@ _cmd_load_data:
 _cmd_load_end:
     jp prompt
 
-include "strings.asm"
-
 alt_welcome_msg:
                 db "MARVIN v1.1.beta\n"
                 db "A simple Z80 homebrew monitor program\n"
