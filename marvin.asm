@@ -102,11 +102,11 @@ _cmd_read:
     ; yes: no address argument, so skip to read row
     jr z, _cmd_read_row
     ; parse first pair of characters
-    call hex_val
+    call hex_byte_val
     ; load into upper byte of memory pointer
     ld d,a
     ; parse second pair of characters
-    call hex_val
+    call hex_byte_val
     ; load into lower byte of memory pointer
     ld e,a
 _cmd_read_row:
@@ -154,11 +154,11 @@ _cmd_write:
     ; yes: no data
     jr z, _cmd_write_null
     ; parse first pair of characters - address high
-    call hex_val
+    call hex_byte_val
     ; load into upper byte of memory pointer
     ld d,a
     ; parse second pair of characters - address low
-    call hex_val
+    call hex_byte_val
     ; load into lower byte of memory pointer
     ld e,a
 _cmd_write_data:
@@ -169,7 +169,7 @@ _cmd_write_data:
     ; yes: we're done
     jr z, _cmd_write_end
     ; parse data byte
-    call hex_val
+    call hex_byte_val
     ; write byte to memory
     ld (de),a
     ; advance destination pointer
@@ -195,11 +195,11 @@ _cmd_execute:
     ; yes - no data
     jp z, _cmd_exec_df
     ; parse first pair of characters - address high
-    call hex_val
+    call hex_byte_val
     ; load into upper byte of memory pointer
     ld d,a
     ; parse second pair of characters - address low
-    call hex_val
+    call hex_byte_val
     ; load into lower byte of memory pointer
     ld e,a
     ld hl,de
@@ -222,22 +222,22 @@ _cmd_load:
     ; yes: no data - quit
     jp z, _cmd_load_end
     ; parse first pair of characters - byte count
-    call hex_val
+    call hex_byte_val
     cp 0 
     ; yes - zero byte count - quit 
     jp z, _cmd_load_end
     ; load byte count into C
     ld c,a
     ; parse address high
-    call hex_val
+    call hex_byte_val
     ; load into upper byte of memory pointer
     ld d,a
     ; parse address low
-    call hex_val
+    call hex_byte_val
     ; load into lower byte of memory pointer
     ld e,a
     ; parse record type
-    call hex_val
+    call hex_byte_val
     ; record type zero?
     cp 0
     ; no: quit 
@@ -251,7 +251,7 @@ _cmd_load_data:
     jr z, _cmd_load_end
     ; no:
     ; parse data byte
-    call hex_val
+    call hex_byte_val
     ; write byte to memory
     ld (de),a
     ; advance destination pointer
@@ -267,7 +267,7 @@ _cmd_load_end:
 ; SUBROUTINES
 
 ; read 2 ASCII hex chars from HL pointer, return converted value in A and advance HL pointer
-hex_val:
+hex_byte_val:
     ; preserve BC
     push bc
     ; load 1st character from memory
@@ -275,12 +275,12 @@ hex_val:
     ; end of string?
     cp 0
     ; yes: no value - return zero
-    jr z,_hex_byte_zero
+    jr z,_hex_byte_val_zero
     ; no:
     ; advance the buffer pointer
     inc hl
     ; convert first hex digit
-    call hex_to_num
+    call hex_val
     ; shift left 4 bits to put value into top nibble
     sla a
     sla a
@@ -293,17 +293,17 @@ hex_val:
     ; end of string?
     cp 0
     ; yes: incomplete byte - return zero 
-    jr z,_hex_byte_zero
+    jr z,_hex_byte_val_zero
     ; advance the buffer pointer
     inc hl
     ; and convert 2nd hex digit
-    call hex_to_num         
+    call hex_val         
     ; add first and second digits
     add a,b
     ; restore BC
     pop bc
     ret
-_hex_byte_zero:
+_hex_byte_val_zero:
     ; zero return value
     ld a,0
     ; restore BC
@@ -311,23 +311,23 @@ _hex_byte_zero:
     ret
 
 ; convert an ASCII hex char in A to a number value (lower 4 bits)
-hex_to_num:
+hex_val:
     ; is it lowercase alphabetic?
     cp 'a'                  
     ; no: uppercase/numeric
-    jr c,_hex_to_num_un
+    jr c,_hex_val_u_n
     ; yes: alphabetic
     sub 'a'-$0a
     ret
-_hex_to_num_un:
+_hex_val_u_n:
     ; is it uppercase alphabetic?
     cp 'A'
     ; no: numeric
-    jr c,_hex_to_num_n       
+    jr c,_hex_val_n       
     ; y:
     sub 'A'-$0a
     ret
-_hex_to_num_n:
+_hex_val_n:
     ; numeric
     sub '0'
     ret
