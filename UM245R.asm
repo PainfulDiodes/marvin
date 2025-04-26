@@ -23,11 +23,11 @@ usb_readchar:
     ; yes, read the received char
     in a,(UM245R_DATA)
     ; is CR?
-    cp _r
+    cp ESC_R
     ; no:
     ret nz
     ; yes: convert CR to LF
-    ld a, _n
+    ld a, ESC_N
     ret 
 _usb_no_char:
     ld a,0
@@ -35,12 +35,12 @@ _usb_no_char:
     
 usb_putchar:
     ; newline?
-    cp _n
+    cp ESC_N
     ; no: just send the char
     jr nz,_do_usb_put
-    ld a, _r
+    ld a, ESC_R
     call _usb_put
-    ld a, _n
+    ld a, ESC_N
 _do_usb_put:
     call _usb_put
     ret
