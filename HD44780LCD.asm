@@ -50,8 +50,6 @@ lcd_getchar:
 
 ; transmit character in A to the data port
 lcd_putchar:
-    ; TODO necessary?
-    push af
     ; newline char?
     cp '\n'
     jp nz,_lcd_putchar_printable
@@ -98,7 +96,6 @@ _lcd_putchar_eol3:
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
 	call lcd_putcmd
 _lcd_putchar_end:
-    pop af
     ret
 
 ; transmit character in A to the data port, 
