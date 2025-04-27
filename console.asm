@@ -12,13 +12,16 @@ ALIGN $10
 ; read a character from the console and return it, 
 ; or 0 if there is no character
 readchar:
+IF BEANBOARD
     ; check keyboard
     call keyscan
     ; is there a character? 
     cp 0
     ; yes: return it
     ret nz
-    ; no: check usb
+    ; no: 
+ENDIF
+    ; check usb
     call usb_readchar
     ; return the result - 0 if no char
     ret
@@ -28,9 +31,11 @@ ALIGN $10
 putchar:
     ; A is not guaranteed to be preserved in these calls, 
     ; so preserve across the first call
+IF BEANBOARD
     push af
     call lcd_putchar
     pop af
+ENDIF
     call usb_putchar
     ret
 
