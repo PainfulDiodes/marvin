@@ -2,16 +2,16 @@
 ; https://github.com/PainfulDiodes/BeanZee
 ; https://github.com/PainfulDiodes/BeanBoard
 
+BEANBOARD EQU 1
+
 ORG $8000
 
 ; start of user RAM
 RAMSTART equ $9000
 ; 8-byte keyscan buffer
 KEYSCAN_BUFFER equ $f000
-
 ; input buffer - start of system RAM 
 CMD_BUFFER equ $f010
-
 ; this should really be $0000 as the CPU will dec SP before PUSH
 STACK equ $ffff
 
