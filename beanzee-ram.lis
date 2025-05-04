@@ -4,14 +4,14 @@ beanzee-ram.asm:
      3                          
      4                          BEANBOARD EQU 0
      5                          
-     6                          ORG $8000
+     6                          ORG 0x8000
      7                          
      8                          ; start of user RAM
-     9                          RAMSTART equ $9000
+     9                          RAMSTART equ 0x9000
     10                          ; input buffer - start of system RAM
-    11                          CMD_BUFFER equ $f010
-    12                          ; this should really be $0000 as the CPU will dec SP before PUSH
-    13                          STACK equ $ffff
+    11                          CMD_BUFFER equ 0xf010
+    12                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
+    13                          STACK equ 0xffff
     14                          
     15                          UM245R_CTRL equ 0 ; serial control port
     16                          UM245R_DATA equ 1 ; serial data port
