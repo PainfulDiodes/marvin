@@ -1,4 +1,4 @@
-ALIGN $10
+ALIGN 0x10
 
 ; wait for a character and return in A
 getchar:
@@ -7,7 +7,7 @@ getchar:
     ret nz
     jr getchar 
 
-ALIGN $10
+ALIGN 0x10
 
 ; read a character from the console and return it, 
 ; or 0 if there is no character
@@ -26,7 +26,7 @@ ENDIF
     ; return the result - 0 if no char
     ret
 
-ALIGN $10
+ALIGN 0x10
 
 putchar:
     ; A is not guaranteed to be preserved in these calls, 
@@ -39,7 +39,7 @@ ENDIF
     call usb_putchar
     ret
 
-ALIGN $10
+ALIGN 0x10
 
 ; print a zero-terminated string, pointed to by hl
 puts:

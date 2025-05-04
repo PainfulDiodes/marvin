@@ -100,7 +100,7 @@ HD44780LCD.inc:
 beanboard-ram.asm:
     32                          include "console.asm"
 console.asm:
-     1  000c  00000000          ALIGN $10
+     1  000c  00000000          ALIGN 0x10
      2                          
      3                          ; wait for a character and return in A
      4                          getchar:
@@ -109,7 +109,7 @@ console.asm:
      7  0015  c0                    ret nz
      8  0016  18f8                  jr getchar
      9                          
-    10  0018  0000000000000000  ALIGN $10
+    10  0018  0000000000000000  ALIGN 0x10
     11                          
     12                          ; read a character from the console and return it,
     13                          ; or 0 if there is no character
@@ -128,7 +128,7 @@ console.asm:
     26                              ; return the result - 0 if no char
     27  0029  c9                    ret
     28                          
-    29  002a  000000000000      ALIGN $10
+    29  002a  000000000000      ALIGN 0x10
     30                          
     31                          putchar:
     32                              ; A is not guaranteed to be preserved in these calls,
@@ -141,7 +141,7 @@ console.asm:
     39  0035  cd6000                call usb_putchar
     40  0038  c9                    ret
     41                          
-    42  0039  00000000000000    ALIGN $10
+    42  0039  00000000000000    ALIGN 0x10
     43                          
     44                          ; print a zero-terminated string, pointed to by hl
     45                          puts:
