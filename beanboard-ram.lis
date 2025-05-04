@@ -46,56 +46,56 @@ beanboard-ram.asm:
     31                          include "HD44780LCD.inc"
 HD44780LCD.inc:
      1                          ; LCD commands
-     2                          LCD_CLEAR_DISPLAY equ $01
-     3                          LCD_RETURN_HOME equ $02
-     4                          LCD_ENTRY_MODE_SET equ $04
-     5                          LCD_DISPLAY_ON_OFF_CONTROL equ $08
-     6                          LCD_CURSOR_DISPLAY_SHIFT equ $10
-     7                          LCD_FUNCTION_SET equ $20
-     8                          LCD_SET_CGRAM_ADDR equ $40
-     9                          LCD_SET_DDRAM_ADDR equ $80
+     2                          LCD_CLEAR_DISPLAY equ 0x01
+     3                          LCD_RETURN_HOME equ 0x02
+     4                          LCD_ENTRY_MODE_SET equ 0x04
+     5                          LCD_DISPLAY_ON_OFF_CONTROL equ 0x08
+     6                          LCD_CURSOR_DISPLAY_SHIFT equ 0x10
+     7                          LCD_FUNCTION_SET equ 0x20
+     8                          LCD_SET_CGRAM_ADDR equ 0x40
+     9                          LCD_SET_DDRAM_ADDR equ 0x80
     10                          
     11                          ; LCD_ENTRY_MODE_SET options
-    12                          LCD_ENTRY_INC equ $02 ; left
-    13                          LCD_ENTRY_DEC equ $00 ; right
-    14                          LCD_ENTRY_SHIFT equ $01
-    15                          LCD_ENTRY_NO_SHIFT equ $00
+    12                          LCD_ENTRY_INC equ 0x02 ; left
+    13                          LCD_ENTRY_DEC equ 0x00 ; right
+    14                          LCD_ENTRY_SHIFT equ 0x01
+    15                          LCD_ENTRY_NO_SHIFT equ 0x00
     16                          
     17                          ; LCD_DISPLAY_ON_OFF_CONTROL options
-    18                          LCD_DISPLAY_ON equ $04
-    19                          LCD_DISPLAY_OFF equ $00
-    20                          LCD_CURSOR_ON equ $02
-    21                          LCD_CURSOR_OFF equ $00
-    22                          LCD_BLINK_ON equ $01
-    23                          LCD_BLINK_OFF equ $00
+    18                          LCD_DISPLAY_ON equ 0x04
+    19                          LCD_DISPLAY_OFF equ 0x00
+    20                          LCD_CURSOR_ON equ 0x02
+    21                          LCD_CURSOR_OFF equ 0x00
+    22                          LCD_BLINK_ON equ 0x01
+    23                          LCD_BLINK_OFF equ 0x00
     24                          
     25                          ; LCD_CURSOR_DISPLAY_SHIFT options
-    26                          LCD_SHIFT_DISPLAY equ $08
-    27                          LCD_SHIFT_CURSOR equ $00
-    28                          LCD_SHIFT_RIGHT equ $04
-    29                          LCD_SHIFT_LEFT equ $00
+    26                          LCD_SHIFT_DISPLAY equ 0x08
+    27                          LCD_SHIFT_CURSOR equ 0x00
+    28                          LCD_SHIFT_RIGHT equ 0x04
+    29                          LCD_SHIFT_LEFT equ 0x00
     30                          
     31                          ; LCD_FUNCTION_SET options
-    32                          LCD_DATA_LEN_8 equ $10
-    33                          LCD_DATA_LEN_4 equ $00
-    34                          LCD_DISP_LINES_2 equ $08
-    35                          LCD_DISP_LINES_1 equ $00
-    36                          LCD_FONT_10 equ $04
-    37                          LCD_FONT_8 equ $00
+    32                          LCD_DATA_LEN_8 equ 0x10
+    33                          LCD_DATA_LEN_4 equ 0x00
+    34                          LCD_DISP_LINES_2 equ 0x08
+    35                          LCD_DISP_LINES_1 equ 0x00
+    36                          LCD_FONT_10 equ 0x04
+    37                          LCD_FONT_8 equ 0x00
     38                          
-    39                          LCD_LINE_LEN equ $14
+    39                          LCD_LINE_LEN equ 0x14
     40                          LCD_NUM_LINES equ 4
     41                          LCD_BUFFER_LEN equ LCD_LINE_LEN*LCD_NUM_LINES
     42                          
     43                          ; LCD_SET_DDRAM_ADDR options
-    44                          LCD_LINE_0_ADDR equ $00
-    45                          LCD_LINE_1_ADDR equ $40
-    46                          LCD_LINE_2_ADDR equ $00+LCD_LINE_LEN
-    47                          LCD_LINE_3_ADDR equ $40+LCD_LINE_LEN
-    48                          LCD_EOL_0 equ $00+LCD_LINE_LEN-1
-    49                          LCD_EOL_1 equ $40+LCD_LINE_LEN-1
-    50                          LCD_EOL_2 equ $00+LCD_LINE_LEN*2-1
-    51                          LCD_EOL_3 equ $40+LCD_LINE_LEN*2-1
+    44                          LCD_LINE_0_ADDR equ 0x00
+    45                          LCD_LINE_1_ADDR equ 0x40
+    46                          LCD_LINE_2_ADDR equ 0x00+LCD_LINE_LEN
+    47                          LCD_LINE_3_ADDR equ 0x40+LCD_LINE_LEN
+    48                          LCD_EOL_0 equ 0x00+LCD_LINE_LEN-1
+    49                          LCD_EOL_1 equ 0x40+LCD_LINE_LEN-1
+    50                          LCD_EOL_2 equ 0x00+LCD_LINE_LEN*2-1
+    51                          LCD_EOL_3 equ 0x40+LCD_LINE_LEN*2-1
     52                          
 beanboard-ram.asm:
     32                          include "console.asm"
