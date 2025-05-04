@@ -29,13 +29,13 @@ escapestring.inc:
      2                          ; sjasmplus requires double quotes around escape sequences: "\n" and would not interpret '\n' but truncate
      3                          ; z88dk-z80asm requires single quotes around so would correctly interpret '\n' but reject "\n"
      4                          
-     5                          ESC_B equ $08 ; \b
-     6                          ESC_T equ $09 ; \t
-     7                          ESC_N equ $0a ; \n
-     8                          ESC_R equ $0d ; \r
-     9                          ESC_E equ $1b ; \e
-    10                          SLASH equ $5c ; \\
-    11                          QUOTE equ $27 ; \'
+     5                          ESC_B equ 0x08 ; \b
+     6                          ESC_T equ 0x09 ; \t
+     7                          ESC_N equ 0x0a ; \n
+     8                          ESC_R equ 0x0d ; \r
+     9                          ESC_E equ 0x1b ; \e
+    10                          SLASH equ 0x5c ; \\
+    11                          QUOTE equ 0x27 ; \'
     12                          
 beanzee-ram.asm:
     26                          include "console.asm"
