@@ -51,7 +51,7 @@ hex_val:
     ; no: uppercase/numeric
     jr c,_hex_val_u_n
     ; yes: alphabetic
-    sub 'a'-$0a
+    sub 'a'-0x0a
     ret
 _hex_val_u_n:
     ; is it uppercase alphabetic?
@@ -59,7 +59,7 @@ _hex_val_u_n:
     ; no: numeric
     jr c,_hex_val_n       
     ; y:
-    sub 'A'-$0a
+    sub 'A'-0x0a
     ret
 _hex_val_n:
     ; numeric
@@ -90,12 +90,12 @@ putchar_hex:
     ret
 _putchar_hex_dgt:
     ; is it an alpha or numeric?
-    cp $0a
+    cp 0x0a
     ; numeric
     jr c,_putchar_hex_n
     ; alpha
-    ; for alpha add the base ascii for 'a' but then sub 10 / $0a as hex 'a' = 10d
-    add a,'a'-$0a
+    ; for alpha add the base ascii for 'a' but then sub 10 / 0x0a as hex 'a' = 10d
+    add a,'a'-0x0a
     call putchar
     ret
 _putchar_hex_n:
