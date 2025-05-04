@@ -112,7 +112,7 @@ _lcd_putdata_loop:
     ; yes
     jr nz,_lcd_putdata_loop
     ; no, reset the 'busy' bit and preserve the DDRAM address
-    and %01111111
+    and 0b01111111
     ld c,a
     ; restore the transmit character and send it
     ld a,b

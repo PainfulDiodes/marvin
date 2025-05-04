@@ -626,7 +626,7 @@ strings.asm:
     82                              ; recover from stash
     83  0286  78                    ld a,b
     84                              ; clear the top 4 bits
-    85  0287  e60f                  and %00001111
+    85  0287  e60f                  and 0b00001111
     86                              ; least significant digit
     87  0289  cd8f02                call _putchar_hex_dgt
     88  028c  c1                    pop bc
@@ -765,7 +765,7 @@ HD44780LCD.asm:
    112                              ; yes
    113  032a  20fa                  jr nz,_lcd_putdata_loop
    114                              ; no, reset the 'busy' bit and preserve the DDRAM address
-   115  032c  e67f                  and %01111111
+   115  032c  e67f                  and 0b01111111
    116  032e  4f                    ld c,a
    117                              ; restore the transmit character and send it
    118  032f  78                    ld a,b
@@ -836,8 +836,8 @@ beanboard-ram.asm:
     37                          include "keyscan.asm"
 keyscan.asm:
      1                          DEBOUNCE_DELAY equ 0xf0
-     2                          MOD_KEY_SHIFT_L equ %00000010
-     3                          MOD_KEY_SHIFT_R equ %00000001
+     2                          MOD_KEY_SHIFT_L equ 0b00000010
+     3                          MOD_KEY_SHIFT_R equ 0b00000001
      4                          
      5                          ; initialise keyscan
      6                          keyscan_init:
@@ -934,20 +934,20 @@ keyscan.asm:
     97                          ; get bitmap representing modifier keys:
     98                          ; return value in A
     99                          _modifierkeys:
-   100  03c9  3e40                  ld a,%01000000 ; row 7
+   100  03c9  3e40                  ld a,0b01000000 ; row 7
    101                              ; output row strobe
    102  03cb  d302                  out (KEYSCAN_OUT),a
    103                              ; get column values
    104  03cd  db03                  in a,(KEYSCAN_IN)
-   105  03cf  e601                  and %00000001 ; row 7, bit 1 is LEFT SHIFT
+   105  03cf  e601                  and 0b00000001 ; row 7, bit 1 is LEFT SHIFT
    106                              ; left shift modifier
    107  03d1  200d                  jr nz,_modifier_l_shift
-   108  03d3  3e80                  ld a,%10000000 ; row 8
+   108  03d3  3e80                  ld a,0b10000000 ; row 8
    109                              ; output row strobe
    110  03d5  d302                  out (KEYSCAN_OUT),a
    111                              ; get column values
    112  03d7  db03                  in a,(KEYSCAN_IN)
-   113  03d9  e610                  and %00010000 ; row 8, bit 5 is RIGHT SHIFT
+   113  03d9  e610                  and 0b00010000 ; row 8, bit 5 is RIGHT SHIFT
    114                              ; left shift modifier
    115  03db  2006                  jr nz,_modifier_r_shift
    116                              ; no modifiers

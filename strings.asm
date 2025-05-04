@@ -82,7 +82,7 @@ putchar_hex:
     ; recover from stash
     ld a,b
     ; clear the top 4 bits
-    and %00001111
+    and 0b00001111
     ; least significant digit
     call _putchar_hex_dgt
     pop bc

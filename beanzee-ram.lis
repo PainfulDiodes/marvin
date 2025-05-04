@@ -569,7 +569,7 @@ strings.asm:
     82                              ; recover from stash
     83  0286  78                    ld a,b
     84                              ; clear the top 4 bits
-    85  0287  e60f                  and %00001111
+    85  0287  e60f                  and 0b00001111
     86                              ; least significant digit
     87  0289  cd8f02                call _putchar_hex_dgt
     88  028c  c1                    pop bc
