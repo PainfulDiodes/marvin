@@ -186,11 +186,11 @@ marvin.asm:
      6                          
      7                          ; MAIN PROGRAM LOOP
      8                          
-     9  007c  00000000          ALIGN $10
+     9  007c  00000000          ALIGN 0x10
     10                          
     11                          start:
     12                              ; point DE to zero - this is the default address argument for commands
-    13  0080  110000                ld de,$0000
+    13  0080  110000                ld de,0x0000
     14                          
     15  0083  21ee01                ld hl,welcome_msg
     16  0086  cd4000                call puts
@@ -291,7 +291,7 @@ marvin.asm:
    111  00e7  5f                    ld e,a
    112                          _cmd_read_row:
    113                              ; initialise byte counter - each row will have this many bytes
-   114  00e8  0e10                  ld c, $10
+   114  00e8  0e10                  ld c, 0x10
    115                              ; print DE content: the read address
    116  00ea  7a                    ld a,d
    117  00eb  cd7802                call putchar_hex
@@ -538,7 +538,7 @@ strings.asm:
     51                              ; no: uppercase/numeric
     52  0269  3803                  jr c,_hex_val_u_n
     53                              ; yes: alphabetic
-    54  026b  d657                  sub 'a'-$0a
+    54  026b  d657                  sub 'a'-0x0a
     55  026d  c9                    ret
     56                          _hex_val_u_n:
     57                              ; is it uppercase alphabetic?
@@ -546,7 +546,7 @@ strings.asm:
     59                              ; no: numeric
     60  0270  3803                  jr c,_hex_val_n
     61                              ; y:
-    62  0272  d637                  sub 'A'-$0a
+    62  0272  d637                  sub 'A'-0x0a
     63  0274  c9                    ret
     64                          _hex_val_n:
     65                              ; numeric
@@ -577,12 +577,12 @@ strings.asm:
     90  028e  c9                    ret
     91                          _putchar_hex_dgt:
     92                              ; is it an alpha or numeric?
-    93  028f  fe0a                  cp $0a
+    93  028f  fe0a                  cp 0x0a
     94                              ; numeric
     95  0291  3806                  jr c,_putchar_hex_n
     96                              ; alpha
-    97                              ; for alpha add the base ascii for 'a' but then sub 10 / $0a as hex 'a' = 10d
-    98  0293  c657                  add a,'a'-$0a
+    97                              ; for alpha add the base ascii for 'a' but then sub 10 / 0x0a as hex 'a' = 10d
+    98  0293  c657                  add a,'a'-0x0a
     99  0295  cd3000                call putchar
    100  0298  c9                    ret
    101                          _putchar_hex_n:

@@ -6,11 +6,11 @@
 
 ; MAIN PROGRAM LOOP
 
-ALIGN $10
+ALIGN 0x10
 
 start:
     ; point DE to zero - this is the default address argument for commands
-    ld de,$0000
+    ld de,0x0000
 
     ld hl,welcome_msg
     call puts
@@ -111,7 +111,7 @@ _cmd_read:
     ld e,a
 _cmd_read_row:
     ; initialise byte counter - each row will have this many bytes
-    ld c, $10
+    ld c, 0x10
     ; print DE content: the read address
     ld a,d
     call putchar_hex
