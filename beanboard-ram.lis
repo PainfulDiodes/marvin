@@ -835,7 +835,7 @@ HD44780LCD.asm:
 beanboard-ram.asm:
     37                          include "keyscan.asm"
 keyscan.asm:
-     1                          DEBOUNCE_DELAY equ $f0
+     1                          DEBOUNCE_DELAY equ 0xf0
      2                          MOD_KEY_SHIFT_L equ %00000010
      3                          MOD_KEY_SHIFT_R equ %00000001
      4                          
@@ -860,9 +860,9 @@ keyscan.asm:
     23  038a  d5                    push de
     24  038b  e5                    push hl
     25                              ; initial row bit - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-    26  038c  0601                  ld b,$01
+    26  038c  0601                  ld b,0x01
     27                              ; row counter - 0 => 7
-    28  038e  0e00                  ld c,$00
+    28  038e  0e00                  ld c,0x00
     29                              ; location of previous values
     30  0390  2100f0                ld hl,KEYSCAN_BUFFER
     31  0393  cdc903                call _modifierkeys
@@ -967,7 +967,7 @@ keyscan.asm:
    130                              ; preserve registers
    131  03e6  c5                    push bc
    132                              ; initialise col bit mask - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-   133  03e7  0e01                  ld c,$01
+   133  03e7  0e01                  ld c,0x01
    134                              ; stash the bitmap
    135  03e9  47                    ld b,a
    136                          _colscanloop:

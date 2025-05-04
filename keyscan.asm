@@ -1,4 +1,4 @@
-DEBOUNCE_DELAY equ $f0
+DEBOUNCE_DELAY equ 0xf0
 MOD_KEY_SHIFT_L equ %00000010
 MOD_KEY_SHIFT_R equ %00000001
 
@@ -23,9 +23,9 @@ keyscan:
     push de
     push hl
     ; initial row bit - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-    ld b,$01                    
+    ld b,0x01                    
     ; row counter - 0 => 7
-    ld c,$00                    
+    ld c,0x00                    
     ; location of previous values
     ld hl,KEYSCAN_BUFFER
     call _modifierkeys
@@ -130,7 +130,7 @@ _colscan:
     ; preserve registers
     push bc
     ; initialise col bit mask - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-    ld c,$01
+    ld c,0x01
     ; stash the bitmap
     ld b,a                    
 _colscanloop:
