@@ -5,6 +5,7 @@ lst
 *.bin
 *.hex
 *.lst
+*.lis
 *.o
 *.map
 *.sym
