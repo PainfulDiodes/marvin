@@ -1,6 +1,6 @@
 DEBOUNCE_DELAY equ 0xf0
-MOD_KEY_SHIFT_L equ %00000010
-MOD_KEY_SHIFT_R equ %00000001
+MOD_KEY_SHIFT_L equ 0b00000010
+MOD_KEY_SHIFT_R equ 0b00000001
 
 ; initialise keyscan
 keyscan_init:
@@ -97,20 +97,20 @@ _rowscan:
 ; get bitmap representing modifier keys:  
 ; return value in A
 _modifierkeys:                       
-    ld a,%01000000 ; row 7
+    ld a,0b01000000 ; row 7
     ; output row strobe
     out (KEYSCAN_OUT),a            
     ; get column values
     in a,(KEYSCAN_IN)
-    and %00000001 ; row 7, bit 1 is LEFT SHIFT
+    and 0b00000001 ; row 7, bit 1 is LEFT SHIFT
     ; left shift modifier
     jr nz,_modifier_l_shift
-    ld a,%10000000 ; row 8
+    ld a,0b10000000 ; row 8
     ; output row strobe
     out (KEYSCAN_OUT),a            
     ; get column values
     in a,(KEYSCAN_IN)
-    and %00010000 ; row 8, bit 5 is RIGHT SHIFT
+    and 0b00010000 ; row 8, bit 5 is RIGHT SHIFT
     ; left shift modifier
     jr nz,_modifier_r_shift
     ; no modifiers
