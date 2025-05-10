@@ -1,10 +1,10 @@
-beanzee-ram.asm:
-     1                          ; MARVIN build for beanzee / Z80 breadboard computer - RAM version
+beanzee.asm:
+     1                          ; MARVIN build for beanzee / Z80 breadboard computer
      2                          ; https://github.com/PainfulDiodes/BeanZee
      3                          
      4                          BEANBOARD EQU 0
      5                          
-     6                          ORG 0x8000
+     6                          ORG 0x0000
      7                          
      8                          ; start of user RAM
      9                          RAMSTART equ 0x9000
@@ -37,7 +37,7 @@ asm/escapestring.inc:
     10                          SLASH equ 0x5c ; \\
     11                          QUOTE equ 0x27 ; \'
     12                          
-beanzee-ram.asm:
+beanzee.asm:
     26                          include "asm/console.asm"
 asm/console.asm:
      1  0006  0000000000000000  ALIGN 0x10
@@ -106,7 +106,7 @@ asm/console.asm:
     61  004d  e1                    pop hl
     62  004e  c9                    ret
     63                          
-beanzee-ram.asm:
+beanzee.asm:
     27                          include "asm/UM245R.asm"
 asm/UM245R.asm:
      1                          ; It is assumed that UM245R status signals are gated to the data bus as an IO port where:
@@ -175,7 +175,7 @@ asm/UM245R.asm:
     64  007a  c1                    pop bc
     65  007b  c9                    ret
     66                          
-beanzee-ram.asm:
+beanzee.asm:
     28                          include "asm/marvin.asm"
 asm/marvin.asm:
      1                          ; ****************************************************
@@ -482,7 +482,7 @@ asm/marvin.asm:
               746f207772697465  
               0a00              
    283                          
-beanzee-ram.asm:
+beanzee.asm:
     29                          include "asm/strings.asm"
 asm/strings.asm:
      1                          ; string subroutines
@@ -591,8 +591,5 @@ asm/strings.asm:
    104  029b  cd3000                call putchar
    105  029e  c9                    ret
    106                          
-beanzee-ram.asm:
+beanzee.asm:
     30                          
-    31                          
-    32                          
-    33                          

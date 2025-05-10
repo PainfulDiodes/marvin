@@ -1,20 +1,20 @@
-beanboard-ram.asm:
-     1                          ; MARVIN build for BeanZee with BeanBoard - RAM version
+beanboard.asm:
+     1                          ; MARVIN build for BeanZee with BeanBoard
      2                          ; https://github.com/PainfulDiodes/BeanZee
      3                          ; https://github.com/PainfulDiodes/BeanBoard
      4                          
      5                          BEANBOARD EQU 1
      6                          
-     7                          ORG 0x8000
+     7                          ORG 0x0000
      8                          
      9                          ; start of user RAM
     10                          RAMSTART equ 0x9000
-    11                          ; 8-byte keyscan buffer
-    12                          KEYSCAN_BUFFER equ 0xf000
-    13                          ; input buffer - start of system RAM
-    14                          CMD_BUFFER equ 0xf010
-    15                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
-    16                          STACK equ 0xffff
+    11                          ; input buffer - start of system RAM
+    12                          CMD_BUFFER equ 0xf010
+    13                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
+    14                          STACK equ 0xffff
+    15                          ; 8-byte keyscan buffer
+    16                          KEYSCAN_BUFFER equ 0xf000
     17                          
     18                          UM245R_CTRL equ 0 ; serial control port
     19                          UM245R_DATA equ 1 ; serial data port
@@ -42,7 +42,7 @@ asm/escapestring.inc:
     10                          SLASH equ 0x5c ; \\
     11                          QUOTE equ 0x27 ; \'
     12                          
-beanboard-ram.asm:
+beanboard.asm:
     31                          include "asm/HD44780LCD.inc"
 asm/HD44780LCD.inc:
      1                          ; LCD commands
@@ -97,7 +97,7 @@ asm/HD44780LCD.inc:
     50                          LCD_EOL_2 equ 0x00+LCD_LINE_LEN*2-1
     51                          LCD_EOL_3 equ 0x40+LCD_LINE_LEN*2-1
     52                          
-beanboard-ram.asm:
+beanboard.asm:
     32                          include "asm/console.asm"
 asm/console.asm:
      1  000c  00000000          ALIGN 0x10
@@ -163,7 +163,7 @@ asm/console.asm:
     61  004d  e1                    pop hl
     62  004e  c9                    ret
     63                          
-beanboard-ram.asm:
+beanboard.asm:
     33                          include "asm/UM245R.asm"
 asm/UM245R.asm:
      1                          ; It is assumed that UM245R status signals are gated to the data bus as an IO port where:
@@ -232,7 +232,7 @@ asm/UM245R.asm:
     64  007a  c1                    pop bc
     65  007b  c9                    ret
     66                          
-beanboard-ram.asm:
+beanboard.asm:
     34                          include "asm/marvin.asm"
 asm/marvin.asm:
      1                          ; ****************************************************
@@ -539,7 +539,7 @@ asm/marvin.asm:
               746f207772697465  
               0a00              
    283                          
-beanboard-ram.asm:
+beanboard.asm:
     35                          include "asm/strings.asm"
 asm/strings.asm:
      1                          ; string subroutines
@@ -648,7 +648,7 @@ asm/strings.asm:
    104  029b  cd3000                call putchar
    105  029e  c9                    ret
    106                          
-beanboard-ram.asm:
+beanboard.asm:
     36                          include "asm/HD44780LCD.asm"
 asm/HD44780LCD.asm:
      1                          LCD_COMMAND_0 equ LCD_FUNCTION_SET+LCD_DATA_LEN_8+LCD_DISP_LINES_2+LCD_FONT_8
@@ -832,7 +832,7 @@ asm/HD44780LCD.asm:
    179  0377  10f9                  djnz _lcd_scroll_clear_line_loop
    180  0379  c9                    ret
    181                          
-beanboard-ram.asm:
+beanboard.asm:
     37                          include "asm/keyscan.asm"
 asm/keyscan.asm:
      1                          DEBOUNCE_DELAY equ 0xf0
@@ -1029,5 +1029,5 @@ asm/keyscan.asm:
    192  046b  007e5a584356424e      db QWERTY_SHIFT_L,'~','Z','X','C','V','B','N'
    193  0473  4d3c3e3f0000200c      db 'M','<','>','?',QWERTY_SHIFT_R,QWERTY_CMD,' ',QWERTY_UNDEFINED
    194                          
-beanboard-ram.asm:
+beanboard.asm:
     38                          
