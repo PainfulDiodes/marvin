@@ -2,7 +2,7 @@
 # with or without extension
 #  ./build.sh beanzee
 #  ./build.sh beanzee.asm
-# provide an org value to pack an Intel HEX file
+# provide an org value (defaults to 0x0000)
 #  ./build.sh beanzee $8000
 
 # set -x #echo on
