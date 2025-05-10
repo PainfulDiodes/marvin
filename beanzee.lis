@@ -4,26 +4,30 @@ beanzee.asm:
      3                          
      4                          BEANBOARD EQU 0
      5                          
-     6                          ORG 0x0000
-     7                          
-     8                          ; start of user RAM
-     9                          RAMSTART equ 0x8000
-    10                          ; input buffer - start of system RAM
-    11                          CMD_BUFFER equ 0xf010
-    12                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
-    13                          STACK equ 0xffff
-    14                          
-    15                          UM245R_CTRL equ 0 ; serial control port
-    16                          UM245R_DATA equ 1 ; serial data port
-    17                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
-    18                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
-    19                          LCD_CTRL    equ 4 ; LCD control port
-    20                          LCD_DATA    equ 5 ; LCD data port
-    21                          
-    22  0000  31ffff                ld sp, STACK
-    23  0003  c38000                jp start
-    24                          
-    25                          include "asm/escapestring.inc"
+     6                          IFDEF ORGDEF
+     7                              ORG ORGDEF
+     8                          ELSE
+     9                              ORG 0x0000
+    10                          ENDIF
+    11                          
+    12                          ; start of user RAM
+    13                          RAMSTART equ 0x8000
+    14                          ; input buffer - start of system RAM
+    15                          CMD_BUFFER equ 0xf010
+    16                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
+    17                          STACK equ 0xffff
+    18                          
+    19                          UM245R_CTRL equ 0 ; serial control port
+    20                          UM245R_DATA equ 1 ; serial data port
+    21                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
+    22                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
+    23                          LCD_CTRL    equ 4 ; LCD control port
+    24                          LCD_DATA    equ 5 ; LCD data port
+    25                          
+    26  0000  31ffff                ld sp, STACK
+    27  0003  c38000                jp start
+    28                          
+    29                          include "asm/escapestring.inc"
 asm/escapestring.inc:
      1                          ; escape character constants for assembler compatibility
      2                          ; sjasmplus requires double quotes around escape sequences: "\n" and would not interpret '\n' but truncate
@@ -38,7 +42,7 @@ asm/escapestring.inc:
     11                          QUOTE equ 0x27 ; \'
     12                          
 beanzee.asm:
-    26                          include "asm/console.asm"
+    30                          include "asm/console.asm"
 asm/console.asm:
      1  0006  0000000000000000  ALIGN 0x10
               0000              
@@ -107,7 +111,7 @@ asm/console.asm:
     62  004e  c9                    ret
     63                          
 beanzee.asm:
-    27                          include "asm/UM245R.asm"
+    31                          include "asm/UM245R.asm"
 asm/UM245R.asm:
      1                          ; It is assumed that UM245R status signals are gated to the data bus as an IO port where:
      2                          ; /TXE = bit 0
@@ -176,7 +180,7 @@ asm/UM245R.asm:
     65  007b  c9                    ret
     66                          
 beanzee.asm:
-    28                          include "asm/marvin.asm"
+    32                          include "asm/marvin.asm"
 asm/marvin.asm:
      1                          ; ****************************************************
      2                          ; *  Marvin - a Z80 homebrew monitor program
@@ -483,7 +487,7 @@ asm/marvin.asm:
               0a00              
    283                          
 beanzee.asm:
-    29                          include "asm/strings.asm"
+    33                          include "asm/strings.asm"
 asm/strings.asm:
      1                          ; string subroutines
      2                          
@@ -592,4 +596,4 @@ asm/strings.asm:
    105  029e  c9                    ret
    106                          
 beanzee.asm:
-    30                          
+    34                          
