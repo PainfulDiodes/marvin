@@ -1,21 +1,29 @@
 ; MARVIN build for beanzee / Z80 breadboard computer
-; https://github.com/PainfulDiodes/BeanZee/tree/v1.0.0
-; https://github.com/PainfulDiodes/z80-breadboard-computer/tree/v1.0.0
+; https://github.com/PainfulDiodes/BeanZee
 
-ORG $0000
+BEANBOARD EQU 0
+
+ORG 0x0000
 
 ; start of user RAM
-RAMSTART equ $8000
-; input buffer - start of system RAM
-CMD_BUFFER   equ $f000
-; stack should really be $0000 as the CPU will dec SP before PUSH
-STACK    equ $ffff
+RAMSTART equ 0x9000
+; input buffer - start of system RAM 
+CMD_BUFFER equ 0xf010
+; this should really be 0x0000 as the CPU will dec SP before PUSH
+STACK equ 0xffff
+
+UM245R_CTRL equ 0 ; serial control port
+UM245R_DATA equ 1 ; serial data port
+KEYSCAN_OUT equ 2 ; either 2 or 3 will work
+KEYSCAN_IN  equ 3 ; either 2 or 3 will work
+LCD_CTRL    equ 4 ; LCD control port
+LCD_DATA    equ 5 ; LCD data port
 
     ld sp, STACK
     jp start
 
-include "UM245R.asm"
-UM245R_CTRL equ 0 ; serial control port
-UM245R_DATA equ 1 ; serial data port
-
-include "marvin.asm"
+include "asm/escapestring.inc"
+include "asm/console.asm"
+include "asm/UM245R.asm"
+include "asm/marvin.asm"
+include "asm/strings.asm"
