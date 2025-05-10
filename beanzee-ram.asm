@@ -22,11 +22,11 @@ LCD_DATA    equ 5 ; LCD data port
     ld sp, STACK
     jp start
 
-include "escapestring.inc"
-include "console.asm"
-include "UM245R.asm"
-include "marvin.asm"
-include "strings.asm"
+include "asm/escapestring.inc"
+include "asm/console.asm"
+include "asm/UM245R.asm"
+include "asm/marvin.asm"
+include "asm/strings.asm"
 
 
 

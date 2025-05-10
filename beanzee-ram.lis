@@ -23,8 +23,8 @@ beanzee-ram.asm:
     22  0000  31ffff                ld sp, STACK
     23  0003  c38000                jp start
     24                          
-    25                          include "escapestring.inc"
-escapestring.inc:
+    25                          include "asm/escapestring.inc"
+asm/escapestring.inc:
      1                          ; escape character constants for assembler compatibility
      2                          ; sjasmplus requires double quotes around escape sequences: "\n" and would not interpret '\n' but truncate
      3                          ; z88dk-z80asm requires single quotes around so would correctly interpret '\n' but reject "\n"
@@ -38,8 +38,8 @@ escapestring.inc:
     11                          QUOTE equ 0x27 ; \'
     12                          
 beanzee-ram.asm:
-    26                          include "console.asm"
-console.asm:
+    26                          include "asm/console.asm"
+asm/console.asm:
      1  0006  0000000000000000  ALIGN 0x10
               0000              
      2                          
@@ -107,8 +107,8 @@ console.asm:
     62  004e  c9                    ret
     63                          
 beanzee-ram.asm:
-    27                          include "UM245R.asm"
-UM245R.asm:
+    27                          include "asm/UM245R.asm"
+asm/UM245R.asm:
      1                          ; It is assumed that UM245R status signals are gated to the data bus as an IO port where:
      2                          ; /TXE = bit 0
      3                          ; /RXF = bit 1
@@ -176,8 +176,8 @@ UM245R.asm:
     65  007b  c9                    ret
     66                          
 beanzee-ram.asm:
-    28                          include "marvin.asm"
-marvin.asm:
+    28                          include "asm/marvin.asm"
+asm/marvin.asm:
      1                          ; ****************************************************
      2                          ; *  Marvin - a Z80 homebrew monitor program
      3                          ; * (c) Stephen Willcock 2024
@@ -483,8 +483,8 @@ marvin.asm:
               0a00              
    283                          
 beanzee-ram.asm:
-    29                          include "strings.asm"
-strings.asm:
+    29                          include "asm/strings.asm"
+asm/strings.asm:
      1                          ; string subroutines
      2                          
      3                          ; read 2 ASCII hex chars from memory by HL pointer, return converted value in A and advance HL pointer
