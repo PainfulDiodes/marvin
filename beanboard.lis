@@ -5,30 +5,34 @@ beanboard.asm:
      4                          
      5                          BEANBOARD EQU 1
      6                          
-     7                          ORG 0x0000
-     8                          
-     9                          ; start of user RAM
-    10                          RAMSTART equ 0x8000
-    11                          ; input buffer - start of system RAM
-    12                          CMD_BUFFER equ 0xf010
-    13                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
-    14                          STACK equ 0xffff
-    15                          ; 8-byte keyscan buffer
-    16                          KEYSCAN_BUFFER equ 0xf000
-    17                          
-    18                          UM245R_CTRL equ 0 ; serial control port
-    19                          UM245R_DATA equ 1 ; serial data port
-    20                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
-    21                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
-    22                          LCD_CTRL    equ 4 ; LCD control port
-    23                          LCD_DATA    equ 5 ; LCD data port
-    24                          
-    25  0000  31ffff                ld sp, STACK
-    26  0003  cd9f02                call lcd_init
-    27  0006  cd7a03                call keyscan_init
-    28  0009  c38000                jp start
-    29                          
-    30                          include "asm/escapestring.inc"
+     7                          IFDEF ORGDEF
+     8                              ORG ORGDEF
+     9                          ELSE
+    10                              ORG 0x0000
+    11                          ENDIF
+    12                          
+    13                          ; start of user RAM
+    14                          RAMSTART equ 0x8000
+    15                          ; input buffer - start of system RAM
+    16                          CMD_BUFFER equ 0xf010
+    17                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
+    18                          STACK equ 0xffff
+    19                          ; 8-byte keyscan buffer
+    20                          KEYSCAN_BUFFER equ 0xf000
+    21                          
+    22                          UM245R_CTRL equ 0 ; serial control port
+    23                          UM245R_DATA equ 1 ; serial data port
+    24                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
+    25                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
+    26                          LCD_CTRL    equ 4 ; LCD control port
+    27                          LCD_DATA    equ 5 ; LCD data port
+    28                          
+    29  0000  31ffff                ld sp, STACK
+    30  0003  cd9f02                call lcd_init
+    31  0006  cd7a03                call keyscan_init
+    32  0009  c38000                jp start
+    33                          
+    34                          include "asm/escapestring.inc"
 asm/escapestring.inc:
      1                          ; escape character constants for assembler compatibility
      2                          ; sjasmplus requires double quotes around escape sequences: "\n" and would not interpret '\n' but truncate
@@ -43,7 +47,7 @@ asm/escapestring.inc:
     11                          QUOTE equ 0x27 ; \'
     12                          
 beanboard.asm:
-    31                          include "asm/HD44780LCD.inc"
+    35                          include "asm/HD44780LCD.inc"
 asm/HD44780LCD.inc:
      1                          ; LCD commands
      2                          LCD_CLEAR_DISPLAY equ 0x01
@@ -98,7 +102,7 @@ asm/HD44780LCD.inc:
     51                          LCD_EOL_3 equ 0x40+LCD_LINE_LEN*2-1
     52                          
 beanboard.asm:
-    32                          include "asm/console.asm"
+    36                          include "asm/console.asm"
 asm/console.asm:
      1  000c  00000000          ALIGN 0x10
      2                          
@@ -164,7 +168,7 @@ asm/console.asm:
     62  004e  c9                    ret
     63                          
 beanboard.asm:
-    33                          include "asm/UM245R.asm"
+    37                          include "asm/UM245R.asm"
 asm/UM245R.asm:
      1                          ; It is assumed that UM245R status signals are gated to the data bus as an IO port where:
      2                          ; /TXE = bit 0
@@ -233,7 +237,7 @@ asm/UM245R.asm:
     65  007b  c9                    ret
     66                          
 beanboard.asm:
-    34                          include "asm/marvin.asm"
+    38                          include "asm/marvin.asm"
 asm/marvin.asm:
      1                          ; ****************************************************
      2                          ; *  Marvin - a Z80 homebrew monitor program
@@ -540,7 +544,7 @@ asm/marvin.asm:
               0a00              
    283                          
 beanboard.asm:
-    35                          include "asm/strings.asm"
+    39                          include "asm/strings.asm"
 asm/strings.asm:
      1                          ; string subroutines
      2                          
@@ -649,7 +653,7 @@ asm/strings.asm:
    105  029e  c9                    ret
    106                          
 beanboard.asm:
-    36                          include "asm/HD44780LCD.asm"
+    40                          include "asm/HD44780LCD.asm"
 asm/HD44780LCD.asm:
      1                          LCD_COMMAND_0 equ LCD_FUNCTION_SET+LCD_DATA_LEN_8+LCD_DISP_LINES_2+LCD_FONT_8
      2                          LCD_COMMAND_1 equ LCD_DISPLAY_ON_OFF_CONTROL+LCD_DISPLAY_ON+LCD_CURSOR_ON+LCD_BLINK_ON
@@ -833,7 +837,7 @@ asm/HD44780LCD.asm:
    180  0379  c9                    ret
    181                          
 beanboard.asm:
-    37                          include "asm/keyscan.asm"
+    41                          include "asm/keyscan.asm"
 asm/keyscan.asm:
      1                          DEBOUNCE_DELAY equ 0xf0
      2                          MOD_KEY_SHIFT_L equ 0b00000010
@@ -1030,4 +1034,4 @@ asm/keyscan.asm:
    193  0473  4d3c3e3f0000200c      db 'M','<','>','?',QWERTY_SHIFT_R,QWERTY_CMD,' ',QWERTY_UNDEFINED
    194                          
 beanboard.asm:
-    38                          
+    42                          
