@@ -27,11 +27,11 @@ LCD_DATA    equ 5 ; LCD data port
     call keyscan_init
     jp start
 
-include "escapestring.inc"
-include "HD44780LCD.inc"
-include "console.asm"
-include "UM245R.asm"
-include "marvin.asm"
-include "strings.asm"
-include "HD44780LCD.asm"
-include "keyscan.asm"
+include "asm/escapestring.inc"
+include "asm/HD44780LCD.inc"
+include "asm/console.asm"
+include "asm/UM245R.asm"
+include "asm/marvin.asm"
+include "asm/strings.asm"
+include "asm/HD44780LCD.asm"
+include "asm/keyscan.asm"

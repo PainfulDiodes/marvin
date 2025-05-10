@@ -28,8 +28,8 @@ beanboard-ram.asm:
     27  0006  cd7a03                call keyscan_init
     28  0009  c38000                jp start
     29                          
-    30                          include "escapestring.inc"
-escapestring.inc:
+    30                          include "asm/escapestring.inc"
+asm/escapestring.inc:
      1                          ; escape character constants for assembler compatibility
      2                          ; sjasmplus requires double quotes around escape sequences: "\n" and would not interpret '\n' but truncate
      3                          ; z88dk-z80asm requires single quotes around so would correctly interpret '\n' but reject "\n"
@@ -43,8 +43,8 @@ escapestring.inc:
     11                          QUOTE equ 0x27 ; \'
     12                          
 beanboard-ram.asm:
-    31                          include "HD44780LCD.inc"
-HD44780LCD.inc:
+    31                          include "asm/HD44780LCD.inc"
+asm/HD44780LCD.inc:
      1                          ; LCD commands
      2                          LCD_CLEAR_DISPLAY equ 0x01
      3                          LCD_RETURN_HOME equ 0x02
@@ -98,8 +98,8 @@ HD44780LCD.inc:
     51                          LCD_EOL_3 equ 0x40+LCD_LINE_LEN*2-1
     52                          
 beanboard-ram.asm:
-    32                          include "console.asm"
-console.asm:
+    32                          include "asm/console.asm"
+asm/console.asm:
      1  000c  00000000          ALIGN 0x10
      2                          
      3                          ; wait for a character and return in A
@@ -164,8 +164,8 @@ console.asm:
     62  004e  c9                    ret
     63                          
 beanboard-ram.asm:
-    33                          include "UM245R.asm"
-UM245R.asm:
+    33                          include "asm/UM245R.asm"
+asm/UM245R.asm:
      1                          ; It is assumed that UM245R status signals are gated to the data bus as an IO port where:
      2                          ; /TXE = bit 0
      3                          ; /RXF = bit 1
@@ -233,8 +233,8 @@ UM245R.asm:
     65  007b  c9                    ret
     66                          
 beanboard-ram.asm:
-    34                          include "marvin.asm"
-marvin.asm:
+    34                          include "asm/marvin.asm"
+asm/marvin.asm:
      1                          ; ****************************************************
      2                          ; *  Marvin - a Z80 homebrew monitor program
      3                          ; * (c) Stephen Willcock 2024
@@ -540,8 +540,8 @@ marvin.asm:
               0a00              
    283                          
 beanboard-ram.asm:
-    35                          include "strings.asm"
-strings.asm:
+    35                          include "asm/strings.asm"
+asm/strings.asm:
      1                          ; string subroutines
      2                          
      3                          ; read 2 ASCII hex chars from memory by HL pointer, return converted value in A and advance HL pointer
@@ -649,8 +649,8 @@ strings.asm:
    105  029e  c9                    ret
    106                          
 beanboard-ram.asm:
-    36                          include "HD44780LCD.asm"
-HD44780LCD.asm:
+    36                          include "asm/HD44780LCD.asm"
+asm/HD44780LCD.asm:
      1                          LCD_COMMAND_0 equ LCD_FUNCTION_SET+LCD_DATA_LEN_8+LCD_DISP_LINES_2+LCD_FONT_8
      2                          LCD_COMMAND_1 equ LCD_DISPLAY_ON_OFF_CONTROL+LCD_DISPLAY_ON+LCD_CURSOR_ON+LCD_BLINK_ON
      3                          
@@ -833,8 +833,8 @@ HD44780LCD.asm:
    180  0379  c9                    ret
    181                          
 beanboard-ram.asm:
-    37                          include "keyscan.asm"
-keyscan.asm:
+    37                          include "asm/keyscan.asm"
+asm/keyscan.asm:
      1                          DEBOUNCE_DELAY equ 0xf0
      2                          MOD_KEY_SHIFT_L equ 0b00000010
      3                          MOD_KEY_SHIFT_R equ 0b00000001
