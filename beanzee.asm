@@ -6,7 +6,7 @@ BEANBOARD EQU 0
 ORG 0x0000
 
 ; start of user RAM
-RAMSTART equ 0x9000
+RAMSTART equ 0x8000
 ; input buffer - start of system RAM 
 CMD_BUFFER equ 0xf010
 ; this should really be 0x0000 as the CPU will dec SP before PUSH

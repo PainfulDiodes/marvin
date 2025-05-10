@@ -8,7 +8,7 @@ beanboard.asm:
      7                          ORG 0x0000
      8                          
      9                          ; start of user RAM
-    10                          RAMSTART equ 0x9000
+    10                          RAMSTART equ 0x8000
     11                          ; input buffer - start of system RAM
     12                          CMD_BUFFER equ 0xf010
     13                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
@@ -444,7 +444,7 @@ asm/marvin.asm:
    207  0146  e9                    jp (hl)
    208                              ; start executing from default address
    209                          _cmd_exec_df:
-   210  0147  210090                ld hl,RAMSTART
+   210  0147  210080                ld hl,RAMSTART
    211                              ; execute from address
    212  014a  e9                    jp (hl)
    213                          
