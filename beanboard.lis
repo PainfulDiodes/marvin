@@ -118,7 +118,7 @@ asm/console.asm:
     12                          ; read a character from the console and return it,
     13                          ; or 0 if there is no character
     14                          readchar:
-    15                          IF BEANBOARD
+    15                          IFDEF BEANBOARD
     16                              ; check keyboard
     17  0020  cd8903                call keyscan
     18                              ; is there a character?

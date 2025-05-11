@@ -12,7 +12,7 @@ ALIGN 0x10
 ; read a character from the console and return it, 
 ; or 0 if there is no character
 readchar:
-IF BEANBOARD
+IFDEF BEANBOARD
     ; check keyboard
     call keyscan
     ; is there a character? 

@@ -1,8 +1,6 @@
 ; MARVIN build for beanzee / Z80 breadboard computer
 ; https://github.com/PainfulDiodes/BeanZee
 
-BEANBOARD EQU 0
-
 IFDEF ORGDEF
     ORG ORGDEF
 ELSE
