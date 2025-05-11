@@ -77,9 +77,9 @@ asm/console.asm:
               00000000          
     30                          
     31                          putchar:
-    32                              ; A is not guaranteed to be preserved in these calls,
-    33                              ; so preserve across the first call
-    34                          IF BEANBOARD
+    32                          IF BEANBOARD
+    33                              ; A is not guaranteed to be preserved in these calls,
+    34                              ; so preserve across the first call
     35                              push af
     36                              call lcd_putchar
     37                              pop af

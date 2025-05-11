@@ -29,9 +29,9 @@ ENDIF
 ALIGN 0x10
 
 putchar:
+IF BEANBOARD
     ; A is not guaranteed to be preserved in these calls, 
     ; so preserve across the first call
-IF BEANBOARD
     push af
     call lcd_putchar
     pop af
