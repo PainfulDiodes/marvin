@@ -263,20 +263,3 @@ _cmd_load_data:
     jr nz,_cmd_load_data
 _cmd_load_end:
     jp prompt
-
-alt_welcome_msg:
-                db "MARVIN v1.1.beta\n"
-                db "A simple Z80 homebrew monitor program\n"
-                db "(c) Stephen Willcock 2024\n"
-                db "https://github.com/PainfulDiodes\n\n",0
-
-welcome_msg:    
-                db "PainfulDiodes\n"
-                db "MARVIN Z80 monitor\n"
-                db "v1.1.beta\n",0
-
-bad_cmd_msg:    
-                db "Command not recognised\n",0
-
-cmd_w_null_msg: 
-                db "No data to write\n",0
