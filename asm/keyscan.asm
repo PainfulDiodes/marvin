@@ -1,6 +1,10 @@
-DEBOUNCE_DELAY equ 0xf0
-MOD_KEY_SHIFT_L equ 0b00000010
-MOD_KEY_SHIFT_R equ 0b00000001
+DEBOUNCE_DELAY  equ 0xf0
+
+MOD_KEY_SHIFT   equ 0b00000001
+MOD_KEY_FN      equ 0b00000010
+MOD_KEY_CONTROL equ 0b00000100
+MOD_KEY_ALT     equ 0b00001000
+MOD_KEY_CMD     equ 0b00010000
 
 ; initialise keyscan
 keyscan_init:
@@ -31,8 +35,8 @@ keyscan:
     call _modifierkeys
     ; initialise map pointer
     ld de,QWERTY_KEYMAP_L
-    ; either shift key down?
-    and MOD_KEY_SHIFT_L+MOD_KEY_SHIFT_R
+    ; shift key down?
+    and MOD_KEY_SHIFT
     jp z,_keyscanloop
     ld de,QWERTY_KEYMAP_U
 _keyscanloop:
@@ -97,30 +101,19 @@ _rowscan:
 ; get bitmap representing modifier keys:  
 ; return value in A
 _modifierkeys:                       
-    ld a,0b01000000 ; row 7
+    ld a,0b00010000 ; row 4
     ; output row strobe
     out (KEYSCAN_OUT),a            
     ; get column values
     in a,(KEYSCAN_IN)
-    and 0b00000001 ; row 7, bit 1 is LEFT SHIFT
+    and 0b00000001 ; row 4, bit 0 is SHIFT
     ; left shift modifier
-    jr nz,_modifier_l_shift
-    ld a,0b10000000 ; row 8
-    ; output row strobe
-    out (KEYSCAN_OUT),a            
-    ; get column values
-    in a,(KEYSCAN_IN)
-    and 0b00010000 ; row 8, bit 5 is RIGHT SHIFT
-    ; left shift modifier
-    jr nz,_modifier_r_shift
+    jr nz,_modifier_shift
     ; no modifiers
     ld a,0
     ret
-_modifier_l_shift:
-    ld a,MOD_KEY_SHIFT_L
-    ret
-_modifier_r_shift:
-    ld a,MOD_KEY_SHIFT_R
+_modifier_shift:
+    ld a,MOD_KEY_SHIFT
     ret
 
 ; A contains row bitmap representing new keystrokes,  
@@ -160,8 +153,7 @@ _colscanend:
 
 ; define values for control keys
 ; modifiers have zero value
-QWERTY_SHIFT_L equ 0
-QWERTY_SHIFT_R equ 0
+QWERTY_SHIFT equ 0
 QWERTY_FN equ 0
 QWERTY_CTRL equ 0
 QWERTY_ALT equ 0
@@ -171,23 +163,14 @@ QWERTY_CURS_DOWN equ 2
 QWERTY_CURS_LEFT equ 3
 QWERTY_CURS_RIGHT equ 4
 QWERTY_CAPS equ 5
-QWERTY_UNDEFINED equ 12
 
 QWERTY_KEYMAP_L:
-    db ESC_E,'1','2','3','4','5','6','7'
-    db '8','9','0','-','=',ESC_B,QWERTY_CURS_UP,QWERTY_CURS_DOWN
-    db ESC_T,'q','w','e','r','t','y','u'
-    db 'i','o','p','[',']',ESC_N,QWERTY_CURS_LEFT,QWERTY_CURS_RIGHT
-    db QWERTY_CAPS,'a','s','d','f','g','h','j'
-    db 'k','l',';',QUOTE,SLASH,QWERTY_FN,QWERTY_CTRL,QWERTY_ALT
-    db QWERTY_SHIFT_L,'`','z','x','c','v','b','n'
-    db 'm',',','.','/',QWERTY_SHIFT_R,QWERTY_CMD,' ',QWERTY_UNDEFINED
+    db ESC_E,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,ESC_B,'7','8','9'
+    db ESC_T,'a','s','d','f','g','h','j','k','l',';',QUOTE,ESC_N,'4','5','6'
+    db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',SLASH,QWERTY_CURS_UP,'1','2','3'
+    db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',ESC_N
 QWERTY_KEYMAP_U:
-    db ESC_E,'!','@','#','$','%','^','&'
-    db '*','(',')','_','+',ESC_B,QWERTY_CURS_UP,QWERTY_CURS_DOWN
-    db ESC_T,'Q','W','E','R','T','Y','U'
-    db 'I','O','P','{','}',ESC_N,QWERTY_CURS_LEFT,QWERTY_CURS_RIGHT
-    db QWERTY_CAPS,'A','S','D','F','G','H','J'
-    db 'K','L',':','"','|',QWERTY_FN,QWERTY_CTRL,QWERTY_ALT
-    db QWERTY_SHIFT_L,'~','Z','X','C','V','B','N'
-    db 'M','<','>','?',QWERTY_SHIFT_R,QWERTY_CMD,' ',QWERTY_UNDEFINED
+    db ESC_E,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,ESC_B,'&','*','('
+    db ESC_T,'A','S','D','F','G','H','J','K','L',':','"',ESC_N,'$','%','^'
+    db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',SLASH,QWERTY_CURS_UP,'!','@','#'
+    db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',ESC_N
