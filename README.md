@@ -1,28 +1,35 @@
 # Marvin Z80 monitor program
-Marvin is a simple monitor program designed to work with the [BeanZee](https://github.com/PainfulDiodes/BeanZee) Z80 development board. It will also work with my [breadboard computer](https://github.com/PainfulDiodes/z80-breadboard-computer), and should be easy to adapt for other Z80 designs.  
+Marvin is a simple monitor program designed to work with the [BeanZee](https://github.com/PainfulDiodes/BeanZee) Z80 development board. It will also work with my [Z80 breadboard computer](https://github.com/PainfulDiodes/z80-breadboard-computer), and should be easy to adapt for other Z80 homebrew designs.  
 
-BeanZee is a board for experimentation and learning. The primary function of Marvin is to be able to load,  execute Z80 programs on BeanZee - programs that typically have been written and cross-assembled or cross-compiled on a host computer.
+BeanZee is a board for experimentation and learning. The primary function of Marvin is to be able to load and run programs on BeanZee that have been written and cross-assembled or cross-compiled on a host computer.
 
+Example programs to run on BeanZee are provided in [BeanZeeBytes](https://github.com/PainfulDiodes/BeanZeeBytes)
+
+## Building Marvin
 Marvin builds with:  
-[z88dk-z80asm](https://github.com/z88dk/z88dk/wiki/Tool---z80asm) (default), or  
+[z88dk-z80asm](https://github.com/z88dk/z88dk/wiki/Tool---z80asm) (the default), or  
 [sjasmplus](https://github.com/z00m128/sjasmplus)  
 
-See also [PainfulDiodes Blog post](https://painfuldiodes.wordpress.com/2025/03/02/marvin-v1/)
+Shell scripts are included for building Marvin, which have been a convenience for me but may be of limited use depending on your environment (I am using zsh / macOS).
 
-Example programs to run on BeanZee can be found in [BeanZeeBytes](https://github.com/PainfulDiodes/BeanZeeBytes)
+The home directory has several build targets - assemble these to build a binary of Marvin; each will include the necessary additional assembly files from the asm directory.
 
-## Using Marvin with BeanZee
+* beanzee.asm - this is for BeanZee standalone, and expects there to be an FTDI UM245R USB module fitted. This build is also suitable for my Z80 breadboard computer
+* beanboard.asm - this is for BeanZee with the BeanBoard keyboard/display - it also currently expects there to be an FTDI UM245R USB module fitted
+* beanboard_proto.asm - this is not generally useful - it supports the key-mapping used in the earlier beanboard prototype
 
-The BeanZee board has 32k RAM and 32k ROM. Marvin (and other potential firmware) is loaded into the ROM. The top 4k of the RAM is reserved for system use (which currently is just the stack and an input buffer), but the remainder of the RAM is available for user programs.  
+## Marvin and BeanZee
 
-BeanZee has an FTDI USB interface for communication with a host computer using a terminal emulator.
+The BeanZee board has 32k RAM and 32k ROM. Marvin (and other potential firmware) is loaded into the ROM. The top 4k of the RAM is reserved for system use (stack, buffers etc), but the remainder of the RAM is available for user programs.  
+
+BeanZee has an FTDI UM245R USB interface for communication with a host computer using a terminal emulator.
 
 Memory map:  
 0000 - 7FFF : 32k ROM  
 8000 - FFFF : 32k RAM  
 
 Stack starts at top of RAM (FFFF) (working down)  
-Input buffer starts at bottom of system RAM (F000) 
+System RAM starts from F000
 
 8000-EFFF is available for user progams.
 
@@ -35,9 +42,16 @@ Status byte:
 Bit 0 : device ready for data to be written (active low)  
 Bit 1 : data available in read buffer (active low)  
 
-## Basic interaction
+## Marvin and BeanBoard
+In addition, with the BeanBoard build, additional ports are defined:
 
-When BeanZee is reset it responds with a Marvin welcome message and a prompt:
+Port 2 / 3 : keyboard  
+Port 4 : LCD control port  
+Port 5 : LCD data port   
+Port 6 / 7 : GPIO  
+
+## Basic interaction
+When BeanZee is reset it responds with a Marvin welcome message and a prompt, similar to:
 
     MARVIN
     A super simple monitor program for Z80 homebrew
