@@ -1,7 +1,7 @@
 welcome_msg:    
                 db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
-                db "v1.1.beta\n",0
+                db "v1.1.0\n",0
 
 
 bad_cmd_msg:    

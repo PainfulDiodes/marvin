@@ -346,7 +346,7 @@ asm/marvin.asm:
     87  00e5  fe3a                  cp ':'
     88  00e7  2879                  jr z,_cmd_load
     89                              ; otherwise error
-    90  00e9  219904                ld hl,bad_cmd_msg
+    90  00e9  219604                ld hl,bad_cmd_msg
     91  00ec  cd4000                call puts
     92                              ; loop back to the prompt
     93  00ef  c3a000                jp prompt
@@ -440,7 +440,7 @@ asm/marvin.asm:
    181  0141  c3a000                jp prompt
    182                              ; w with no data
    183                          _cmd_write_null:
-   184  0144  21b104                ld hl,cmd_w_null_msg
+   184  0144  21ae04                ld hl,cmd_w_null_msg
    185  0147  cd4000                call puts
    186                              ; and back to prompt
    187  014a  c3a000                jp prompt
@@ -1039,31 +1039,30 @@ beanzee.asm:
     17                          include "asm/messages.asm"
 asm/messages.asm:
      1                          welcome_msg:
-     2  0425  4d415256494e2076                  db "MARVIN v1.1.beta\n"
-              312e312e62657461  
-              0a                
-     3  0436  412073696d706c65                  db "A simple Z80 homebrew monitor program\n"
+     2  0425  4d415256494e2076                  db "MARVIN v1.1.0\n"
+              312e312e300a      
+     3  0433  412073696d706c65                  db "A simple Z80 homebrew monitor program\n"
               205a383020686f6d  
               6562726577206d6f  
               6e69746f72207072  
               6f6772616d0a      
-     4  045c  2863292053746570                  db "(c) Stephen Willcock 2024\n"
+     4  0459  2863292053746570                  db "(c) Stephen Willcock 2024\n"
               68656e2057696c6c  
               636f636b20323032  
               340a              
-     5  0476  68747470733a2f2f                  db "https://github.com/PainfulDiodes\n\n",0
+     5  0473  68747470733a2f2f                  db "https://github.com/PainfulDiodes\n\n",0
               6769746875622e63  
               6f6d2f5061696e66  
               756c44696f646573  
               0a0a00            
      6                          
      7                          bad_cmd_msg:
-     8  0499  436f6d6d616e6420                  db "Command not recognised\n",0
+     8  0496  436f6d6d616e6420                  db "Command not recognised\n",0
               6e6f74207265636f  
               676e697365640a00  
      9                          
     10                          cmd_w_null_msg:
-    11  04b1  4e6f206461746120                  db "No data to write\n",0
+    11  04ae  4e6f206461746120                  db "No data to write\n",0
               746f207772697465  
               0a00              
     12                          
