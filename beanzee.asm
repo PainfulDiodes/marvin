@@ -22,6 +22,8 @@ KEYSCAN_OUT equ 2 ; either 2 or 3 will work
 KEYSCAN_IN  equ 3 ; either 2 or 3 will work
 LCD_CTRL    equ 4 ; LCD control port
 LCD_DATA    equ 5 ; LCD data port
+GPIO_OUT    equ 6 ; either 6 or 7 will work
+GPIO_IN     equ 7 ; either 6 or 7 will work
 
     ld sp, STACK
     jp start

@@ -2,6 +2,8 @@ DEBOUNCE_DELAY equ 0xf0
 MOD_KEY_SHIFT_L equ 0b00000010
 MOD_KEY_SHIFT_R equ 0b00000001
 
+ALIGN 0x10
+
 ; initialise keyscan
 keyscan_init:
     push bc
@@ -16,6 +18,8 @@ _keyscan_init_loop:
     pop hl
     pop bc
     ret
+
+ALIGN 0x10
 
 ; return value in A
 keyscan:

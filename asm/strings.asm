@@ -1,5 +1,7 @@
 ; string subroutines
 
+ALIGN 0x10
+
 ; read 2 ASCII hex chars from memory by HL pointer, return converted value in A and advance HL pointer
 hex_byte_val:
     ; preserve BC
@@ -44,6 +46,8 @@ _hex_byte_val_zero:
     pop bc
     ret
 
+ALIGN 0x10
+
 ; convert an ASCII hex char in A to a number value (lower 4 bits)
 hex_val:
     ; is it lowercase alphabetic?
@@ -65,6 +69,8 @@ _hex_val_n:
     ; numeric
     sub '0'
     ret
+
+ALIGN 0x10
 
 ; convert value in A into an ASCII pair and send to console
 putchar_hex:
