@@ -1,8 +1,8 @@
-; MARVIN build for beanzee / Z80 breadboard computer
+; MARVIN build for BeanZee with BeanBoard
 ; https://github.com/PainfulDiodes/BeanZee
+; https://github.com/PainfulDiodes/BeanBoard
 
-
-BEANBOARD EQU 0
+BEANBOARD EQU 1
 
 include "asm/main.inc"
 include "asm/escapestring.inc"
@@ -14,4 +14,4 @@ include "asm/marvin.asm"
 include "asm/strings.asm"
 include "asm/HD44780LCD.asm"
 include "asm/keyscan.asm"
-include "asm/messages.asm"
+include "asm/messages_small.asm"
