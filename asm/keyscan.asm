@@ -6,6 +6,8 @@ MOD_KEY_CONTROL equ 0b00000100
 MOD_KEY_ALT     equ 0b00001000
 MOD_KEY_CMD     equ 0b00010000
 
+ALIGN 0x10
+
 ; initialise keyscan
 keyscan_init:
     push bc
@@ -20,6 +22,8 @@ _keyscan_init_loop:
     pop hl
     pop bc
     ret
+
+ALIGN 0x10
 
 ; return value in A
 keyscan:

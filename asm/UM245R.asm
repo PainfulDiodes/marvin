@@ -12,6 +12,8 @@
 ; externally this is consistent with VT100/ANSI terminal behaviour
 ; and internally line endings are always \n
 
+ALIGN 0x10
+
 ; get character and return in A
 usb_readchar:
     ; get the USB status
@@ -32,7 +34,9 @@ usb_readchar:
 _usb_no_char:
     ld a,0
     ret
-    
+
+ALIGN 0x10
+
 usb_putchar:
     ; newline?
     cp ESC_N

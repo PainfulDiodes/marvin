@@ -15,6 +15,8 @@ start:
     ld hl,welcome_msg
     call puts
 
+ALIGN 0x10
+
 prompt:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER            
