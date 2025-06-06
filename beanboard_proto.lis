@@ -343,7 +343,7 @@ asm/marvin.asm:
     87  00e5  fe3a                  cp ':'
     88  00e7  2879                  jr z,_cmd_load
     89                              ; otherwise error
-    90  00e9  215e04                ld hl,bad_cmd_msg
+    90  00e9  215b04                ld hl,bad_cmd_msg
     91  00ec  cd4000                call puts
     92                              ; loop back to the prompt
     93  00ef  c3a000                jp prompt
@@ -437,7 +437,7 @@ asm/marvin.asm:
    181  0141  c3a000                jp prompt
    182                              ; w with no data
    183                          _cmd_write_null:
-   184  0144  216b04                ld hl,cmd_w_null_msg
+   184  0144  216804                ld hl,cmd_w_null_msg
    185  0147  cd4000                call puts
    186                              ; and back to prompt
    187  014a  c3a000                jp prompt
@@ -1050,16 +1050,15 @@ asm/messages_small.asm:
      3  0440  4d415256494e205a                  db "MARVIN Z80 monitor\n"
               3830206d6f6e6974  
               6f720a            
-     4  0453  76312e312e626574                  db "v1.1.beta\n",0
-              610a00            
+     4  0453  76312e312e300a00                  db "v1.1.0\n",0
      5                          
      6                          
      7                          bad_cmd_msg:
-     8  045e  42616420636f6d6d                  db "Bad command\n",0
+     8  045b  42616420636f6d6d                  db "Bad command\n",0
               616e640a00        
      9                          
     10                          cmd_w_null_msg:
-    11  046b  4e6f20646174610a                  db "No data\n",0
+    11  0468  4e6f20646174610a                  db "No data\n",0
               00                
     12                          
 beanboard_proto.asm:

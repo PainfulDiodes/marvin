@@ -1,5 +1,5 @@
 welcome_msg:
-                db "MARVIN v1.1.beta\n"
+                db "MARVIN v1.1.0\n"
                 db "A simple Z80 homebrew monitor program\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n\n",0
