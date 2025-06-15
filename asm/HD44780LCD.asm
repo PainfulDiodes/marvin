@@ -3,6 +3,7 @@ LCD_COMMAND_1 equ LCD_DISPLAY_ON_OFF_CONTROL+LCD_DISPLAY_ON+LCD_CURSOR_ON+LCD_BL
 
 ALIGN 0x10
 
+; initialise LCD
 lcd_init:
 ; preserve registers
     push af
@@ -21,7 +22,7 @@ lcd_init:
 
 ALIGN 0x10
 
-; transmit character in A to the control port
+; transmit character in A to the LCD control port
 lcd_putcmd:                     
     push bc
 ; save the transmit character
@@ -42,7 +43,7 @@ _lcd_putcmd_loop:
 
 ALIGN 0x10
 
-; get character from data port and return in A
+; get character from LCD data port and return in A
 lcd_getchar:                     
 ; get the LCD status
     in a,(LCD_CTRL)
@@ -56,7 +57,7 @@ lcd_getchar:
 
 ALIGN 0x10
 
-; transmit character in A to the data port
+; transmit character in A to the LCD data port
 lcd_putchar:
     ; newline char?
     cp ESC_N
@@ -108,7 +109,7 @@ _lcd_putchar_end:
 
 ALIGN 0x10
 
-; transmit character in A to the data port, 
+; transmit character in A to the LCD data port, 
 ; return in A the DDRAM address where the character was sent
 lcd_putdata:                     
     push bc

@@ -28,6 +28,7 @@ ENDIF
 
 ALIGN 0x10
 
+; sent character in A to the console 
 putchar:
 IF BEANBOARD
     ; A is not guaranteed to be preserved in these calls, 
@@ -41,7 +42,7 @@ ENDIF
 
 ALIGN 0x10
 
-; print a zero-terminated string, pointed to by hl
+; print a zero-terminated string pointed to by hl to the console
 puts:
     push hl
 _puts_loop:
