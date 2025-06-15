@@ -269,7 +269,7 @@ asm/marvin.asm:
     12                              ; point DE to zero - this is the default address argument for commands
     13  0090  110000                ld de,0x0000
     14                          
-    15  0093  212504                ld hl,welcome_msg
+    15  0093  213004                ld hl,welcome_msg
     16  0096  cd4000                call puts
     17                          
     18  0099  00000000000000    ALIGN 0x10
@@ -344,7 +344,7 @@ asm/marvin.asm:
     87  00e5  fe3a                  cp ':'
     88  00e7  2879                  jr z,_cmd_load
     89                              ; otherwise error
-    90  00e9  214e04                ld hl,bad_cmd_msg
+    90  00e9  216004                ld hl,bad_cmd_msg
     91  00ec  cd4000                call puts
     92                              ; loop back to the prompt
     93  00ef  c3a000                jp prompt
@@ -438,7 +438,7 @@ asm/marvin.asm:
    181  0141  c3a000                jp prompt
    182                              ; w with no data
    183                          _cmd_write_null:
-   184  0144  215b04                ld hl,cmd_w_null_msg
+   184  0144  217004                ld hl,cmd_w_null_msg
    185  0147  cd4000                call puts
    186                              ; and back to prompt
    187  014a  c3a000                jp prompt
@@ -1037,22 +1037,30 @@ asm/keyscan.asm:
 beanboard.asm:
     17                          include "asm/messages_small.asm"
 asm/messages_small.asm:
-     1                          welcome_msg:
-     2  0425  5061696e66756c44                  db "PainfulDiodes\n"
+     1  0425  0000000000000000  ALIGN 0x10
+              000000            
+     2                          
+     3                          welcome_msg:
+     4  0430  5061696e66756c44                  db "PainfulDiodes\n"
               696f6465730a      
-     3  0433  4d415256494e205a                  db "MARVIN Z80 monitor\n"
+     5  043e  4d415256494e205a                  db "MARVIN Z80 monitor\n"
               3830206d6f6e6974  
               6f720a            
-     4  0446  76312e312e300a00                  db "v1.1.0\n",0
-     5                          
-     6                          
-     7                          bad_cmd_msg:
-     8  044e  42616420636f6d6d                  db "Bad command\n",0
+     6  0451  76312e312e315f62                  db "v1.1.1_beta\n",0
+              6574610a00        
+     7                          
+     8                          
+     9  045e  0000              ALIGN 0x10
+    10                          
+    11                          bad_cmd_msg:
+    12  0460  42616420636f6d6d                  db "Bad command\n",0
               616e640a00        
-     9                          
-    10                          cmd_w_null_msg:
-    11  045b  4e6f20646174610a                  db "No data\n",0
+    13                          
+    14  046d  000000            ALIGN 0x10
+    15                          
+    16                          cmd_w_null_msg:
+    17  0470  4e6f20646174610a                  db "No data\n",0
               00                
-    12                          
+    18                          
 beanboard.asm:
     18                          
