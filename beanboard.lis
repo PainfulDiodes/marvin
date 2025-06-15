@@ -109,7 +109,7 @@ asm/main.asm:
      9  0003  cd2002                call lcd_init
     10  0006  cd3003                call keyscan_init
     11                          ENDIF
-    12  0009  c39000                jp start
+    12  0009  c39000                jp START
     13                          
 beanboard.asm:
     11                          include "asm/console.asm"
@@ -265,7 +265,7 @@ asm/marvin.asm:
      8                          
      9  008c  00000000          ALIGN 0x10
     10                          
-    11                          start:
+    11                          START:
     12                              ; point DE to zero - this is the default address argument for commands
     13  0090  110000                ld de,0x0000
     14                          
@@ -274,7 +274,7 @@ asm/marvin.asm:
     17                          
     18  0099  00000000000000    ALIGN 0x10
     19                          
-    20                          prompt:
+    20                          PROMPT:
     21                              ; point HL to the beginning of the input buffer
     22  00a0  2110f0                ld hl,CMD_BUFFER
     23  00a3  3e3e                  ld a,'>'
@@ -317,7 +317,7 @@ asm/marvin.asm:
     60  00c6  3e0a                  ld a,ESC_N
     61  00c8  cd3000                call putchar
     62                              ; back to prompt
-    63  00cb  18d3                  jr prompt
+    63  00cb  18d3                  jr PROMPT
     64                          _get_cmd_end:
     65                              ; string terminator
     66  00cd  3e00                  ld a,0
@@ -331,7 +331,7 @@ asm/marvin.asm:
     74                              ; end of string?
     75  00d4  fe00                  cp 0
     76                              ; yes - empty line - go back to prompt
-    77  00d6  28c8                  jr z,prompt
+    77  00d6  28c8                  jr z,PROMPT
     78                              ; advance the buffer pointer
     79  00d8  23                    inc hl
     80  00d9  fe72                  cp 'r'
@@ -347,7 +347,7 @@ asm/marvin.asm:
     90  00e9  216004                ld hl,bad_cmd_msg
     91  00ec  cd4000                call puts
     92                              ; loop back to the prompt
-    93  00ef  c3a000                jp prompt
+    93  00ef  c3a000                jp PROMPT
     94                          
     95                          ; COMMANDS
     96                          
@@ -400,7 +400,7 @@ asm/marvin.asm:
    143  0120  3e0a                  ld a,ESC_N
    144  0122  cd3000                call putchar
    145                              ; and back to prompt
-   146  0125  c3a000                jp prompt
+   146  0125  c3a000                jp PROMPT
    147                          
    148                          ; WRITE
    149                          
@@ -435,13 +435,13 @@ asm/marvin.asm:
    178  013e  13                    inc de
    179  013f  18f4                  jr _cmd_write_data
    180                          _cmd_write_end:
-   181  0141  c3a000                jp prompt
+   181  0141  c3a000                jp PROMPT
    182                              ; w with no data
    183                          _cmd_write_null:
    184  0144  217004                ld hl,cmd_w_null_msg
    185  0147  cd4000                call puts
    186                              ; and back to prompt
-   187  014a  c3a000                jp prompt
+   187  014a  c3a000                jp PROMPT
    188                          
    189                          ; EXECUTE
    190                          
@@ -521,7 +521,7 @@ asm/marvin.asm:
    264                              ; if byte counter not zero then go again
    265  018c  20f3                  jr nz,_cmd_load_data
    266                          _cmd_load_end:
-   267  018e  c3a000                jp prompt
+   267  018e  c3a000                jp PROMPT
    268                          
 beanboard.asm:
     14                          include "asm/strings.asm"

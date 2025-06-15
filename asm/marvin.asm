@@ -8,7 +8,7 @@
 
 ALIGN 0x10
 
-start:
+START:
     ; point DE to zero - this is the default address argument for commands
     ld de,0x0000
 
@@ -17,7 +17,7 @@ start:
 
 ALIGN 0x10
 
-prompt:
+PROMPT:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER            
     ld a,'>'
@@ -60,7 +60,7 @@ _get_cmd_esc:
     ld a,ESC_N
     call putchar
     ; back to prompt
-    jr prompt
+    jr PROMPT
 _get_cmd_end:
     ; string terminator
     ld a,0                  
@@ -74,7 +74,7 @@ _get_cmd_end:
     ; end of string?
     cp 0
     ; yes - empty line - go back to prompt
-    jr z,prompt
+    jr z,PROMPT
     ; advance the buffer pointer
     inc hl
     cp 'r'
@@ -90,7 +90,7 @@ _get_cmd_end:
     ld hl,bad_cmd_msg
     call puts
     ; loop back to the prompt
-    jp prompt
+    jp PROMPT
 
 ; COMMANDS
 
@@ -143,7 +143,7 @@ _cmd_read_byte:
     ld a,ESC_N
     call putchar
     ; and back to prompt
-    jp prompt
+    jp PROMPT
 
 ; WRITE
 
@@ -178,13 +178,13 @@ _cmd_write_data:
     inc de
     jr _cmd_write_data
 _cmd_write_end:
-    jp prompt
+    jp PROMPT
     ; w with no data
 _cmd_write_null:        
     ld hl,cmd_w_null_msg
     call puts
     ; and back to prompt
-    jp prompt
+    jp PROMPT
 
 ; EXECUTE
 
@@ -264,4 +264,4 @@ _cmd_load_data:
     ; if byte counter not zero then go again
     jr nz,_cmd_load_data
 _cmd_load_end:
-    jp prompt
+    jp PROMPT

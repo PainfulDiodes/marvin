@@ -9,4 +9,4 @@ IF BEANBOARD
     call lcd_init
     call keyscan_init
 ENDIF
-    jp start
+    jp START
