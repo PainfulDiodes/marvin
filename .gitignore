@@ -6,5 +6,4 @@ lst
 *.hex
 *.lst
 *.o
-*.map
 *.sym
