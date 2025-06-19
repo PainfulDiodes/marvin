@@ -125,59 +125,58 @@ asm/console.asm:
      9                          
     10  0018  0000000000000000  ALIGN 0x10
     11                          
-    12                          ; read a character from the console and return it,
-    13                          ; or 0 if there is no character
-    14                          readchar:
-    15                          IF BEANBOARD
-    16                              ; check keyboard
-    17  0020  cd4003                call keyscan
-    18                              ; is there a character?
-    19  0023  fe00                  cp 0
-    20                              ; yes: return it
-    21  0025  c0                    ret nz
-    22                              ; no:
-    23                          ENDIF
-    24                              ; check usb
-    25  0026  cd5000                call usb_readchar
-    26                              ; return the result - 0 if no char
-    27  0029  c9                    ret
-    28                          
-    29  002a  000000000000      ALIGN 0x10
-    30                          
-    31                          ; sent character in A to the console
-    32                          putchar:
-    33                          IF BEANBOARD
-    34                              ; A is not guaranteed to be preserved in these calls,
-    35                              ; so preserve across the first call
-    36  0030  f5                    push af
-    37  0031  cd6002                call lcd_putchar
-    38  0034  f1                    pop af
-    39                          ENDIF
-    40  0035  cd7000                call usb_putchar
-    41  0038  c9                    ret
-    42                          
-    43  0039  00000000000000    ALIGN 0x10
-    44                          
-    45                          ; print a zero-terminated string pointed to by hl to the console
-    46                          puts:
-    47  0040  e5                    push hl
-    48                          _puts_loop:
-    49                              ; get character from string
-    50  0041  7e                    ld a,(hl)
-    51                              ; is it zero?
-    52  0042  fe00                  cp 0
-    53                              ; yes
-    54  0044  2807                  jr z, _puts_end
-    55                              ; no: send character
-    56  0046  cd3000                call putchar
-    57                              ; next character position
-    58  0049  23                    inc hl
-    59                              ; loop for next character
-    60  004a  c34100                jp _puts_loop
-    61                          _puts_end:
-    62  004d  e1                    pop hl
-    63  004e  c9                    ret
-    64                          
+    12                          ; read a character from the console and return in A - return 0 if there is no character
+    13                          readchar:
+    14                          IF BEANBOARD
+    15                              ; check keyboard
+    16  0020  cd4003                call keyscan
+    17                              ; is there a character?
+    18  0023  fe00                  cp 0
+    19                              ; yes: return it
+    20  0025  c0                    ret nz
+    21                              ; no:
+    22                          ENDIF
+    23                              ; check usb
+    24  0026  cd5000                call usb_readchar
+    25                              ; return the result - 0 if no char
+    26  0029  c9                    ret
+    27                          
+    28  002a  000000000000      ALIGN 0x10
+    29                          
+    30                          ; sent character in A to the console
+    31                          putchar:
+    32                          IF BEANBOARD
+    33                              ; A is not guaranteed to be preserved in these calls,
+    34                              ; so preserve across the first call
+    35  0030  f5                    push af
+    36  0031  cd6002                call lcd_putchar
+    37  0034  f1                    pop af
+    38                          ENDIF
+    39  0035  cd7000                call usb_putchar
+    40  0038  c9                    ret
+    41                          
+    42  0039  00000000000000    ALIGN 0x10
+    43                          
+    44                          ; print a zero-terminated string pointed to by hl to the console
+    45                          puts:
+    46  0040  e5                    push hl
+    47                          _puts_loop:
+    48                              ; get character from string
+    49  0041  7e                    ld a,(hl)
+    50                              ; is it zero?
+    51  0042  fe00                  cp 0
+    52                              ; yes
+    53  0044  2807                  jr z, _puts_end
+    54                              ; no: send character
+    55  0046  cd3000                call putchar
+    56                              ; next character position
+    57  0049  23                    inc hl
+    58                              ; loop for next character
+    59  004a  c34100                jp _puts_loop
+    60                          _puts_end:
+    61  004d  e1                    pop hl
+    62  004e  c9                    ret
+    63                          
 beanboard.asm:
     12                          include "asm/UM245R.asm"
 asm/UM245R.asm:
