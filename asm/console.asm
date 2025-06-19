@@ -9,8 +9,7 @@ getchar:
 
 ALIGN 0x10
 
-; read a character from the console and return it, 
-; or 0 if there is no character
+; read a character from the console and return in A - return 0 if there is no character
 readchar:
 IF BEANBOARD
     ; check keyboard
