@@ -3,7 +3,7 @@ ALIGN 0x10
 welcome_msg:    
                 db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
-                db "v1.1.1_beta\n",0
+                db "v1.1.1 WIP\n",0
 
 
 ALIGN 0x10
