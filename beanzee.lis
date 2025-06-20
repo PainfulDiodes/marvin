@@ -1043,26 +1043,26 @@ asm/messages.asm:
               000000            
      2                          
      3                          welcome_msg:
-     4  0430  4d415256494e2076                  db "MARVIN v1.1.1_beta\n"
-              312e312e315f6265  
-              74610a            
-     5  0443  412073696d706c65                  db "A simple Z80 homebrew monitor program\n"
+     4  0430  4d415256494e2076                  db "MARVIN v1.1.1 WIP\n"
+              312e312e31205749  
+              500a              
+     5  0442  412073696d706c65                  db "A simple Z80 homebrew monitor program\n"
               205a383020686f6d  
               6562726577206d6f  
               6e69746f72207072  
               6f6772616d0a      
-     6  0469  2863292053746570                  db "(c) Stephen Willcock 2024\n"
+     6  0468  2863292053746570                  db "(c) Stephen Willcock 2024\n"
               68656e2057696c6c  
               636f636b20323032  
               340a              
-     7  0483  68747470733a2f2f                  db "https://github.com/PainfulDiodes\n\n",0
+     7  0482  68747470733a2f2f                  db "https://github.com/PainfulDiodes\n\n",0
               6769746875622e63  
               6f6d2f5061696e66  
               756c44696f646573  
               0a0a00            
      8                          
-     9  04a6  0000000000000000  ALIGN 0x10
-              0000              
+     9  04a5  0000000000000000  ALIGN 0x10
+              000000            
     10                          
     11                          bad_cmd_msg:
     12  04b0  436f6d6d616e6420                  db "Command not recognised\n",0
