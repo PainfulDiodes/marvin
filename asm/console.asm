@@ -33,10 +33,29 @@ ALIGN 0x10
 
 ; sent character in A to the console 
 putchar:
-    push af
+    push hl
+    push bc
+    ld b,a
+    ld hl,CONSOLE_STATUS
+    ld a,CONSOLE_STATUS_BEANBOARD
+    and (hl)
+    jr nz,_putchar_beanboard
+    ld a,CONSOLE_STATUS_USB
+    and (hl)
+    jr nz,_putchar_usb
+    jr _putchar_end
+_putchar_beanboard:
+    ld a,b
     call lcd_putchar
-    pop af
+    ld a,b
+    jr _putchar_end
+_putchar_usb:
+    ld a,b
     call usb_putchar
+    ld a,b
+_putchar_end:
+    pop bc
+    pop hl
     ret
 
 ALIGN 0x10
