@@ -8,6 +8,5 @@ ENDIF
 IF BEANBOARD
     call console_init
     call lcd_init
-    call keyscan_init
 ENDIF
     jp START

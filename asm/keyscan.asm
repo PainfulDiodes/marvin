@@ -8,23 +8,6 @@ MOD_KEY_CMD     equ 0b00010000
 
 ALIGN 0x10
 
-; initialise keyscan
-keyscan_init:
-    push bc
-    push hl
-    ld b,8
-    ld hl,KEYSCAN_BUFFER
-_keyscan_init_loop:
-    ld (hl),0
-    inc hl
-    djnz _keyscan_init_loop
-    ; end
-    pop hl
-    pop bc
-    ret
-
-ALIGN 0x10
-
 ; return value in A
 keyscan:
     push bc
