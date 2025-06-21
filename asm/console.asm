@@ -11,31 +11,31 @@ ALIGN 0x10
 
 ; read a character from the console and return in A - return 0 if there is no character
 readchar:
-IF BEANBOARD
-    ; check keyboard
+    push hl
+    ld hl,CONSOLE_STATUS
+    ld a,CONSOLE_STATUS_BEANBOARD
+    and (hl)
+    jr nz,_readchar_beanboard
+    ld a,CONSOLE_STATUS_USB
+    and (hl)
+    jr nz,_readchar_usb
+    jr _readchar_end
+_readchar_beanboard:
     call keyscan
-    ; is there a character? 
-    cp 0
-    ; yes: return it
-    ret nz
-    ; no: 
-ENDIF
-    ; check usb
+    jr _readchar_end
+_readchar_usb:
     call usb_readchar
-    ; return the result - 0 if no char
+_readchar_end:
+    pop hl
     ret
 
 ALIGN 0x10
 
 ; sent character in A to the console 
 putchar:
-IF BEANBOARD
-    ; A is not guaranteed to be preserved in these calls, 
-    ; so preserve across the first call
     push af
     call lcd_putchar
     pop af
-ENDIF
     call usb_putchar
     ret
 
@@ -59,4 +59,32 @@ _puts_loop:
     jp _puts_loop
 _puts_end:
     pop hl
+    ret
+
+console_init:
+    ; check for keypress
+    ; check usb
+    call usb_readchar
+    ; is there a character? 
+    cp 0
+    ; yes
+    jr nz,_console_init_usb
+    ; no: 
+    ; check keyboard
+    call keyscan
+    ; is there a character? 
+    cp 0
+    ; yes
+    jr nz,_console_init_beanboard
+    ; no: loop again
+    jr console_init
+_console_init_beanboard:
+    ld a,CONSOLE_STATUS_BEANBOARD
+    ld hl,CONSOLE_STATUS
+    ld (hl),a
+    ret
+_console_init_usb:
+    ld a,CONSOLE_STATUS_USB
+    ld hl,CONSOLE_STATUS
+    ld (hl),a
     ret
