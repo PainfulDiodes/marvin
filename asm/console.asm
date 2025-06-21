@@ -47,13 +47,12 @@ putchar:
 _putchar_beanboard:
     ld a,b
     call lcd_putchar
-    ld a,b
     jr _putchar_end
 _putchar_usb:
     ld a,b
     call usb_putchar
-    ld a,b
 _putchar_end:
+    ld a,b
     pop bc
     pop hl
     ret
