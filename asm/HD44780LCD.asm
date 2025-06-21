@@ -191,3 +191,18 @@ _lcd_scroll_clear_line_loop:
     call lcd_putdata
     djnz _lcd_scroll_clear_line_loop
     ret
+
+; ret 0 in A if the LCD device is ready to be written to
+lcd_write_ready:
+    ; get the LCD status
+    in a,(LCD_CTRL)
+    ; busy ?
+    bit 7,a
+    ; yes
+    jr nz,_lcd_write_not_ready
+    ; no
+    ld a,0x00
+    ret
+_lcd_write_not_ready:
+    ld a,0xff
+    ret

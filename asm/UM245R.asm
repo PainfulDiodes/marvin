@@ -67,3 +67,18 @@ _usb_put_loop:
     out (UM245R_DATA),a
     pop bc
     ret
+
+; ret 0 in A if the USB device is ready to be written to
+usb_write_ready:
+    ; get the USB status
+    in a,(UM245R_CTRL)
+    ; ready to transmit? (active low)
+    bit 0,a
+    ; no: bit is high - not ready
+    jr nz,_usb_write_not_ready
+    ; yes: bit is low - ready
+    ld a,0x00
+    ret
+_usb_write_not_ready:
+    ld a,0xff
+    ret

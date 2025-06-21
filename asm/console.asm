@@ -11,22 +11,9 @@ ALIGN 0x10
 
 ; read a character from the console and return in A - return 0 if there is no character
 readchar:
-    push hl
-    ld hl,CONSOLE_STATUS
-    ld a,CONSOLE_STATUS_BEANBOARD
-    and (hl)
-    jr nz,_readchar_beanboard
-    ld a,CONSOLE_STATUS_USB
-    and (hl)
-    jr nz,_readchar_usb
-    jr _readchar_end
-_readchar_beanboard:
     call keyscan
-    jr _readchar_end
-_readchar_usb:
+    ret nz
     call usb_readchar
-_readchar_end:
-    pop hl
     ret
 
 ALIGN 0x10
@@ -80,21 +67,10 @@ _puts_end:
     ret
 
 console_init:
-    ; check for keypress
-    ; check usb
-    call usb_readchar
-    ; is there a character? 
-    cp 0
-    ; yes
-    jr nz,_console_init_usb
-    ; no: 
-    ; check keyboard
-    call keyscan
-    ; is there a character? 
-    cp 0
-    ; yes
-    jr nz,_console_init_beanboard
-    ; no: loop again
+    call lcd_write_ready
+    jr z,_console_init_beanboard
+    call usb_write_ready
+    jr z,_console_init_usb
     jr console_init
 _console_init_beanboard:
     ld a,CONSOLE_STATUS_BEANBOARD

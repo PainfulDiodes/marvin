@@ -112,7 +112,7 @@ asm/main.asm:
      6                          
      7  0000  31ffff                ld sp, STACK
      8                          IF BEANBOARD
-     9  0003  cd6f00                call console_init
+     9  0003  cd5f00                call console_init
     10  0006  cd6002                call lcd_init
     11                          ENDIF
     12  0009  c3d000                jp START
@@ -133,102 +133,78 @@ asm/console.asm:
     11                          
     12                          ; read a character from the console and return in A - return 0 if there is no character
     13                          readchar:
-    14  0020  e5                    push hl
-    15  0021  2100f0                ld hl,CONSOLE_STATUS
-    16  0024  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
-    17  0026  a6                    and (hl)
-    18  0027  2007                  jr nz,_readchar_beanboard
-    19  0029  3e01                  ld a,CONSOLE_STATUS_USB
-    20  002b  a6                    and (hl)
-    21  002c  2007                  jr nz,_readchar_usb
-    22  002e  1808                  jr _readchar_end
-    23                          _readchar_beanboard:
-    24  0030  cd7003                call keyscan
-    25  0033  1803                  jr _readchar_end
-    26                          _readchar_usb:
-    27  0035  cd9000                call usb_readchar
-    28                          _readchar_end:
-    29  0038  e1                    pop hl
-    30  0039  c9                    ret
-    31                          
-    32  003a  000000000000      ALIGN 0x10
-    33                          
-    34                          ; sent character in A to the console
-    35                          putchar:
-    36  0040  e5                    push hl
-    37  0041  c5                    push bc
-    38  0042  47                    ld b,a
-    39  0043  2100f0                ld hl,CONSOLE_STATUS
-    40  0046  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
-    41  0048  a6                    and (hl)
-    42  0049  2007                  jr nz,_putchar_beanboard
-    43  004b  3e01                  ld a,CONSOLE_STATUS_USB
-    44  004d  a6                    and (hl)
-    45  004e  2008                  jr nz,_putchar_usb
-    46  0050  180a                  jr _putchar_end
-    47                          _putchar_beanboard:
-    48  0052  78                    ld a,b
-    49  0053  cda002                call lcd_putchar
-    50  0056  1804                  jr _putchar_end
-    51                          _putchar_usb:
-    52  0058  78                    ld a,b
-    53  0059  cdb000                call usb_putchar
-    54                          _putchar_end:
-    55  005c  78                    ld a,b
-    56  005d  c1                    pop bc
-    57  005e  e1                    pop hl
-    58  005f  c9                    ret
-    59                          
-    60                          ALIGN 0x10
-    61                          
-    62                          ; print a zero-terminated string pointed to by hl to the console
-    63                          puts:
-    64  0060  e5                    push hl
-    65                          _puts_loop:
-    66                              ; get character from string
-    67  0061  7e                    ld a,(hl)
-    68                              ; is it zero?
-    69  0062  fe00                  cp 0
-    70                              ; yes
-    71  0064  2807                  jr z, _puts_end
-    72                              ; no: send character
-    73  0066  cd4000                call putchar
-    74                              ; next character position
-    75  0069  23                    inc hl
-    76                              ; loop for next character
-    77  006a  c36100                jp _puts_loop
-    78                          _puts_end:
-    79  006d  e1                    pop hl
-    80  006e  c9                    ret
-    81                          
-    82                          console_init:
-    83                              ; check for keypress
-    84                              ; check usb
-    85  006f  cd9000                call usb_readchar
-    86                              ; is there a character?
-    87  0072  fe00                  cp 0
-    88                              ; yes
-    89  0074  2010                  jr nz,_console_init_usb
-    90                              ; no:
-    91                              ; check keyboard
-    92  0076  cd7003                call keyscan
-    93                              ; is there a character?
-    94  0079  fe00                  cp 0
-    95                              ; yes
-    96  007b  2002                  jr nz,_console_init_beanboard
-    97                              ; no: loop again
-    98  007d  18f0                  jr console_init
-    99                          _console_init_beanboard:
-   100  007f  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
-   101  0081  2100f0                ld hl,CONSOLE_STATUS
-   102  0084  77                    ld (hl),a
-   103  0085  c9                    ret
-   104                          _console_init_usb:
-   105  0086  3e01                  ld a,CONSOLE_STATUS_USB
-   106  0088  2100f0                ld hl,CONSOLE_STATUS
-   107  008b  77                    ld (hl),a
-   108  008c  c9                    ret
-   109                          
+    14  0020  cd8003                call keyscan
+    15  0023  c0                    ret nz
+    16  0024  cd8000                call usb_readchar
+    17  0027  c9                    ret
+    18                          
+    19  0028  0000000000000000  ALIGN 0x10
+    20                          
+    21                          ; sent character in A to the console
+    22                          putchar:
+    23  0030  e5                    push hl
+    24  0031  c5                    push bc
+    25  0032  47                    ld b,a
+    26  0033  2100f0                ld hl,CONSOLE_STATUS
+    27  0036  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
+    28  0038  a6                    and (hl)
+    29  0039  2007                  jr nz,_putchar_beanboard
+    30  003b  3e01                  ld a,CONSOLE_STATUS_USB
+    31  003d  a6                    and (hl)
+    32  003e  2008                  jr nz,_putchar_usb
+    33  0040  180a                  jr _putchar_end
+    34                          _putchar_beanboard:
+    35  0042  78                    ld a,b
+    36  0043  cda002                call lcd_putchar
+    37  0046  1804                  jr _putchar_end
+    38                          _putchar_usb:
+    39  0048  78                    ld a,b
+    40  0049  cda000                call usb_putchar
+    41                          _putchar_end:
+    42  004c  78                    ld a,b
+    43  004d  c1                    pop bc
+    44  004e  e1                    pop hl
+    45  004f  c9                    ret
+    46                          
+    47                          ALIGN 0x10
+    48                          
+    49                          ; print a zero-terminated string pointed to by hl to the console
+    50                          puts:
+    51  0050  e5                    push hl
+    52                          _puts_loop:
+    53                              ; get character from string
+    54  0051  7e                    ld a,(hl)
+    55                              ; is it zero?
+    56  0052  fe00                  cp 0
+    57                              ; yes
+    58  0054  2807                  jr z, _puts_end
+    59                              ; no: send character
+    60  0056  cd3000                call putchar
+    61                              ; next character position
+    62  0059  23                    inc hl
+    63                              ; loop for next character
+    64  005a  c35100                jp _puts_loop
+    65                          _puts_end:
+    66  005d  e1                    pop hl
+    67  005e  c9                    ret
+    68                          
+    69                          console_init:
+    70  005f  cd6503                call lcd_write_ready
+    71  0062  2807                  jr z,_console_init_beanboard
+    72  0064  cdbc00                call usb_write_ready
+    73  0067  2809                  jr z,_console_init_usb
+    74  0069  18f4                  jr console_init
+    75                          _console_init_beanboard:
+    76  006b  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
+    77  006d  2100f0                ld hl,CONSOLE_STATUS
+    78  0070  77                    ld (hl),a
+    79  0071  c9                    ret
+    80                          _console_init_usb:
+    81  0072  3e01                  ld a,CONSOLE_STATUS_USB
+    82  0074  2100f0                ld hl,CONSOLE_STATUS
+    83  0077  77                    ld (hl),a
+    84  0078  c9                    ret
+    85                          
 beanboard.asm:
     12                          include "asm/UM245R.asm"
 asm/UM245R.asm:
@@ -246,63 +222,78 @@ asm/UM245R.asm:
     12                          ; externally this is consistent with VT100/ANSI terminal behaviour
     13                          ; and internally line endings are always \n
     14                          
-    15  008d  000000            ALIGN 0x10
+    15  0079  00000000000000    ALIGN 0x10
     16                          
     17                          ; get character and return in A
     18                          usb_readchar:
     19                              ; get the USB status
-    20  0090  db00                  in a,(UM245R_CTRL)
+    20  0080  db00                  in a,(UM245R_CTRL)
     21                              ; data to read? (active low)
-    22  0092  cb4f                  bit 1,a
+    22  0082  cb4f                  bit 1,a
     23                              ; no, the buffer is empty
-    24  0094  2008                  jr nz,_usb_no_char
+    24  0084  2008                  jr nz,_usb_no_char
     25                              ; yes, read the received char
-    26  0096  db01                  in a,(UM245R_DATA)
+    26  0086  db01                  in a,(UM245R_DATA)
     27                              ; is CR?
-    28  0098  fe0d                  cp ESC_R
+    28  0088  fe0d                  cp ESC_R
     29                              ; no:
-    30  009a  c0                    ret nz
+    30  008a  c0                    ret nz
     31                              ; yes: convert CR to LF
-    32  009b  3e0a                  ld a, ESC_N
-    33  009d  c9                    ret
+    32  008b  3e0a                  ld a, ESC_N
+    33  008d  c9                    ret
     34                          _usb_no_char:
-    35  009e  3e00                  ld a,0
-    36  00a0  c9                    ret
+    35  008e  3e00                  ld a,0
+    36  0090  c9                    ret
     37                          
-    38  00a1  0000000000000000  ALIGN 0x10
+    38  0091  0000000000000000  ALIGN 0x10
               00000000000000    
     39                          
     40                          usb_putchar:
     41                              ; newline?
-    42  00b0  fe0a                  cp ESC_N
+    42  00a0  fe0a                  cp ESC_N
     43                              ; no: just send the char
-    44  00b2  2007                  jr nz,_do_usb_put
-    45  00b4  3e0d                  ld a, ESC_R
-    46  00b6  cdbf00                call _usb_put
-    47  00b9  3e0a                  ld a, ESC_N
+    44  00a2  2007                  jr nz,_do_usb_put
+    45  00a4  3e0d                  ld a, ESC_R
+    46  00a6  cdaf00                call _usb_put
+    47  00a9  3e0a                  ld a, ESC_N
     48                          _do_usb_put:
-    49  00bb  cdbf00                call _usb_put
-    50  00be  c9                    ret
+    49  00ab  cdaf00                call _usb_put
+    50  00ae  c9                    ret
     51                          
     52                          ; transmit character in A
     53                          _usb_put:
-    54  00bf  c5                    push bc
+    54  00af  c5                    push bc
     55                              ; stash the transmit character
-    56  00c0  47                    ld b,a
+    56  00b0  47                    ld b,a
     57                          _usb_put_loop:
     58                              ; get the USB status
-    59  00c1  db00                  in a,(UM245R_CTRL)
+    59  00b1  db00                  in a,(UM245R_CTRL)
     60                              ; ready to transmit? (active low)
-    61  00c3  cb47                  bit 0,a
+    61  00b3  cb47                  bit 0,a
     62                              ; no: bit is high
-    63  00c5  20fa                  jr nz,_usb_put_loop
+    63  00b5  20fa                  jr nz,_usb_put_loop
     64                              ; yes: restore the stashed transmit character
-    65  00c7  78                    ld a,b
+    65  00b7  78                    ld a,b
     66                              ; transmit the character
-    67  00c8  d301                  out (UM245R_DATA),a
-    68  00ca  c1                    pop bc
-    69  00cb  c9                    ret
+    67  00b8  d301                  out (UM245R_DATA),a
+    68  00ba  c1                    pop bc
+    69  00bb  c9                    ret
     70                          
+    71                          ; ret 0 in A if the USB device is ready to be written to
+    72                          usb_write_ready:
+    73                              ; get the USB status
+    74  00bc  db00                  in a,(UM245R_CTRL)
+    75                              ; ready to transmit? (active low)
+    76  00be  cb47                  bit 0,a
+    77                              ; no: bit is high - not ready
+    78  00c0  2003                  jr nz,_usb_write_not_ready
+    79                              ; yes: bit is low - ready
+    80  00c2  3e00                  ld a,0x00
+    81  00c4  c9                    ret
+    82                          _usb_write_not_ready:
+    83  00c5  3eff                  ld a,0xff
+    84  00c7  c9                    ret
+    85                          
 beanboard.asm:
     13                          include "asm/marvin.asm"
 asm/marvin.asm:
@@ -314,14 +305,14 @@ asm/marvin.asm:
      6                          
      7                          ; MAIN PROGRAM LOOP
      8                          
-     9  00cc  00000000          ALIGN 0x10
+     9  00c8  0000000000000000  ALIGN 0x10
     10                          
     11                          START:
     12                              ; point DE to zero - this is the default address argument for commands
     13  00d0  110000                ld de,0x0000
     14                          
-    15  00d3  216004                ld hl,welcome_msg
-    16  00d6  cd6000                call puts
+    15  00d3  217004                ld hl,welcome_msg
+    16  00d6  cd5000                call puts
     17                          
     18  00d9  00000000000000    ALIGN 0x10
     19                          
@@ -329,13 +320,13 @@ asm/marvin.asm:
     21                              ; point HL to the beginning of the input buffer
     22  00e0  2120f0                ld hl,CMD_BUFFER
     23  00e3  3e3e                  ld a,'>'
-    24  00e5  cd4000                call putchar
+    24  00e5  cd3000                call putchar
     25                          
     26                          _get_cmd:
     27                              ; get character from console
     28  00e8  cd1000                call getchar
     29                              ; echo the character to console
-    30  00eb  cd4000                call putchar
+    30  00eb  cd3000                call putchar
     31                              ; is CR?
     32  00ee  fe0d                  cp ESC_R
     33                              ; yes: skip this
@@ -366,7 +357,7 @@ asm/marvin.asm:
     58                          _get_cmd_esc:
     59                              ; new line
     60  0106  3e0a                  ld a,ESC_N
-    61  0108  cd4000                call putchar
+    61  0108  cd3000                call putchar
     62                              ; back to prompt
     63  010b  18d3                  jr PROMPT
     64                          _get_cmd_end:
@@ -395,8 +386,8 @@ asm/marvin.asm:
     87  0125  fe3a                  cp ':'
     88  0127  2879                  jr z,_cmd_load
     89                              ; otherwise error
-    90  0129  219004                ld hl,bad_cmd_msg
-    91  012c  cd6000                call puts
+    90  0129  21a004                ld hl,bad_cmd_msg
+    91  012c  cd5000                call puts
     92                              ; loop back to the prompt
     93  012f  c3e000                jp PROMPT
     94                          
@@ -429,9 +420,9 @@ asm/marvin.asm:
    121  0146  cd3002                call putchar_hex
    122                              ; separator between address and data
    123  0149  3e3a                  ld a,':'
-   124  014b  cd4000                call putchar
+   124  014b  cd3000                call putchar
    125  014e  3e20                  ld a,' '
-   126  0150  cd4000                call putchar
+   126  0150  cd3000                call putchar
    127                              ; get a byte
    128                          _cmd_read_byte:
    129  0153  1a                    ld a,(de)
@@ -439,7 +430,7 @@ asm/marvin.asm:
    131  0154  cd3002                call putchar_hex
    132                              ; add space between bytes
    133  0157  3e20                  ld a,' '
-   134  0159  cd4000                call putchar
+   134  0159  cd3000                call putchar
    135                              ; next address
    136  015c  13                    inc de
    137                              ; reduce byte counter
@@ -449,7 +440,7 @@ asm/marvin.asm:
    141  015e  20f3                  jr nz, _cmd_read_byte
    142                              ; otherwise, new line
    143  0160  3e0a                  ld a,ESC_N
-   144  0162  cd4000                call putchar
+   144  0162  cd3000                call putchar
    145                              ; and back to prompt
    146  0165  c3e000                jp PROMPT
    147                          
@@ -489,8 +480,8 @@ asm/marvin.asm:
    181  0181  c3e000                jp PROMPT
    182                              ; w with no data
    183                          _cmd_write_null:
-   184  0184  21a004                ld hl,cmd_w_null_msg
-   185  0187  cd6000                call puts
+   184  0184  21b004                ld hl,cmd_w_null_msg
+   185  0187  cd5000                call puts
    186                              ; and back to prompt
    187  018a  c3e000                jp PROMPT
    188                          
@@ -684,12 +675,12 @@ asm/strings.asm:
    102                              ; alpha
    103                              ; for alpha add the base ascii for 'a' but then sub 10 / 0x0a as hex 'a' = 10d
    104  024b  c657                  add a,'a'-0x0a
-   105  024d  cd4000                call putchar
+   105  024d  cd3000                call putchar
    106  0250  c9                    ret
    107                          _putchar_hex_n:
    108                              ; for numeric add the base ascii for '0'
    109  0251  c630                  add a,'0'
-   110  0253  cd4000                call putchar
+   110  0253  cd3000                call putchar
    111  0256  c9                    ret
    112                          
 beanboard.asm:
@@ -892,6 +883,21 @@ asm/HD44780LCD.asm:
    192  0362  10f9                  djnz _lcd_scroll_clear_line_loop
    193  0364  c9                    ret
    194                          
+   195                          ; ret 0 in A if the LCD device is ready to be written to
+   196                          lcd_write_ready:
+   197                              ; get the LCD status
+   198  0365  db04                  in a,(LCD_CTRL)
+   199                              ; busy ?
+   200  0367  cb7f                  bit 7,a
+   201                              ; yes
+   202  0369  2003                  jr nz,_lcd_write_not_ready
+   203                              ; no
+   204  036b  3e00                  ld a,0x00
+   205  036d  c9                    ret
+   206                          _lcd_write_not_ready:
+   207  036e  3eff                  ld a,0xff
+   208  0370  c9                    ret
+   209                          
 beanboard.asm:
     16                          include "asm/keyscan.asm"
 asm/keyscan.asm:
@@ -903,57 +909,57 @@ asm/keyscan.asm:
      6                          MOD_KEY_ALT     equ 0b00001000
      7                          MOD_KEY_CMD     equ 0b00010000
      8                          
-     9  0365  0000000000000000  ALIGN 0x10
-              000000            
+     9  0371  0000000000000000  ALIGN 0x10
+              00000000000000    
     10                          
     11                          ; return value in A
     12                          keyscan:
-    13  0370  c5                    push bc
-    14  0371  d5                    push de
-    15  0372  e5                    push hl
+    13  0380  c5                    push bc
+    14  0381  d5                    push de
+    15  0382  e5                    push hl
     16                              ; initial row bit - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-    17  0373  0601                  ld b,0x01
+    17  0383  0601                  ld b,0x01
     18                              ; row counter - 0 => 7
-    19  0375  0e00                  ld c,0x00
+    19  0385  0e00                  ld c,0x00
     20                              ; location of previous values
-    21  0377  2110f0                ld hl,KEYSCAN_BUFFER
-    22  037a  cdb003                call _modifierkeys
+    21  0387  2110f0                ld hl,KEYSCAN_BUFFER
+    22  038a  cdc003                call _modifierkeys
     23                              ; initialise map pointer
-    24  037d  11d503                ld de,QWERTY_KEYMAP_L
+    24  038d  11e503                ld de,QWERTY_KEYMAP_L
     25                              ; shift key down?
-    26  0380  e601                  and MOD_KEY_SHIFT
-    27  0382  ca8803                jp z,_keyscanloop
-    28  0385  111504                ld de,QWERTY_KEYMAP_U
+    26  0390  e601                  and MOD_KEY_SHIFT
+    27  0392  ca9803                jp z,_keyscanloop
+    28  0395  112504                ld de,QWERTY_KEYMAP_U
     29                          _keyscanloop:
-    30  0388  cda303                call _rowscan
+    30  0398  cdb303                call _rowscan
     31                              ; ASCII returned in A, or 0
-    32  038b  cdc003                call _colscan
-    33  038e  fe00                  cp 0
-    34  0390  c29a03                jp nz,_delay
+    32  039b  cdd003                call _colscan
+    33  039e  fe00                  cp 0
+    34  03a0  c2aa03                jp nz,_delay
     35                              ; move the pointer of previous values to the next row slot
-    36  0393  23                    inc hl
+    36  03a3  23                    inc hl
     37                              ; increment row counter
-    38  0394  0c                    inc c
+    38  03a4  0c                    inc c
     39                              ; clear the carry flag
-    40  0395  b7                    or a
+    40  03a5  b7                    or a
     41                              ; shift row bit left - when we've done all 8, it will move to the carry flag
-    42  0396  cb10                  rl b
+    42  03a6  cb10                  rl b
     43                              ; loop if not done all rows
-    44  0398  30ee                  jr nc,_keyscanloop
+    44  03a8  30ee                  jr nc,_keyscanloop
     45                              ; key debounce
     46                          _delay:
     47                              ; set a to the length of the delay
-    48  039a  06f0                  ld b,DEBOUNCE_DELAY
+    48  03aa  06f0                  ld b,DEBOUNCE_DELAY
     49                          _delayloop:
     50                              ; wait a few cycles
-    51  039c  00                    nop
+    51  03ac  00                    nop
     52                              ; no - loop again
-    53  039d  10fd                  djnz _delayloop
+    53  03ad  10fd                  djnz _delayloop
     54                          ; end
-    55  039f  e1                    pop hl
-    56  03a0  d1                    pop de
-    57  03a1  c1                    pop bc
-    58  03a2  c9                    ret
+    55  03af  e1                    pop hl
+    56  03b0  d1                    pop de
+    57  03b1  c1                    pop bc
+    58  03b2  c9                    ret
     59                          
     60                          ; get row bitmap representing new keystrokes:
     61                          ; B contains row bit,
@@ -962,79 +968,79 @@ asm/keyscan.asm:
     64                          ; return value in A
     65                          _rowscan:
     66                              ; preserve registers
-    67  03a3  d5                    push de
+    67  03b3  d5                    push de
     68                              ; fetch previous value for comparison
-    69  03a4  7e                    ld a,(hl)
+    69  03b4  7e                    ld a,(hl)
     70                              ; invert A - we want to check keys becoming closed - so zeroed bits on the previous value are significant
-    71  03a5  2f                    cpl
+    71  03b5  2f                    cpl
     72                              ; store inverted previous value
-    73  03a6  57                    ld d,a
+    73  03b6  57                    ld d,a
     74                              ; get the current row bit
-    75  03a7  78                    ld a,b
+    75  03b7  78                    ld a,b
     76                              ; output row strobe
-    77  03a8  d302                  out (KEYSCAN_OUT),a
+    77  03b8  d302                  out (KEYSCAN_OUT),a
     78                              ; get column values
-    79  03aa  db03                  in a,(KEYSCAN_IN)
+    79  03ba  db03                  in a,(KEYSCAN_IN)
     80                              ; store the new value
-    81  03ac  77                    ld (hl),a
+    81  03bc  77                    ld (hl),a
     82                              ; newVal AND ~oldVal means bits are set only when the previous bit value was 0
-    83  03ad  a2                    and d
+    83  03bd  a2                    and d
     84                              ; restore registers
-    85  03ae  d1                    pop de
-    86  03af  c9                    ret
+    85  03be  d1                    pop de
+    86  03bf  c9                    ret
     87                          
     88                          ; get bitmap representing modifier keys:
     89                          ; return value in A
     90                          _modifierkeys:
-    91  03b0  3e10                  ld a,0b00010000 ; row 4
+    91  03c0  3e10                  ld a,0b00010000 ; row 4
     92                              ; output row strobe
-    93  03b2  d302                  out (KEYSCAN_OUT),a
+    93  03c2  d302                  out (KEYSCAN_OUT),a
     94                              ; get column values
-    95  03b4  db03                  in a,(KEYSCAN_IN)
-    96  03b6  e601                  and 0b00000001 ; row 4, bit 0 is SHIFT
+    95  03c4  db03                  in a,(KEYSCAN_IN)
+    96  03c6  e601                  and 0b00000001 ; row 4, bit 0 is SHIFT
     97                              ; left shift modifier
-    98  03b8  2003                  jr nz,_modifier_shift
+    98  03c8  2003                  jr nz,_modifier_shift
     99                              ; no modifiers
-   100  03ba  3e00                  ld a,0
-   101  03bc  c9                    ret
+   100  03ca  3e00                  ld a,0
+   101  03cc  c9                    ret
    102                          _modifier_shift:
-   103  03bd  3e01                  ld a,MOD_KEY_SHIFT
-   104  03bf  c9                    ret
+   103  03cd  3e01                  ld a,MOD_KEY_SHIFT
+   104  03cf  c9                    ret
    105                          
    106                          ; A contains row bitmap representing new keystrokes,
    107                          ; DE contains a pointer to the ASCII map for the row - which is incremented in the subroutine
    108                          ; first printable character returned in A
    109                          _colscan:
    110                              ; preserve registers
-   111  03c0  c5                    push bc
+   111  03d0  c5                    push bc
    112                              ; initialise col bit mask - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-   113  03c1  0e01                  ld c,0x01
+   113  03d1  0e01                  ld c,0x01
    114                              ; stash the bitmap
-   115  03c3  47                    ld b,a
+   115  03d3  47                    ld b,a
    116                          _colscanloop:
    117                              ; reload the bitmap
-   118  03c4  78                    ld a,b
+   118  03d4  78                    ld a,b
    119                              ; mask the bitmap - use the column mask (C) over the bitmap value in A
-   120  03c5  a1                    and c
+   120  03d5  a1                    and c
    121                              ; if zero then no keypress
-   122  03c6  2805                  jr z,_colscanloopnext
-   123  03c8  1a                    ld a,(de)
+   122  03d6  2805                  jr z,_colscanloopnext
+   123  03d8  1a                    ld a,(de)
    124                              ; ASCII is 0?
-   125  03c9  fe00                  cp 0
-   126  03cb  2006                  jr nz,_colscanend
+   125  03d9  fe00                  cp 0
+   126  03db  2006                  jr nz,_colscanend
    127                          _colscanloopnext:
    128                              ; increment character map pointer
-   129  03cd  13                    inc de
+   129  03dd  13                    inc de
    130                              ; clear the carry flag
-   131  03ce  b7                    or a
+   131  03de  b7                    or a
    132                              ; shift row bit left - when we've done all 8, it will move to the carry flag
-   133  03cf  cb11                  rl c
+   133  03df  cb11                  rl c
    134                              ; loop if not done all rows
-   135  03d1  30f1                  jr nc,_colscanloop
+   135  03e1  30f1                  jr nc,_colscanloop
    136                          _colscanend:
    137                              ; restore registers
-   138  03d3  c1                    pop bc
-   139  03d4  c9                    ret
+   138  03e3  c1                    pop bc
+   139  03e4  c9                    ret
    140                          
    141                          ; define values for control keys
    142                          ; modifiers have zero value
@@ -1050,50 +1056,50 @@ asm/keyscan.asm:
    152                          QWERTY_CAPS equ 5
    153                          
    154                          QWERTY_KEYMAP_L:
-   155  03d5  1b71776572747975      db ESC_E,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,ESC_B,'7','8','9'
+   155  03e5  1b71776572747975      db ESC_E,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,ESC_B,'7','8','9'
               696f700508373839  
-   156  03e5  096173646667686a      db ESC_T,'a','s','d','f','g','h','j','k','l',';',QUOTE,ESC_N,'4','5','6'
+   156  03f5  096173646667686a      db ESC_T,'a','s','d','f','g','h','j','k','l',';',QUOTE,ESC_N,'4','5','6'
               6b6c3b270a343536  
-   157  03f5  007a786376626e6d      db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',SLASH,QWERTY_CURS_UP,'1','2','3'
+   157  0405  007a786376626e6d      db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',SLASH,QWERTY_CURS_UP,'1','2','3'
               2c2e2f5c01313233  
-   158  0405  00000000205b5d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',ESC_N
+   158  0415  00000000205b5d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',ESC_N
               602d3d030204300a  
    159                          QWERTY_KEYMAP_U:
-   160  0415  1b51574552545955      db ESC_E,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,ESC_B,'&','*','('
+   160  0425  1b51574552545955      db ESC_E,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,ESC_B,'&','*','('
               494f500508262a28  
-   161  0425  094153444647484a      db ESC_T,'A','S','D','F','G','H','J','K','L',':','"',ESC_N,'$','%','^'
+   161  0435  094153444647484a      db ESC_T,'A','S','D','F','G','H','J','K','L',':','"',ESC_N,'$','%','^'
               4b4c3a220a24255e  
-   162  0435  005a584356424e4d      db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',SLASH,QWERTY_CURS_UP,'!','@','#'
+   162  0445  005a584356424e4d      db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',SLASH,QWERTY_CURS_UP,'!','@','#'
               3c3e3f5c01214023  
-   163  0445  00000000207b7d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',ESC_N
+   163  0455  00000000207b7d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',ESC_N
               7e5f2b030204290a  
    164                          
 beanboard.asm:
     17                          include "asm/messages_small.asm"
 asm/messages_small.asm:
-     1  0455  0000000000000000  ALIGN 0x10
+     1  0465  0000000000000000  ALIGN 0x10
               000000            
      2                          
      3                          welcome_msg:
-     4  0460  5061696e66756c44                  db "PainfulDiodes\n"
+     4  0470  5061696e66756c44                  db "PainfulDiodes\n"
               696f6465730a      
-     5  046e  4d415256494e205a                  db "MARVIN Z80 monitor\n"
+     5  047e  4d415256494e205a                  db "MARVIN Z80 monitor\n"
               3830206d6f6e6974  
               6f720a            
-     6  0481  76312e312e312057                  db "v1.1.1 WIP\n",0
+     6  0491  76312e312e312057                  db "v1.1.1 WIP\n",0
               49500a00          
      7                          
      8                          
-     9  048d  000000            ALIGN 0x10
+     9  049d  000000            ALIGN 0x10
     10                          
     11                          bad_cmd_msg:
-    12  0490  42616420636f6d6d                  db "Bad command\n",0
+    12  04a0  42616420636f6d6d                  db "Bad command\n",0
               616e640a00        
     13                          
-    14  049d  000000            ALIGN 0x10
+    14  04ad  000000            ALIGN 0x10
     15                          
     16                          cmd_w_null_msg:
-    17  04a0  4e6f20646174610a                  db "No data\n",0
+    17  04b0  4e6f20646174610a                  db "No data\n",0
               00                
     18                          
 beanboard.asm:
