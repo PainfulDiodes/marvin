@@ -21,7 +21,7 @@ readchar:
     jr nz,_readchar_usb
     jr _readchar_end
 _readchar_beanboard:
-    call keyscan
+    call key_readchar
     jr _readchar_end
 _readchar_usb:
     call usb_readchar

@@ -143,7 +143,7 @@ asm/console.asm:
     21  002c  2007                  jr nz,_readchar_usb
     22  002e  1808                  jr _readchar_end
     23                          _readchar_beanboard:
-    24  0030  cd7003                call keyscan
+    24  0030  cd7003                call key_readchar
     25  0033  1803                  jr _readchar_end
     26                          _readchar_usb:
     27  0035  cd9000                call usb_readchar
@@ -907,7 +907,7 @@ asm/keymatrix.asm:
               000000            
     10                          
     11                          ; return value in A
-    12                          keyscan:
+    12                          key_readchar:
     13  0370  c5                    push bc
     14  0371  d5                    push de
     15  0372  e5                    push hl

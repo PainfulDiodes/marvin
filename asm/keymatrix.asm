@@ -9,7 +9,7 @@ MOD_KEY_CMD     equ 0b00010000
 ALIGN 0x10
 
 ; return value in A
-keyscan:
+key_readchar:
     push bc
     push de
     push hl
