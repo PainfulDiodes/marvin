@@ -8,7 +8,7 @@ MOD_KEY_CMD     equ 0b00010000
 
 ALIGN 0x10
 
-; return value in A
+; return keyboard char value in A, or 0
 key_readchar:
     push bc
     push de
@@ -87,8 +87,7 @@ _rowscan:
 
 ALIGN 0x10
 
-; get bitmap representing modifier keys:  
-; return value in A
+; return bitmap representing modifier keys in A
 modifierkeys:                       
     ld a,0b00010000 ; row 4
     ; output row strobe
