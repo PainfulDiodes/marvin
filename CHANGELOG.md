@@ -11,6 +11,7 @@
   * For BeanBoard console may be USB or keyboard/LCD
   * On RESET we sense for shift key to determine which is the active console: shift-RESET=USB, RESET=beanboard
   * This also helps with speeding up loading programs via the USB: LCD echoing seems to significantly slow the USB transfer speed
+* Renamed keyscan.asm > keymatrix.asm, keyscan > key_readchar (and associated labels)
 
 # v1.1.0 Latest
  
