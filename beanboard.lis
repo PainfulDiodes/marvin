@@ -13,7 +13,7 @@ asm/main.inc:
      4                          ; 8-byte status area
      5                          CONSOLE_STATUS equ 0xf000
      6                          ; 8-byte keyscan buffer
-     7                          KEYSCAN_BUFFER equ 0xf010
+     7                          KEY_MATRIX_BUFFER equ 0xf010
      8                          ; command buffer
      9                          CMD_BUFFER equ 0xf020
     10                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
@@ -916,7 +916,7 @@ asm/keymatrix.asm:
     18                              ; row counter - 0 => 7
     19  0375  0e00                  ld c,0x00
     20                              ; location of previous values
-    21  0377  2110f0                ld hl,KEYSCAN_BUFFER
+    21  0377  2110f0                ld hl,KEY_MATRIX_BUFFER
     22  037a  cdb003                call modifierkeys
     23                              ; initialise map pointer
     24  037d  11d503                ld de,QWERTY_KEYMAP_L

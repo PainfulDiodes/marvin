@@ -18,7 +18,7 @@ key_readchar:
     ; row counter - 0 => 7
     ld c,0x00                    
     ; location of previous values
-    ld hl,KEYSCAN_BUFFER
+    ld hl,KEY_MATRIX_BUFFER
     call modifierkeys
     ; initialise map pointer
     ld de,QWERTY_KEYMAP_L
