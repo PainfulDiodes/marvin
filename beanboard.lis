@@ -893,8 +893,8 @@ asm/HD44780LCD.asm:
    193  0364  c9                    ret
    194                          
 beanboard.asm:
-    16                          include "asm/keyscan.asm"
-asm/keyscan.asm:
+    16                          include "asm/keymatrix.asm"
+asm/keymatrix.asm:
      1                          DEBOUNCE_DELAY  equ 0xf0
      2                          
      3                          MOD_KEY_SHIFT   equ 0b00000001
