@@ -111,8 +111,8 @@ asm/main.asm:
      5                          ENDIF
      6                          
      7  0000  31ffff                ld sp, STACK
-     8                          IF BEANBOARD
-     9  0003  cd6f00                call console_init
+     8  0003  cd6f00                call console_init
+     9                          IF BEANBOARD
     10  0006  cd6002                call lcd_init
     11                          ENDIF
     12  0009  c3d000                jp START
