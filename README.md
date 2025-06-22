@@ -12,11 +12,10 @@ Marvin builds with:
 
 Shell scripts are included for building Marvin, which have been a convenience for me but may be of limited use depending on your environment (I am using zsh / macOS).
 
-The home directory has several build targets - assemble these to build a binary of Marvin; each will include the necessary additional assembly files from the asm directory.
+The home directory has different build targets - assemble these to build a binary of Marvin; each will include the necessary additional assembly files from the asm directory.
 
 * beanzee.asm - this is for BeanZee standalone, and expects there to be an FTDI UM245R USB module fitted. This build is also suitable for my Z80 breadboard computer
-* beanboard.asm - this is for BeanZee with the BeanBoard keyboard/display - it also currently expects there to be an FTDI UM245R USB module fitted
-* beanboard_proto.asm - this is not generally useful - it supports the key-mapping used in the earlier beanboard prototype
+* beanboard.asm - this is for BeanZee with the BeanBoard QWERTY keyboard and LCD display
 
 ## Marvin and BeanZee
 
@@ -58,6 +57,8 @@ When BeanZee is reset it responds with a Marvin welcome message and a prompt, si
     (c) Stephen Willcock 2024
     https://github.com/PainfulDiodes
     >
+
+*Using BeanBoard, the default console input/output is the BeanBoard keyboard and LCD display. Holding down the BeanBoard Shift key when resetting will switch to using the USB for the console. Resetting without the Shift key will switch back to using the BeanBoard keyboard/display.*
 
 Marvin interprets inputs character-by-character, echoing each character back to the terminal, and waits for a carriage return character (\r) before processing a command. 
 
