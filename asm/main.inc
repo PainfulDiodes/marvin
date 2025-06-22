@@ -4,7 +4,7 @@ RAMSTART equ 0x8000
 ; 8-byte status area
 CONSOLE_STATUS equ 0xf000
 ; 8-byte keyscan buffer
-KEYSCAN_BUFFER equ 0xf010
+KEY_MATRIX_BUFFER equ 0xf010
 ; command buffer
 CMD_BUFFER equ 0xf020
 ; this should really be 0x0000 as the CPU will dec SP before PUSH
