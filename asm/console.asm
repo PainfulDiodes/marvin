@@ -79,6 +79,7 @@ _puts_end:
     pop hl
     ret
 
+IF BEANBOARD
 ; determine which console should be active - Reset=beanboard, shift-Reset=USB
 console_init:
     ; check for modifier keys being held down
@@ -96,3 +97,11 @@ _console_init_usb:
     ld hl,CONSOLE_STATUS
     ld (hl),a
     ret
+ELSE
+; USB is the active console
+console_init:
+    ld a,CONSOLE_STATUS_USB
+    ld hl,CONSOLE_STATUS
+    ld (hl),a
+    ret
+ENDIF

@@ -5,8 +5,8 @@ ELSE
 ENDIF
 
     ld sp, STACK
-IF BEANBOARD
     call console_init
+IF BEANBOARD
     call lcd_init
 ENDIF
     jp START

@@ -201,24 +201,33 @@ asm/console.asm:
     79  006d  e1                    pop hl
     80  006e  c9                    ret
     81                          
-    82                          ; determine which console should be active - Reset=beanboard, shift-Reset=USB
-    83                          console_init:
-    84                              ; check for modifier keys being held down
-    85  006f  cdb003                call modifierkeys
-    86                              ; shift key down?
-    87  0072  e601                  and MOD_KEY_SHIFT
-    88  0074  c27e00                jp nz,_console_init_usb
-    89                          ;_console_init_beanboard:
-    90  0077  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
-    91  0079  2100f0                ld hl,CONSOLE_STATUS
-    92  007c  77                    ld (hl),a
-    93  007d  c9                    ret
-    94                          _console_init_usb:
-    95  007e  3e01                  ld a,CONSOLE_STATUS_USB
-    96  0080  2100f0                ld hl,CONSOLE_STATUS
-    97  0083  77                    ld (hl),a
-    98  0084  c9                    ret
-    99                          
+    82                          IF BEANBOARD
+    83                          ; determine which console should be active - Reset=beanboard, shift-Reset=USB
+    84                          console_init:
+    85                              ; check for modifier keys being held down
+    86  006f  cdb003                call modifierkeys
+    87                              ; shift key down?
+    88  0072  e601                  and MOD_KEY_SHIFT
+    89  0074  c27e00                jp nz,_console_init_usb
+    90                          ;_console_init_beanboard:
+    91  0077  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
+    92  0079  2100f0                ld hl,CONSOLE_STATUS
+    93  007c  77                    ld (hl),a
+    94  007d  c9                    ret
+    95                          _console_init_usb:
+    96  007e  3e01                  ld a,CONSOLE_STATUS_USB
+    97  0080  2100f0                ld hl,CONSOLE_STATUS
+    98  0083  77                    ld (hl),a
+    99  0084  c9                    ret
+   100                          ELSE
+   101                          ; USB is the active console
+   102                          console_init:
+   103                              ld a,CONSOLE_STATUS_USB
+   104                              ld hl,CONSOLE_STATUS
+   105                              ld (hl),a
+   106                              ret
+   107                          ENDIF
+   108                          
 beanboard.asm:
     12                          include "asm/UM245R.asm"
 asm/UM245R.asm:
