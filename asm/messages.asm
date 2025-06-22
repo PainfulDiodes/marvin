@@ -1,7 +1,7 @@
 ALIGN 0x10
 
 welcome_msg:
-                db "MARVIN v1.1.1 WIP\n"
+                db "MARVIN v1.2\n"
                 db "A simple Z80 homebrew monitor program\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n\n",0
