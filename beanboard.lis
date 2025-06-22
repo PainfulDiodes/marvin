@@ -1073,11 +1073,11 @@ asm/messages_small.asm:
      5  046e  4d415256494e205a                  db "MARVIN Z80 monitor\n"
               3830206d6f6e6974  
               6f720a            
-     6  0481  76312e312e312057                  db "v1.1.1 WIP\n",0
-              49500a00          
+     6  0481  76312e320a00                      db "v1.2\n",0
      7                          
      8                          
-     9  048d  000000            ALIGN 0x10
+     9  0487  0000000000000000  ALIGN 0x10
+              00                
     10                          
     11                          bad_cmd_msg:
     12  0490  42616420636f6d6d                  db "Bad command\n",0
