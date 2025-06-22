@@ -19,7 +19,7 @@ keyscan:
     ld c,0x00                    
     ; location of previous values
     ld hl,KEYSCAN_BUFFER
-    call _modifierkeys
+    call modifierkeys
     ; initialise map pointer
     ld de,QWERTY_KEYMAP_L
     ; shift key down?
@@ -85,9 +85,11 @@ _rowscan:
     pop de                      
     ret
 
+ALIGN 0x10
+
 ; get bitmap representing modifier keys:  
 ; return value in A
-_modifierkeys:                       
+modifierkeys:                       
     ld a,0b00010000 ; row 4
     ; output row strobe
     out (KEYSCAN_OUT),a            

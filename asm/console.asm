@@ -79,24 +79,14 @@ _puts_end:
     pop hl
     ret
 
+; determine which console should be active - Reset=beanboard, shift-Reset=USB
 console_init:
-    ; check for keypress
-    ; check usb
-    call usb_readchar
-    ; is there a character? 
-    cp 0
-    ; yes
-    jr nz,_console_init_usb
-    ; no: 
-    ; check keyboard
-    call keyscan
-    ; is there a character? 
-    cp 0
-    ; yes
-    jr nz,_console_init_beanboard
-    ; no: loop again
-    jr console_init
-_console_init_beanboard:
+    ; check for modifier keys being held down
+    call modifierkeys
+    ; shift key down?
+    and MOD_KEY_SHIFT
+    jp nz,_console_init_usb
+;_console_init_beanboard:
     ld a,CONSOLE_STATUS_BEANBOARD
     ld hl,CONSOLE_STATUS
     ld (hl),a
