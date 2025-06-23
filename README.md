@@ -60,11 +60,11 @@ When BeanZee is reset it responds with a Marvin welcome message and a prompt, si
 
 *Using BeanBoard, the default console input/output is the BeanBoard keyboard and LCD display. Holding down the BeanBoard Shift key when resetting will switch to using the USB for the console. Resetting without the Shift key will switch back to using the BeanBoard keyboard/display.*
 
-Marvin interprets inputs character-by-character, echoing each character back to the terminal, and waits for a carriage return character (\r) before processing a command. 
+Marvin interprets inputs character-by-character, echoing each character back to the console, and waits for a carriage return character (\r) before processing a command. 
 
 Newline (\n) characters are also interpreted as an end-of-command, and so a \r\n combination will result in an additional empty command. This is harmless, but will be visible as an additional prompt line.
 
-When sending responses back to the terminal, Marvin will terminate lines with \r\n. 
+When sending responses back to the console, Marvin will terminate lines with \r\n. 
 
 This behaviour has been found to work with VT100/ANSI terminal emulation, e.g. GNU screen.
 
