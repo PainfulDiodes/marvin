@@ -67,3 +67,26 @@ _usb_put_loop:
     out (UM245R_DATA),a
     pop bc
     ret
+
+ALIGN 0x10
+
+; print a zero-terminated string pointed to by hl to the USB
+usb_puts:
+    push hl
+_usb_puts_loop:
+    ; get character from string
+    ld a,(hl)
+    ; is it zero?
+    cp 0
+    ; yes
+    jr z, _usb_puts_end
+    ; no: send character
+    call usb_putchar
+    ; next character position
+    inc hl
+    ; loop for next character
+    jp _usb_puts_loop
+_usb_puts_end:
+    pop hl
+    ret
+

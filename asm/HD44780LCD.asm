@@ -191,3 +191,26 @@ _lcd_scroll_clear_line_loop:
     call lcd_putdata
     djnz _lcd_scroll_clear_line_loop
     ret
+
+ALIGN 0x10
+
+; print a zero-terminated string pointed to by hl to the LCD
+lcd_puts:
+    push hl
+_lcd_puts_loop:
+    ; get character from string
+    ld a,(hl)
+    ; is it zero?
+    cp 0
+    ; yes
+    jr z, _lcd_puts_end
+    ; no: send character
+    call lcd_putchar
+    ; next character position
+    inc hl
+    ; loop for next character
+    jp _lcd_puts_loop
+_lcd_puts_end:
+    pop hl
+    ret
+
