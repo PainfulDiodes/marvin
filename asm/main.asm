@@ -5,8 +5,10 @@ ELSE
 ENDIF
 
     ld sp, STACK
-    call console_init
 IF BEANBOARD
     call lcd_init
+    call beanboard_console_init
+ELSE
+    call console_init
 ENDIF
     jp START
