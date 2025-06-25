@@ -8,7 +8,7 @@ welcome_msg:
 
 ALIGN 0x10
 
-bad_cmd_msg:    
+BAD_CMD_MSG:    
                 db "Command not recognised\n",0
 
 ALIGN 0x10

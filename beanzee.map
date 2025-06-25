@@ -1,3 +1,4 @@
+BAD_CMD_MSG                     = $0500 ; addr, local, , beanzee, , asm/messages.asm:11
 BEANBOARD                       = $0000 ; const, local, , beanzee, , beanzee.asm:5
 CMD_BUFFER                      = $F020 ; const, local, , beanzee, , asm/main.inc:9
 CONSOLE_STATUS                  = $F000 ; const, local, , beanzee, , asm/main.inc:5
@@ -119,7 +120,6 @@ _usb_put                        = $00CF ; addr, local, , beanzee, , asm/UM245R.a
 _usb_put_loop                   = $00D1 ; addr, local, , beanzee, , asm/UM245R.asm:57
 _usb_puts_end                   = $00ED ; addr, local, , beanzee, , asm/UM245R.asm:89
 _usb_puts_loop                  = $00E1 ; addr, local, , beanzee, , asm/UM245R.asm:76
-bad_cmd_msg                     = $0500 ; addr, local, , beanzee, , asm/messages.asm:11
 beanboard_console_init          = $0080 ; addr, local, , beanzee, , asm/console.asm:94
 cmd_w_null_msg                  = $0520 ; addr, local, , beanzee, , asm/messages.asm:16
 console_init                    = $0070 ; addr, local, , beanzee, , asm/console.asm:85

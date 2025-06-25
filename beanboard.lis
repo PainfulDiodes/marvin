@@ -424,7 +424,7 @@ asm/marvin.asm:
     87  0145  fe3a                  cp ':'
     88  0147  2879                  jr z,_cmd_load
     89                              ; otherwise error
-    90  0149  21c004                ld hl,bad_cmd_msg
+    90  0149  21c004                ld hl,BAD_CMD_MSG
     91  014c  cd6000                call puts
     92                              ; loop back to the prompt
     93  014f  c30001                jp PROMPT
@@ -1139,7 +1139,7 @@ asm/messages_small.asm:
      9  04b7  0000000000000000  ALIGN 0x10
               00                
     10                          
-    11                          bad_cmd_msg:
+    11                          BAD_CMD_MSG:
     12  04c0  42616420636f6d6d                  db "Bad command\n",0
               616e640a00        
     13                          
