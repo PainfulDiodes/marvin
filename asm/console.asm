@@ -1,13 +1,9 @@
-ALIGN 0x10
-
 ; wait for a character and return in A
 getchar:
     call readchar
     cp 0
     ret nz
     jr getchar 
-
-ALIGN 0x10
 
 ; read a character from the console and return in A - return 0 if there is no character
 readchar:
@@ -28,8 +24,6 @@ _readchar_usb:
 _readchar_end:
     pop hl
     ret
-
-ALIGN 0x10
 
 ; sent character in A to the console 
 putchar:
@@ -57,8 +51,6 @@ _putchar_end:
     pop hl
     ret
 
-ALIGN 0x10
-
 ; print a zero-terminated string pointed to by hl to the console
 puts:
     push hl
@@ -79,16 +71,12 @@ _puts_end:
     pop hl
     ret
 
-ALIGN 0x10
-
 ; BeanZee console init - USB is the active console
 console_init:
     ld a,CONSOLE_STATUS_USB
     ld hl,CONSOLE_STATUS
     ld (hl),a
     ret
-
-ALIGN 0x10
 
 ; determine which console should be active - Reset=beanboard, shift-Reset=USB
 beanboard_console_init:

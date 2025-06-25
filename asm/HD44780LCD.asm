@@ -1,8 +1,6 @@
 LCD_COMMAND_0 equ LCD_FUNCTION_SET+LCD_DATA_LEN_8+LCD_DISP_LINES_2+LCD_FONT_8
 LCD_COMMAND_1 equ LCD_DISPLAY_ON_OFF_CONTROL+LCD_DISPLAY_ON+LCD_CURSOR_ON+LCD_BLINK_ON
 
-ALIGN 0x10
-
 ; initialise LCD
 lcd_init:
 ; preserve registers
@@ -19,8 +17,6 @@ lcd_init:
 ; restore registers
     pop af
     ret
-
-ALIGN 0x10
 
 ; transmit character in A to the LCD control port
 lcd_putcmd:                     
@@ -41,8 +37,6 @@ _lcd_putcmd_loop:
     pop bc
     ret
 
-ALIGN 0x10
-
 ; get character from LCD data port and return in A
 lcd_getchar:                     
 ; get the LCD status
@@ -54,8 +48,6 @@ lcd_getchar:
 ; no, get a character
     in a,(LCD_DATA)
     ret
-
-ALIGN 0x10
 
 ; transmit character in A to the LCD data port
 lcd_putchar:
@@ -107,8 +99,6 @@ _lcd_putchar_eol3:
 _lcd_putchar_end:
     ret
 
-ALIGN 0x10
-
 ; transmit character in A to the LCD data port, 
 ; return in A the DDRAM address where the character was sent
 _lcd_putdata:                     
@@ -132,8 +122,6 @@ __lcd_putdata_loop:
     ld a,c
     pop bc
     ret
-
-ALIGN 0x10
 
 lcd_scroll:
     push bc
@@ -191,8 +179,6 @@ _lcd_scroll_clear_line_loop:
     call _lcd_putdata
     djnz _lcd_scroll_clear_line_loop
     ret
-
-ALIGN 0x10
 
 ; print a zero-terminated string pointed to by hl to the LCD
 lcd_puts:

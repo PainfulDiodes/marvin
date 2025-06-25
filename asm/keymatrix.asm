@@ -6,8 +6,6 @@ MOD_KEY_CONTROL equ 0b00000100
 MOD_KEY_ALT     equ 0b00001000
 MOD_KEY_CMD     equ 0b00010000
 
-ALIGN 0x10
-
 ; return keyboard char value in A, or 0
 key_readchar:
     push bc
@@ -84,8 +82,6 @@ _rowscan:
     ; restore registers
     pop de                      
     ret
-
-ALIGN 0x10
 
 ; return bitmap representing modifier keys in A
 modifierkeys:                       
