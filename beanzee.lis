@@ -518,7 +518,7 @@ asm/marvin.asm:
    181  01a1  c30001                jp PROMPT
    182                              ; w with no data
    183                          _cmd_write_null:
-   184  01a4  212005                ld hl,cmd_w_null_msg
+   184  01a4  212005                ld hl,CMD_W_NULL_MSG
    185  01a7  cd6000                call puts
    186                              ; and back to prompt
    187  01aa  c30001                jp PROMPT
@@ -1154,7 +1154,7 @@ asm/messages.asm:
     13                          
     14  0518  0000000000000000  ALIGN 0x10
     15                          
-    16                          cmd_w_null_msg:
+    16                          CMD_W_NULL_MSG:
     17  0520  4e6f206461746120                  db "No data to write\n",0
               746f207772697465  
               0a00              

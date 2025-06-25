@@ -1,6 +1,7 @@
 BAD_CMD_MSG                     = $04C0 ; addr, local, , beanboard, , asm/messages_small.asm:11
 BEANBOARD                       = $0001 ; const, local, , beanboard, , beanboard.asm:5
 CMD_BUFFER                      = $F020 ; const, local, , beanboard, , asm/main.inc:9
+CMD_W_NULL_MSG                  = $04D0 ; addr, local, , beanboard, , asm/messages_small.asm:16
 CONSOLE_STATUS                  = $F000 ; const, local, , beanboard, , asm/main.inc:5
 CONSOLE_STATUS_BEANBOARD        = $0002 ; const, local, , beanboard, , asm/main.inc:23
 CONSOLE_STATUS_USB              = $0001 ; const, local, , beanboard, , asm/main.inc:22
@@ -121,7 +122,6 @@ _usb_put_loop                   = $00D1 ; addr, local, , beanboard, , asm/UM245R
 _usb_puts_end                   = $00ED ; addr, local, , beanboard, , asm/UM245R.asm:89
 _usb_puts_loop                  = $00E1 ; addr, local, , beanboard, , asm/UM245R.asm:76
 beanboard_console_init          = $0080 ; addr, local, , beanboard, , asm/console.asm:94
-cmd_w_null_msg                  = $04D0 ; addr, local, , beanboard, , asm/messages_small.asm:16
 console_init                    = $0070 ; addr, local, , beanboard, , asm/console.asm:85
 getchar                         = $0010 ; addr, local, , beanboard, , asm/console.asm:4
 hex_byte_val                    = $0200 ; addr, local, , beanboard, , asm/strings.asm:6
