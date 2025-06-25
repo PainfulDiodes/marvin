@@ -8,7 +8,5 @@ ENDIF
 IF BEANBOARD
     call lcd_init
     call beanboard_console_init
-ELSE
-    call console_init
 ENDIF
     jp START
