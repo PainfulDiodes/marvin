@@ -89,13 +89,6 @@ _puts_end:
     pop hl
     ret
 
-; BeanZee console init - USB is the active console - TODO REMOVE
-console_init:
-    ld a,CONSOLE_STATUS_USB
-    ld hl,CONSOLE_STATUS
-    ld (hl),a
-    ret
-
 IF BEANBOARD
 ; determine which console should be active - Reset=beanboard, shift-Reset=USB
 beanboard_console_init:
