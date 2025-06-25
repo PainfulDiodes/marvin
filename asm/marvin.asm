@@ -87,7 +87,7 @@ _get_cmd_end:
     cp ':' 
     jr z,_cmd_load
     ; otherwise error
-    ld hl,bad_cmd_msg
+    ld hl,BAD_CMD_MSG
     call puts
     ; loop back to the prompt
     jp PROMPT
