@@ -793,7 +793,7 @@ asm/HD44780LCD.asm:
     65                              ; newline - fill out the line until EOL
     66                          _lcd_putchar_pad:
     67  02c5  3e20                  ld a,' '
-    68  02c7  cd2003                call lcd_putdata
+    68  02c7  cd2003                call _lcd_putdata
     69  02ca  fe13                  cp LCD_EOL_0
     70  02cc  cafa02                jp z,_lcd_putchar_eol0
     71  02cf  fe53                  cp LCD_EOL_1
@@ -805,7 +805,7 @@ asm/HD44780LCD.asm:
     77                              ; loop until EOL
     78  02de  18e5                  jr _lcd_putchar_pad
     79                          _lcd_putchar_printable:
-    80  02e0  cd2003                call lcd_putdata
+    80  02e0  cd2003                call _lcd_putdata
     81                              ; check for overflow - DDRAM address returned in A
     82  02e3  fe13                  cp LCD_EOL_0
     83  02e5  cafa02                jp z,_lcd_putchar_eol0
@@ -839,17 +839,17 @@ asm/HD44780LCD.asm:
    111                          
    112                          ; transmit character in A to the LCD data port,
    113                          ; return in A the DDRAM address where the character was sent
-   114                          lcd_putdata:
+   114                          _lcd_putdata:
    115  0320  c5                    push bc
    116                              ; save the transmit character
    117  0321  47                    ld b,a
-   118                          _lcd_putdata_loop:
+   118                          __lcd_putdata_loop:
    119                              ; get the LCD status
    120  0322  db04                  in a,(LCD_CTRL)
    121                              ; busy ?
    122  0324  cb7f                  bit 7,a
    123                              ; yes
-   124  0326  20fa                  jr nz,_lcd_putdata_loop
+   124  0326  20fa                  jr nz,__lcd_putdata_loop
    125                              ; no, reset the 'busy' bit and preserve the DDRAM address
    126  0328  e67f                  and 0b01111111
    127  032a  4f                    ld c,a
@@ -907,7 +907,7 @@ asm/HD44780LCD.asm:
    178  036e  cda002                call lcd_putcmd
    179                              ; recover the stashed value
    180  0371  79                    ld a,c
-   181  0372  cd2003                call lcd_putdata
+   181  0372  cd2003                call _lcd_putdata
    182  0375  10ea                  djnz _lcd_scroll_line_loop
    183  0377  c9                    ret
    184                          _lcd_scroll_clear_line:
@@ -917,7 +917,7 @@ asm/HD44780LCD.asm:
    188  037a  cda002                call lcd_putcmd
    189                          _lcd_scroll_clear_line_loop:
    190  037d  3e20                  ld a,' '
-   191  037f  cd2003                call lcd_putdata
+   191  037f  cd2003                call _lcd_putdata
    192  0382  10f9                  djnz _lcd_scroll_clear_line_loop
    193  0384  c9                    ret
    194                          

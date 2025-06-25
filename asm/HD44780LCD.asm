@@ -65,7 +65,7 @@ lcd_putchar:
     ; newline - fill out the line until EOL
 _lcd_putchar_pad:
     ld a,' '
-    call lcd_putdata
+    call _lcd_putdata
     cp LCD_EOL_0                
     jp z,_lcd_putchar_eol0
     cp LCD_EOL_1                
@@ -77,7 +77,7 @@ _lcd_putchar_pad:
     ; loop until EOL
     jr _lcd_putchar_pad 
 _lcd_putchar_printable:
-    call lcd_putdata
+    call _lcd_putdata
     ; check for overflow - DDRAM address returned in A
     cp LCD_EOL_0                
     jp z,_lcd_putchar_eol0
@@ -111,17 +111,17 @@ ALIGN 0x10
 
 ; transmit character in A to the LCD data port, 
 ; return in A the DDRAM address where the character was sent
-lcd_putdata:                     
+_lcd_putdata:                     
     push bc
     ; save the transmit character
     ld b,a
-_lcd_putdata_loop: 
+__lcd_putdata_loop: 
     ; get the LCD status
     in a,(LCD_CTRL)
     ; busy ?
     bit 7,a
     ; yes
-    jr nz,_lcd_putdata_loop
+    jr nz,__lcd_putdata_loop
     ; no, reset the 'busy' bit and preserve the DDRAM address
     and 0b01111111
     ld c,a
@@ -178,7 +178,7 @@ _lcd_scroll_line_loop:
     call lcd_putcmd 
     ; recover the stashed value
     ld a,c 
-    call lcd_putdata
+    call _lcd_putdata
     djnz _lcd_scroll_line_loop
     ret
 _lcd_scroll_clear_line:
@@ -188,7 +188,7 @@ _lcd_scroll_clear_line:
     call lcd_putcmd 
 _lcd_scroll_clear_line_loop:
     ld a,' '
-    call lcd_putdata
+    call _lcd_putdata
     djnz _lcd_scroll_clear_line_loop
     ret
 
