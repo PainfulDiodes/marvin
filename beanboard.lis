@@ -114,11 +114,9 @@ asm/main.asm:
      8                          IF BEANBOARD
      9  0003  cd0b02                call lcd_init
     10  0006  cd6400                call beanboard_console_init
-    11                          ELSE
-    12                              call console_init
-    13                          ENDIF
-    14  0009  c3b600                jp START
-    15                          
+    11                          ENDIF
+    12  0009  c3b600                jp START
+    13                          
 beanboard.asm:
     11                          include "asm/console.asm"
 asm/console.asm:
@@ -129,98 +127,118 @@ asm/console.asm:
      5  0011  c0                    ret nz
      6  0012  18f8                  jr getchar
      7                          
-     8                          ; read a character from the console and return in A - return 0 if there is no character
-     9                          readchar:
-    10  0014  e5                    push hl
-    11  0015  2100f0                ld hl,CONSOLE_STATUS
-    12  0018  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
-    13  001a  a6                    and (hl)
-    14  001b  2007                  jr nz,_readchar_beanboard
-    15  001d  3e01                  ld a,CONSOLE_STATUS_USB
-    16  001f  a6                    and (hl)
-    17  0020  2007                  jr nz,_readchar_usb
-    18  0022  1808                  jr _readchar_end
-    19                          _readchar_beanboard:
-    20  0024  cdf502                call key_readchar
-    21  0027  1803                  jr _readchar_end
-    22                          _readchar_usb:
-    23  0029  cd7a00                call usb_readchar
-    24                          _readchar_end:
-    25  002c  e1                    pop hl
-    26  002d  c9                    ret
-    27                          
-    28                          ; sent character in A to the console
-    29                          putchar:
-    30  002e  e5                    push hl
-    31  002f  c5                    push bc
-    32  0030  47                    ld b,a
-    33  0031  2100f0                ld hl,CONSOLE_STATUS
-    34  0034  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
-    35  0036  a6                    and (hl)
-    36  0037  2007                  jr nz,_putchar_beanboard
-    37  0039  3e01                  ld a,CONSOLE_STATUS_USB
-    38  003b  a6                    and (hl)
-    39  003c  2008                  jr nz,_putchar_usb
-    40  003e  180a                  jr _putchar_end
-    41                          _putchar_beanboard:
-    42  0040  78                    ld a,b
-    43  0041  cd3802                call lcd_putchar
-    44  0044  1804                  jr _putchar_end
-    45                          _putchar_usb:
-    46  0046  78                    ld a,b
-    47  0047  cd8b00                call usb_putchar
-    48                          _putchar_end:
-    49  004a  78                    ld a,b
-    50  004b  c1                    pop bc
-    51  004c  e1                    pop hl
-    52  004d  c9                    ret
-    53                          
-    54                          ; print a zero-terminated string pointed to by hl to the console
-    55                          puts:
-    56  004e  e5                    push hl
-    57                          _puts_loop:
-    58                              ; get character from string
-    59  004f  7e                    ld a,(hl)
-    60                              ; is it zero?
-    61  0050  fe00                  cp 0
-    62                              ; yes
-    63  0052  2807                  jr z, _puts_end
-    64                              ; no: send character
-    65  0054  cd2e00                call putchar
-    66                              ; next character position
-    67  0057  23                    inc hl
-    68                              ; loop for next character
-    69  0058  c34f00                jp _puts_loop
-    70                          _puts_end:
-    71  005b  e1                    pop hl
-    72  005c  c9                    ret
-    73                          
-    74                          ; BeanZee console init - USB is the active console
-    75                          console_init:
-    76  005d  3e01                  ld a,CONSOLE_STATUS_USB
-    77  005f  2100f0                ld hl,CONSOLE_STATUS
-    78  0062  77                    ld (hl),a
-    79  0063  c9                    ret
-    80                          
-    81                          ; determine which console should be active - Reset=beanboard, shift-Reset=USB
-    82                          beanboard_console_init:
-    83                              ; check for modifier keys being held down
-    84  0064  cd3503                call modifierkeys
-    85                              ; shift key down?
-    86  0067  e601                  and MOD_KEY_SHIFT
-    87                              ; yes shift
-    88  0069  c27300                jp nz,_beanboard_console_init_usb
-    89                              ; no shift
-    90  006c  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
-    91  006e  2100f0                ld hl,CONSOLE_STATUS
-    92  0071  77                    ld (hl),a
-    93  0072  c9                    ret
-    94                          _beanboard_console_init_usb:
-    95  0073  3e01                  ld a,CONSOLE_STATUS_USB
-    96  0075  2100f0                ld hl,CONSOLE_STATUS
-    97  0078  77                    ld (hl),a
-    98  0079  c9                    ret
-    99                          
+     8                          IF BEANBOARD
+     9                          ; read a character from the console and return in A - return 0 if there is no character
+    10                          readchar:
+    11  0014  e5                    push hl
+    12  0015  2100f0                ld hl,CONSOLE_STATUS
+    13  0018  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
+    14  001a  a6                    and (hl)
+    15  001b  2007                  jr nz,_readchar_beanboard
+    16  001d  3e01                  ld a,CONSOLE_STATUS_USB
+    17  001f  a6                    and (hl)
+    18  0020  2007                  jr nz,_readchar_usb
+    19  0022  1808                  jr _readchar_end
+    20                          _readchar_beanboard:
+    21  0024  cdf502                call key_readchar
+    22  0027  1803                  jr _readchar_end
+    23                          _readchar_usb:
+    24  0029  cd7a00                call usb_readchar
+    25                          _readchar_end:
+    26  002c  e1                    pop hl
+    27  002d  c9                    ret
+    28                          ELSE
+    29                          ; read a character from the console and return in A - return 0 if there is no character
+    30                          readchar:
+    31                              call usb_readchar
+    32                              ret
+    33                          ENDIF
+    34                          
+    35                          IF BEANBOARD
+    36                          ; sent character in A to the console
+    37                          putchar:
+    38  002e  e5                    push hl
+    39  002f  c5                    push bc
+    40  0030  47                    ld b,a
+    41  0031  2100f0                ld hl,CONSOLE_STATUS
+    42  0034  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
+    43  0036  a6                    and (hl)
+    44  0037  2007                  jr nz,_putchar_beanboard
+    45  0039  3e01                  ld a,CONSOLE_STATUS_USB
+    46  003b  a6                    and (hl)
+    47  003c  2008                  jr nz,_putchar_usb
+    48  003e  180a                  jr _putchar_end
+    49                          _putchar_beanboard:
+    50  0040  78                    ld a,b
+    51  0041  cd3802                call lcd_putchar
+    52  0044  1804                  jr _putchar_end
+    53                          _putchar_usb:
+    54  0046  78                    ld a,b
+    55  0047  cd8b00                call usb_putchar
+    56                          _putchar_end:
+    57  004a  78                    ld a,b
+    58  004b  c1                    pop bc
+    59  004c  e1                    pop hl
+    60  004d  c9                    ret
+    61                          ELSE
+    62                          ; sent character in A to the console
+    63                          putchar:
+    64                              push bc
+    65                              ld b,a
+    66                              call usb_putchar
+    67                              ld a,b
+    68                              pop bc
+    69                              ret
+    70                          ENDIF
+    71                          
+    72                          ; print a zero-terminated string pointed to by hl to the console
+    73                          puts:
+    74  004e  e5                    push hl
+    75                          _puts_loop:
+    76                              ; get character from string
+    77  004f  7e                    ld a,(hl)
+    78                              ; is it zero?
+    79  0050  fe00                  cp 0
+    80                              ; yes
+    81  0052  2807                  jr z, _puts_end
+    82                              ; no: send character
+    83  0054  cd2e00                call putchar
+    84                              ; next character position
+    85  0057  23                    inc hl
+    86                              ; loop for next character
+    87  0058  c34f00                jp _puts_loop
+    88                          _puts_end:
+    89  005b  e1                    pop hl
+    90  005c  c9                    ret
+    91                          
+    92                          ; BeanZee console init - USB is the active console - TODO REMOVE
+    93                          console_init:
+    94  005d  3e01                  ld a,CONSOLE_STATUS_USB
+    95  005f  2100f0                ld hl,CONSOLE_STATUS
+    96  0062  77                    ld (hl),a
+    97  0063  c9                    ret
+    98                          
+    99                          IF BEANBOARD
+   100                          ; determine which console should be active - Reset=beanboard, shift-Reset=USB
+   101                          beanboard_console_init:
+   102                              ; check for modifier keys being held down
+   103  0064  cd3503                call modifierkeys
+   104                              ; shift key down?
+   105  0067  e601                  and MOD_KEY_SHIFT
+   106                              ; yes shift
+   107  0069  c27300                jp nz,_beanboard_console_init_usb
+   108                              ; no shift
+   109  006c  3e02                  ld a,CONSOLE_STATUS_BEANBOARD
+   110  006e  2100f0                ld hl,CONSOLE_STATUS
+   111  0071  77                    ld (hl),a
+   112  0072  c9                    ret
+   113                          _beanboard_console_init_usb:
+   114  0073  3e01                  ld a,CONSOLE_STATUS_USB
+   115  0075  2100f0                ld hl,CONSOLE_STATUS
+   116  0078  77                    ld (hl),a
+   117  0079  c9                    ret
+   118                          ENDIF
+   119                          
 beanboard.asm:
     12                          include "asm/UM245R.asm"
 asm/UM245R.asm:

@@ -5,6 +5,7 @@ getchar:
     ret nz
     jr getchar 
 
+IF BEANBOARD
 ; read a character from the console and return in A - return 0 if there is no character
 readchar:
     push hl
@@ -24,7 +25,14 @@ _readchar_usb:
 _readchar_end:
     pop hl
     ret
+ELSE
+; read a character from the console and return in A - return 0 if there is no character
+readchar:
+    call usb_readchar
+    ret
+ENDIF 
 
+IF BEANBOARD
 ; sent character in A to the console 
 putchar:
     push hl
@@ -50,6 +58,16 @@ _putchar_end:
     pop bc
     pop hl
     ret
+ELSE
+; sent character in A to the console 
+putchar:
+    push bc
+    ld b,a
+    call usb_putchar
+    ld a,b
+    pop bc
+    ret
+ENDIF
 
 ; print a zero-terminated string pointed to by hl to the console
 puts:
@@ -71,13 +89,14 @@ _puts_end:
     pop hl
     ret
 
-; BeanZee console init - USB is the active console
+; BeanZee console init - USB is the active console - TODO REMOVE
 console_init:
     ld a,CONSOLE_STATUS_USB
     ld hl,CONSOLE_STATUS
     ld (hl),a
     ret
 
+IF BEANBOARD
 ; determine which console should be active - Reset=beanboard, shift-Reset=USB
 beanboard_console_init:
     ; check for modifier keys being held down
@@ -96,3 +115,4 @@ _beanboard_console_init_usb:
     ld hl,CONSOLE_STATUS
     ld (hl),a
     ret
+ENDIF
