@@ -13,5 +13,5 @@ BAD_CMD_MSG:
 
 ALIGN 0x10
 
-cmd_w_null_msg: 
+CMD_W_NULL_MSG: 
                 db "No data to write\n",0

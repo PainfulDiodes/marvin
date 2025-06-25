@@ -181,7 +181,7 @@ _cmd_write_end:
     jp PROMPT
     ; w with no data
 _cmd_write_null:        
-    ld hl,cmd_w_null_msg
+    ld hl,CMD_W_NULL_MSG
     call puts
     ; and back to prompt
     jp PROMPT
