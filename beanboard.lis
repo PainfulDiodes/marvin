@@ -349,7 +349,7 @@ asm/marvin.asm:
     12                              ; point DE to zero - this is the default address argument for commands
     13  00f0  110000                ld de,0x0000
     14                          
-    15  00f3  219004                ld hl,welcome_msg
+    15  00f3  219004                ld hl,WELCOME_MSG
     16  00f6  cd6000                call puts
     17                          
     18  00f9  00000000000000    ALIGN 0x10
@@ -1127,7 +1127,7 @@ asm/messages_small.asm:
      1  0485  0000000000000000  ALIGN 0x10
               000000            
      2                          
-     3                          welcome_msg:
+     3                          WELCOME_MSG:
      4  0490  5061696e66756c44                  db "PainfulDiodes\n"
               696f6465730a      
      5  049e  4d415256494e205a                  db "MARVIN Z80 monitor\n"
