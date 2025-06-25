@@ -13,6 +13,7 @@
   * This also helps with speeding up loading programs via the USB: LCD echoing seems to significantly slow the USB transfer speed
 * Renamed keyscan.asm > keymatrix.asm, keyscan > key_readchar (and associated labels)
 * lcd_puts and usb_puts functions
+* Allowed build targets (beanzee, beanboard) to diverge - removed ALIGN padding between labels; removed beanboard code from beanzee target
 
 
 # v1.1.0 Latest
