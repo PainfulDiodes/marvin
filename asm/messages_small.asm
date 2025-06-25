@@ -1,6 +1,6 @@
 ALIGN 0x10
 
-welcome_msg:    
+WELCOME_MSG:    
                 db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
                 db "v1.2\n",0

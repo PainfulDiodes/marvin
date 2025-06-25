@@ -1,6 +1,6 @@
 ALIGN 0x10
 
-welcome_msg:
+WELCOME_MSG:
                 db "MARVIN v1.2\n"
                 db "A simple Z80 homebrew monitor program\n"
                 db "(c) Stephen Willcock 2024\n"

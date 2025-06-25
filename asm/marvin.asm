@@ -12,7 +12,7 @@ START:
     ; point DE to zero - this is the default address argument for commands
     ld de,0x0000
 
-    ld hl,welcome_msg
+    ld hl,WELCOME_MSG
     call puts
 
 ALIGN 0x10
