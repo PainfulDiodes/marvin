@@ -2,7 +2,7 @@
 # with or without extension
 #  ./build.sh beanzee
 #  ./build.sh beanzee.asm
-# provide an org value (defaults to 0x0000)
+# provide an org value
 #  ./build.sh beanzee $8000
 
 # set -x #echo on
