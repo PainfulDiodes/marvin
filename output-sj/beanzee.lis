@@ -1,0 +1,759 @@
+# file opened: beanzee.asm
+  1   0000              ; MARVIN build for beanzee / Z80 breadboard computer
+  2   0000              ; https://github.com/PainfulDiodes/BeanZee
+  3   0000
+  4   0000
+  5   0000              BEANBOARD EQU 0
+  6   0000
+  7   0000              include "asm/main.inc"
+# file opened: asm/main.inc
+  1+  0000              ; start of user RAM
+  2+  0000              RAMSTART equ 0x8000
+  3+  0000
+  4+  0000              ; 8-byte status area
+  5+  0000              CONSOLE_STATUS equ 0xf000
+  6+  0000              ; 8-byte keyscan buffer
+  7+  0000              KEY_MATRIX_BUFFER equ 0xf010
+  8+  0000              ; command buffer
+  9+  0000              CMD_BUFFER equ 0xf020
+ 10+  0000              ; this should really be 0x0000 as the CPU will dec SP before PUSH
+ 11+  0000              STACK equ 0xffff
+ 12+  0000
+ 13+  0000              UM245R_CTRL equ 0 ; serial control port
+ 14+  0000              UM245R_DATA equ 1 ; serial data port
+ 15+  0000              KEYSCAN_OUT equ 2 ; either 2 or 3 will work
+ 16+  0000              KEYSCAN_IN  equ 3 ; either 2 or 3 will work
+ 17+  0000              LCD_CTRL    equ 4 ; LCD control port
+ 18+  0000              LCD_DATA    equ 5 ; LCD data port
+ 19+  0000              GPIO_OUT    equ 6 ; either 6 or 7 will work
+ 20+  0000              GPIO_IN     equ 7 ; either 6 or 7 will work
+ 21+  0000
+ 22+  0000              CONSOLE_STATUS_USB equ 1
+ 23+  0000              CONSOLE_STATUS_BEANBOARD equ 2
+ 24+  0000
+# file closed: asm/main.inc
+  8   0000              include "asm/escapestring.inc"
+# file opened: asm/escapestring.inc
+  1+  0000              ; escape character constants for assembler compatibility
+  2+  0000              ; sjasmplus requires double quotes around escape sequences: "\n" and would not interpret '\n' but truncate
+  3+  0000              ; z88dk-z80asm requires single quotes around so would correctly interpret '\n' but reject "\n"
+  4+  0000
+  5+  0000              ESC_B equ 0x08 ; \b
+  6+  0000              ESC_T equ 0x09 ; \t
+  7+  0000              ESC_N equ 0x0a ; \n
+  8+  0000              ESC_R equ 0x0d ; \r
+  9+  0000              ESC_E equ 0x1b ; \e
+ 10+  0000              SLASH equ 0x5c ; \\
+ 11+  0000              QUOTE equ 0x27 ; \'
+ 12+  0000
+# file closed: asm/escapestring.inc
+  9   0000              include "asm/main.asm"
+# file opened: asm/main.asm
+  1+  0000              ORG 0x0000
+  2+  0000 31 FF FF         ld sp, STACK
+  3+  0003              IF BEANBOARD
+  4+  0003 ~                call lcd_init
+  5+  0003 ~                call beanboard_console_init
+  6+  0003              ENDIF
+  7+  0003 00 00 00...  ALIGN 0x0010 ; fix the warmstart address across targets
+  8+  0010              WARMSTART:
+  9+  0010 C3 72 00         jp MARVIN
+ 10+  0013
+# file closed: asm/main.asm
+ 10   0013              include "asm/console.asm"
+# file opened: asm/console.asm
+  1+  0013              ; wait for a character and return in A
+  2+  0013              getchar:
+  3+  0013 CD 1B 00         call readchar
+  4+  0016 FE 00            cp 0
+  5+  0018 C0               ret nz
+  6+  0019 18 F8            jr getchar
+  7+  001B
+  8+  001B              IF BEANBOARD
+  9+  001B ~            ; read a character from the console and return in A - return 0 if there is no character
+ 10+  001B ~            readchar:
+ 11+  001B ~                push hl
+ 12+  001B ~                ld hl,CONSOLE_STATUS
+ 13+  001B ~                ld a,CONSOLE_STATUS_BEANBOARD
+ 14+  001B ~                and (hl)
+ 15+  001B ~                jr nz,_readchar_beanboard
+ 16+  001B ~                ld a,CONSOLE_STATUS_USB
+ 17+  001B ~                and (hl)
+ 18+  001B ~                jr nz,_readchar_usb
+ 19+  001B ~                jr _readchar_end
+ 20+  001B ~            _readchar_beanboard:
+ 21+  001B ~                call key_readchar
+ 22+  001B ~                jr _readchar_end
+ 23+  001B ~            _readchar_usb:
+ 24+  001B ~                call usb_readchar
+ 25+  001B ~            _readchar_end:
+ 26+  001B ~                pop hl
+ 27+  001B ~                ret
+ 28+  001B              ELSE
+ 29+  001B              ; read a character from the console and return in A - return 0 if there is no character
+ 30+  001B              readchar:
+ 31+  001B CD 36 00         call usb_readchar
+ 32+  001E C9               ret
+ 33+  001F              ENDIF
+ 34+  001F
+ 35+  001F              IF BEANBOARD
+ 36+  001F ~            ; sent character in A to the console
+ 37+  001F ~            putchar:
+ 38+  001F ~                push hl
+ 39+  001F ~                push bc
+ 40+  001F ~                ld b,a
+ 41+  001F ~                ld hl,CONSOLE_STATUS
+ 42+  001F ~                ld a,CONSOLE_STATUS_BEANBOARD
+ 43+  001F ~                and (hl)
+ 44+  001F ~                jr nz,_putchar_beanboard
+ 45+  001F ~                ld a,CONSOLE_STATUS_USB
+ 46+  001F ~                and (hl)
+ 47+  001F ~                jr nz,_putchar_usb
+ 48+  001F ~                jr _putchar_end
+ 49+  001F ~            _putchar_beanboard:
+ 50+  001F ~                ld a,b
+ 51+  001F ~                call lcd_putchar
+ 52+  001F ~                jr _putchar_end
+ 53+  001F ~            _putchar_usb:
+ 54+  001F ~                ld a,b
+ 55+  001F ~                call usb_putchar
+ 56+  001F ~            _putchar_end:
+ 57+  001F ~                ld a,b
+ 58+  001F ~                pop bc
+ 59+  001F ~                pop hl
+ 60+  001F ~                ret
+ 61+  001F              ELSE
+ 62+  001F              ; sent character in A to the console
+ 63+  001F              putchar:
+ 64+  001F C5               push bc
+ 65+  0020 47               ld b,a
+ 66+  0021 CD 47 00         call usb_putchar
+ 67+  0024 78               ld a,b
+ 68+  0025 C1               pop bc
+ 69+  0026 C9               ret
+ 70+  0027              ENDIF
+ 71+  0027
+ 72+  0027              ; print a zero-terminated string pointed to by hl to the console
+ 73+  0027              puts:
+ 74+  0027 E5               push hl
+ 75+  0028              _puts_loop:
+ 76+  0028                  ; get character from string
+ 77+  0028 7E               ld a,(hl)
+ 78+  0029                  ; is it zero?
+ 79+  0029 FE 00            cp 0
+ 80+  002B                  ; yes
+ 81+  002B 28 07            jr z, _puts_end
+ 82+  002D                  ; no: send character
+ 83+  002D CD 1F 00         call putchar
+ 84+  0030                  ; next character position
+ 85+  0030 23               inc hl
+ 86+  0031                  ; loop for next character
+ 87+  0031 C3 28 00         jp _puts_loop
+ 88+  0034              _puts_end:
+ 89+  0034 E1               pop hl
+ 90+  0035 C9               ret
+ 91+  0036
+ 92+  0036              IF BEANBOARD
+ 93+  0036 ~            ; determine which console should be active - Reset=beanboard, shift-Reset=USB
+ 94+  0036 ~            beanboard_console_init:
+ 95+  0036 ~                ; check for modifier keys being held down
+ 96+  0036 ~                call modifierkeys
+ 97+  0036 ~                ; shift key down?
+ 98+  0036 ~                and MOD_KEY_SHIFT
+ 99+  0036 ~                ; yes shift
+100+  0036 ~                jp nz,_beanboard_console_init_usb
+101+  0036 ~                ; no shift
+102+  0036 ~                ld a,CONSOLE_STATUS_BEANBOARD
+103+  0036 ~                ld hl,CONSOLE_STATUS
+104+  0036 ~                ld (hl),a
+105+  0036 ~                ret
+106+  0036 ~            _beanboard_console_init_usb:
+107+  0036 ~                ld a,CONSOLE_STATUS_USB
+108+  0036 ~                ld hl,CONSOLE_STATUS
+109+  0036 ~                ld (hl),a
+110+  0036 ~                ret
+111+  0036              ENDIF
+# file closed: asm/console.asm
+ 11   0036              include "asm/UM245R.asm"
+# file opened: asm/UM245R.asm
+  1+  0036              ; It is assumed that UM245R status signals are gated to the data bus as an IO port where:
+  2+  0036              ; /TXE = bit 0
+  3+  0036              ; /RXF = bit 1
+  4+  0036              ; As per:
+  5+  0036              ; https://github.com/PainfulDiodes/z80-breadboard-computer
+  6+  0036              ;
+  7+  0036              ; line endings are translated:
+  8+  0036              ; incoming line endings from the terminal are expected to be \r
+  9+  0036              ; and are tranlslated to \n
+ 10+  0036              ; (\r\n would count as 2 line endings)
+ 11+  0036              ; and outgoing line endings are sent as \r\n
+ 12+  0036              ; externally this is consistent with VT100/ANSI terminal behaviour
+ 13+  0036              ; and internally line endings are always \n
+ 14+  0036
+ 15+  0036              ; get character and return in A
+ 16+  0036              usb_readchar:
+ 17+  0036                  ; get the USB status
+ 18+  0036 DB 00            in a,(UM245R_CTRL)
+ 19+  0038                  ; data to read? (active low)
+ 20+  0038 CB 4F            bit 1,a
+ 21+  003A                  ; no, the buffer is empty
+ 22+  003A 20 08            jr nz,_usb_no_char
+ 23+  003C                  ; yes, read the received char
+ 24+  003C DB 01            in a,(UM245R_DATA)
+ 25+  003E                  ; is CR?
+ 26+  003E FE 0D            cp ESC_R
+ 27+  0040                  ; no:
+ 28+  0040 C0               ret nz
+ 29+  0041                  ; yes: convert CR to LF
+ 30+  0041 3E 0A            ld a, ESC_N
+ 31+  0043 C9               ret
+ 32+  0044              _usb_no_char:
+ 33+  0044 3E 00            ld a,0
+ 34+  0046 C9               ret
+ 35+  0047
+ 36+  0047              usb_putchar:
+ 37+  0047                  ; newline?
+ 38+  0047 FE 0A            cp ESC_N
+ 39+  0049                  ; no: just send the char
+ 40+  0049 20 07            jr nz,_do_usb_put
+ 41+  004B 3E 0D            ld a, ESC_R
+ 42+  004D CD 56 00         call _usb_put
+ 43+  0050 3E 0A            ld a, ESC_N
+ 44+  0052              _do_usb_put:
+ 45+  0052 CD 56 00         call _usb_put
+ 46+  0055 C9               ret
+ 47+  0056
+ 48+  0056              ; transmit character in A
+ 49+  0056              _usb_put:
+ 50+  0056 C5               push bc
+ 51+  0057                  ; stash the transmit character
+ 52+  0057 47               ld b,a
+ 53+  0058              _usb_put_loop:
+ 54+  0058                  ; get the USB status
+ 55+  0058 DB 00            in a,(UM245R_CTRL)
+ 56+  005A                  ; ready to transmit? (active low)
+ 57+  005A CB 47            bit 0,a
+ 58+  005C                  ; no: bit is high
+ 59+  005C 20 FA            jr nz,_usb_put_loop
+ 60+  005E                  ; yes: restore the stashed transmit character
+ 61+  005E 78               ld a,b
+ 62+  005F                  ; transmit the character
+ 63+  005F D3 01            out (UM245R_DATA),a
+ 64+  0061 C1               pop bc
+ 65+  0062 C9               ret
+ 66+  0063
+ 67+  0063              ; print a zero-terminated string pointed to by hl to the USB
+ 68+  0063              usb_puts:
+ 69+  0063 E5               push hl
+ 70+  0064              _usb_puts_loop:
+ 71+  0064                  ; get character from string
+ 72+  0064 7E               ld a,(hl)
+ 73+  0065                  ; is it zero?
+ 74+  0065 FE 00            cp 0
+ 75+  0067                  ; yes
+ 76+  0067 28 07            jr z, _usb_puts_end
+ 77+  0069                  ; no: send character
+ 78+  0069 CD 47 00         call usb_putchar
+ 79+  006C                  ; next character position
+ 80+  006C 23               inc hl
+ 81+  006D                  ; loop for next character
+ 82+  006D C3 64 00         jp _usb_puts_loop
+ 83+  0070              _usb_puts_end:
+ 84+  0070 E1               pop hl
+ 85+  0071 C9               ret
+ 86+  0072
+# file closed: asm/UM245R.asm
+ 12   0072              include "asm/marvin.asm"
+# file opened: asm/marvin.asm
+  1+  0072              ; ****************************************************
+  2+  0072              ; *  Marvin - a Z80 homebrew monitor program
+  3+  0072              ; * (c) Stephen Willcock 2024
+  4+  0072              ; * https://github.com/PainfulDiodes
+  5+  0072              ; ****************************************************
+  6+  0072
+  7+  0072              ; MAIN PROGRAM LOOP
+  8+  0072
+  9+  0072              MARVIN:
+ 10+  0072                  ; point DE to zero - this is the default address argument for commands
+ 11+  0072 11 00 00         ld de,0x0000
+ 12+  0075
+ 13+  0075 21 C7 01         ld hl,WELCOME_MSG
+ 14+  0078 CD 27 00         call puts
+ 15+  007B
+ 16+  007B              PROMPT:
+ 17+  007B                  ; point HL to the beginning of the input buffer
+ 18+  007B 21 20 F0         ld hl,CMD_BUFFER
+ 19+  007E 3E 3E            ld a,'>'
+ 20+  0080 CD 1F 00         call putchar
+ 21+  0083
+ 22+  0083              _get_cmd:
+ 23+  0083                  ; get character from console
+ 24+  0083 CD 13 00         call getchar
+ 25+  0086                  ; echo the character to console
+ 26+  0086 CD 1F 00         call putchar
+ 27+  0089                  ; is CR?
+ 28+  0089 FE 0D            cp ESC_R
+ 29+  008B                  ; yes: skip this
+ 30+  008B 28 F6            jr z,_get_cmd
+ 31+  008D                  ; is tab?
+ 32+  008D FE 09            cp ESC_T
+ 33+  008F                  ; yes: skip this
+ 34+  008F 28 F2            jr z,_get_cmd
+ 35+  0091                  ; is space?
+ 36+  0091 FE 20            cp ' '
+ 37+  0093                  ; yes - skip this
+ 38+  0093 28 EE            jr z,_get_cmd
+ 39+  0095                  ; escape?
+ 40+  0095 FE 1B            cp ESC_E
+ 41+  0097                  ; yes
+ 42+  0097 28 08            jr z, _get_cmd_esc
+ 43+  0099                  ; end of line?
+ 44+  0099 FE 0A            cp ESC_N
+ 45+  009B                  ; yes
+ 46+  009B 28 0B            jr z, _get_cmd_end
+ 47+  009D                  ; no: add character to the buffer
+ 48+  009D 77               ld(hl),a
+ 49+  009E                  ; move pointer to next buffer location - we're not checking for overrun
+ 50+  009E 23               inc hl
+ 51+  009F                  ; next character
+ 52+  009F 18 E2            jr _get_cmd
+ 53+  00A1                  ; do escape
+ 54+  00A1              _get_cmd_esc:
+ 55+  00A1                  ; new line
+ 56+  00A1 3E 0A            ld a,ESC_N
+ 57+  00A3 CD 1F 00         call putchar
+ 58+  00A6                  ; back to prompt
+ 59+  00A6 18 D3            jr PROMPT
+ 60+  00A8              _get_cmd_end:
+ 61+  00A8                  ; string terminator
+ 62+  00A8 3E 00            ld a,0
+ 63+  00AA                  ; add terminator to end of buffer
+ 64+  00AA 77               ld(hl),a
+ 65+  00AB              ; process command from buffer
+ 66+  00AB                  ; point to start of buffer
+ 67+  00AB 21 20 F0         ld hl,CMD_BUFFER
+ 68+  00AE                  ; load character from buffer
+ 69+  00AE 7E               ld a,(hl)
+ 70+  00AF                  ; end of string?
+ 71+  00AF FE 00            cp 0
+ 72+  00B1                  ; yes - empty line - go back to prompt
+ 73+  00B1 28 C8            jr z,PROMPT
+ 74+  00B3                  ; advance the buffer pointer
+ 75+  00B3 23               inc hl
+ 76+  00B4 FE 72            cp 'r'
+ 77+  00B6 28 15            jr z,_cmd_read
+ 78+  00B8 FE 77            cp 'w'
+ 79+  00BA 28 47            jr z,_cmd_write
+ 80+  00BC FE 78            cp 'x'
+ 81+  00BE 28 68            jr z,_cmd_execute
+ 82+  00C0                  ; ':' = load from intel hex format
+ 83+  00C0 FE 3A            cp ':'
+ 84+  00C2 28 79            jr z,_cmd_load
+ 85+  00C4                  ; otherwise error
+ 86+  00C4 21 36 02         ld hl,BAD_CMD_MSG
+ 87+  00C7 CD 27 00         call puts
+ 88+  00CA                  ; loop back to the prompt
+ 89+  00CA C3 7B 00         jp PROMPT
+ 90+  00CD
+ 91+  00CD              ; COMMANDS
+ 92+  00CD
+ 93+  00CD              ; READ
+ 94+  00CD              ; read bytes from memory and send hex values to console
+ 95+  00CD              _cmd_read:
+ 96+  00CD                  ; load character from buffer
+ 97+  00CD 7E               ld a,(hl)
+ 98+  00CE                  ; end of string?
+ 99+  00CE FE 00            cp 0
+100+  00D0                  ; yes: no address argument, so skip to read row
+101+  00D0 28 08            jr z, _cmd_read_row
+102+  00D2                  ; parse first pair of characters
+103+  00D2 CD 6C 01         call hex_byte_val
+104+  00D5                  ; load into upper byte of memory pointer
+105+  00D5 57               ld d,a
+106+  00D6                  ; parse second pair of characters
+107+  00D6 CD 6C 01         call hex_byte_val
+108+  00D9                  ; load into lower byte of memory pointer
+109+  00D9 5F               ld e,a
+110+  00DA              _cmd_read_row:
+111+  00DA                  ; initialise byte counter - each row will have this many bytes
+112+  00DA 0E 10            ld c, 0x10
+113+  00DC                  ; print DE content: the read address
+114+  00DC 7A               ld a,d
+115+  00DD CD A0 01         call putchar_hex
+116+  00E0 7B               ld a,e
+117+  00E1 CD A0 01         call putchar_hex
+118+  00E4                  ; separator between address and data
+119+  00E4 3E 3A            ld a,':'
+120+  00E6 CD 1F 00         call putchar
+121+  00E9 3E 20            ld a,' '
+122+  00EB CD 1F 00         call putchar
+123+  00EE                  ; get a byte
+124+  00EE              _cmd_read_byte:
+125+  00EE 1A               ld a,(de)
+126+  00EF                  ; and print it
+127+  00EF CD A0 01         call putchar_hex
+128+  00F2                  ; add space between bytes
+129+  00F2 3E 20            ld a,' '
+130+  00F4 CD 1F 00         call putchar
+131+  00F7                  ; next address
+132+  00F7 13               inc de
+133+  00F8                  ; reduce byte counter
+134+  00F8                  ; TODO djnz ?
+135+  00F8 0D               dec c
+136+  00F9                  ; repeat if the counter is not 0
+137+  00F9 20 F3            jr nz, _cmd_read_byte
+138+  00FB                  ; otherwise, new line
+139+  00FB 3E 0A            ld a,ESC_N
+140+  00FD CD 1F 00         call putchar
+141+  0100                  ; and back to prompt
+142+  0100 C3 7B 00         jp PROMPT
+143+  0103
+144+  0103              ; WRITE
+145+  0103
+146+  0103              ; write bytes to memory interpreting hex values from console
+147+  0103              _cmd_write:
+148+  0103                  ; load character from buffer
+149+  0103 7E               ld a,(hl)
+150+  0104                  ; end of string?
+151+  0104 FE 00            cp 0
+152+  0106                  ; yes: no data
+153+  0106 28 17            jr z, _cmd_write_null
+154+  0108                  ; parse first pair of characters - address high
+155+  0108 CD 6C 01         call hex_byte_val
+156+  010B                  ; load into upper byte of memory pointer
+157+  010B 57               ld d,a
+158+  010C                  ; parse second pair of characters - address low
+159+  010C CD 6C 01         call hex_byte_val
+160+  010F                  ; load into lower byte of memory pointer
+161+  010F 5F               ld e,a
+162+  0110              _cmd_write_data:
+163+  0110                  ; load character from buffer
+164+  0110 7E               ld a,(hl)
+165+  0111                  ; end of string?
+166+  0111 FE 00            cp 0
+167+  0113                  ; yes: we're done
+168+  0113 28 07            jr z, _cmd_write_end
+169+  0115                  ; parse data byte
+170+  0115 CD 6C 01         call hex_byte_val
+171+  0118                  ; write byte to memory
+172+  0118 12               ld (de),a
+173+  0119                  ; advance destination pointer
+174+  0119 13               inc de
+175+  011A 18 F4            jr _cmd_write_data
+176+  011C              _cmd_write_end:
+177+  011C C3 7B 00         jp PROMPT
+178+  011F                  ; w with no data
+179+  011F              _cmd_write_null:
+180+  011F 21 4E 02         ld hl,CMD_W_NULL_MSG
+181+  0122 CD 27 00         call puts
+182+  0125                  ; and back to prompt
+183+  0125 C3 7B 00         jp PROMPT
+184+  0128
+185+  0128              ; EXECUTE
+186+  0128
+187+  0128              ; start executing from given address
+188+  0128              _cmd_execute:
+189+  0128                  ; load character from buffer
+190+  0128 7E               ld a,(hl)
+191+  0129                  ; end of string?
+192+  0129 FE 00            cp 0
+193+  012B                  ; yes - no data
+194+  012B CA 39 01         jp z, _cmd_exec_df
+195+  012E                  ; parse first pair of characters - address high
+196+  012E CD 6C 01         call hex_byte_val
+197+  0131                  ; load into upper byte of memory pointer
+198+  0131 57               ld d,a
+199+  0132                  ; parse second pair of characters - address low
+200+  0132 CD 6C 01         call hex_byte_val
+201+  0135                  ; load into lower byte of memory pointer
+202+  0135 5F               ld e,a
+203+  0136 62 6B            ld hl,de
+204+  0138                  ; execute from address
+205+  0138 E9               jp (hl)
+206+  0139                  ; start executing from default address
+207+  0139              _cmd_exec_df:
+208+  0139 21 00 80         ld hl,RAMSTART
+209+  013C                  ; execute from address
+210+  013C E9               jp (hl)
+211+  013D
+212+  013D              ; LOAD
+213+  013D
+214+  013D              ; load from INTEL HEX - records are read from the buffer
+215+  013D              _cmd_load:
+216+  013D                  ; load character from buffer
+217+  013D 7E               ld a,(hl)
+218+  013E                  ; end of string?
+219+  013E FE 00            cp 0
+220+  0140                  ; yes: no data - quit
+221+  0140 CA 69 01         jp z, _cmd_load_end
+222+  0143                  ; parse first pair of characters - byte count
+223+  0143 CD 6C 01         call hex_byte_val
+224+  0146 FE 00            cp 0
+225+  0148                  ; yes - zero byte count - quit
+226+  0148 CA 69 01         jp z, _cmd_load_end
+227+  014B                  ; load byte count into C
+228+  014B 4F               ld c,a
+229+  014C                  ; parse address high
+230+  014C CD 6C 01         call hex_byte_val
+231+  014F                  ; load into upper byte of memory pointer
+232+  014F 57               ld d,a
+233+  0150                  ; parse address low
+234+  0150 CD 6C 01         call hex_byte_val
+235+  0153                  ; load into lower byte of memory pointer
+236+  0153 5F               ld e,a
+237+  0154                  ; parse record type
+238+  0154 CD 6C 01         call hex_byte_val
+239+  0157                  ; record type zero?
+240+  0157 FE 00            cp 0
+241+  0159                  ; no: quit
+242+  0159 C2 69 01         jp nz, _cmd_load_end
+243+  015C              _cmd_load_data:
+244+  015C                  ; load character from buffer
+245+  015C 7E               ld a,(hl)
+246+  015D                  ; end of string?
+247+  015D FE 00            cp 0
+248+  015F                  ; yes: we're done
+249+  015F 28 08            jr z, _cmd_load_end
+250+  0161                  ; no:
+251+  0161                  ; parse data byte
+252+  0161 CD 6C 01         call hex_byte_val
+253+  0164                  ; write byte to memory
+254+  0164 12               ld (de),a
+255+  0165                  ; advance destination pointer
+256+  0165 13               inc de
+257+  0166                  ; decrement byte counter
+258+  0166                  ; TODO djnz
+259+  0166 0D               dec c
+260+  0167                  ; if byte counter not zero then go again
+261+  0167 20 F3            jr nz,_cmd_load_data
+262+  0169              _cmd_load_end:
+263+  0169 C3 7B 00         jp PROMPT
+# file closed: asm/marvin.asm
+ 13   016C              include "asm/strings.asm"
+# file opened: asm/strings.asm
+  1+  016C              ; string subroutines
+  2+  016C
+  3+  016C              ; read 2 ASCII hex chars from memory by HL pointer, return converted value in A and advance HL pointer
+  4+  016C              hex_byte_val:
+  5+  016C                  ; preserve BC
+  6+  016C C5               push bc
+  7+  016D                  ; load 1st character from memory
+  8+  016D 7E               ld a,(hl)
+  9+  016E                  ; end of string?
+ 10+  016E FE 00            cp 0
+ 11+  0170                  ; yes: no value - return zero
+ 12+  0170 28 19            jr z,_hex_byte_val_zero
+ 13+  0172                  ; no:
+ 14+  0172                  ; advance the buffer pointer
+ 15+  0172 23               inc hl
+ 16+  0173                  ; convert first hex digit
+ 17+  0173 CD 8F 01         call hex_val
+ 18+  0176                  ; shift left 4 bits to put value into top nibble
+ 19+  0176 CB 27            sla a
+ 20+  0178 CB 27            sla a
+ 21+  017A CB 27            sla a
+ 22+  017C CB 27            sla a
+ 23+  017E                  ; cache the result
+ 24+  017E 47               ld b,a
+ 25+  017F                  ; load 2nd character from memory
+ 26+  017F 7E               ld a,(hl)
+ 27+  0180                  ; end of string?
+ 28+  0180 FE 00            cp 0
+ 29+  0182                  ; yes: incomplete byte - return zero
+ 30+  0182 28 07            jr z,_hex_byte_val_zero
+ 31+  0184                  ; advance the buffer pointer
+ 32+  0184 23               inc hl
+ 33+  0185                  ; and convert 2nd hex digit
+ 34+  0185 CD 8F 01         call hex_val
+ 35+  0188                  ; add first and second digits
+ 36+  0188 80               add a,b
+ 37+  0189                  ; restore BC
+ 38+  0189 C1               pop bc
+ 39+  018A C9               ret
+ 40+  018B              _hex_byte_val_zero:
+ 41+  018B                  ; zero return value
+ 42+  018B 3E 00            ld a,0
+ 43+  018D                  ; restore BC
+ 44+  018D C1               pop bc
+ 45+  018E C9               ret
+ 46+  018F
+ 47+  018F              ; convert an ASCII hex char in A to a number value (lower 4 bits)
+ 48+  018F              hex_val:
+ 49+  018F                  ; is it lowercase alphabetic?
+ 50+  018F FE 61            cp 'a'
+ 51+  0191                  ; no: uppercase/numeric
+ 52+  0191 38 03            jr c,_hex_val_u_n
+ 53+  0193                  ; yes: alphabetic
+ 54+  0193 D6 57            sub 'a'-0x0a
+ 55+  0195 C9               ret
+ 56+  0196              _hex_val_u_n:
+ 57+  0196                  ; is it uppercase alphabetic?
+ 58+  0196 FE 41            cp 'A'
+ 59+  0198                  ; no: numeric
+ 60+  0198 38 03            jr c,_hex_val_n
+ 61+  019A                  ; y:
+ 62+  019A D6 37            sub 'A'-0x0a
+ 63+  019C C9               ret
+ 64+  019D              _hex_val_n:
+ 65+  019D                  ; numeric
+ 66+  019D D6 30            sub '0'
+ 67+  019F C9               ret
+ 68+  01A0
+ 69+  01A0              ; convert value in A into an ASCII pair and send to console
+ 70+  01A0              putchar_hex:
+ 71+  01A0 F5               push af
+ 72+  01A1 C5               push bc
+ 73+  01A2                  ; stash in B
+ 74+  01A2 47               ld b,a
+ 75+  01A3                  ; shift A right x4 e.g. transform 10110010 to 00001011
+ 76+  01A3 CB 3F            srl a
+ 77+  01A5 CB 3F            srl a
+ 78+  01A7 CB 3F            srl a
+ 79+  01A9 CB 3F            srl a
+ 80+  01AB                  ; most significant digit
+ 81+  01AB CD B7 01         call _putchar_hex_dgt
+ 82+  01AE                  ; recover from stash
+ 83+  01AE 78               ld a,b
+ 84+  01AF                  ; clear the top 4 bits
+ 85+  01AF E6 0F            and 0b00001111
+ 86+  01B1                  ; least significant digit
+ 87+  01B1 CD B7 01         call _putchar_hex_dgt
+ 88+  01B4 C1               pop bc
+ 89+  01B5 F1               pop af
+ 90+  01B6 C9               ret
+ 91+  01B7              _putchar_hex_dgt:
+ 92+  01B7                  ; is it an alpha or numeric?
+ 93+  01B7 FE 0A            cp 0x0a
+ 94+  01B9                  ; numeric
+ 95+  01B9 38 06            jr c,_putchar_hex_n
+ 96+  01BB                  ; alpha
+ 97+  01BB                  ; for alpha add the base ascii for 'a' but then sub 10 / 0x0a as hex 'a' = 10d
+ 98+  01BB C6 57            add a,'a'-0x0a
+ 99+  01BD CD 1F 00         call putchar
+100+  01C0 C9               ret
+101+  01C1              _putchar_hex_n:
+102+  01C1                  ; for numeric add the base ascii for '0'
+103+  01C1 C6 30            add a,'0'
+104+  01C3 CD 1F 00         call putchar
+105+  01C6 C9               ret
+106+  01C7
+# file closed: asm/strings.asm
+ 14   01C7              include "asm/messages.asm"
+# file opened: asm/messages.asm
+  1+  01C7              WELCOME_MSG:
+  2+  01C7 4D 41 52 56                  db "MARVIN v1.2\n"
+  2+  01CB 49 4E 20 76
+  2+  01CF 31 2E 32 0A
+  3+  01D3 41 20 73 69                  db "A simple Z80 homebrew monitor program\n"
+  3+  01D7 6D 70 6C 65
+  3+  01DB 20 5A 38 30
+  3+  01DF 20 68 6F 6D
+  3+  01E3 65 62 72 65
+  3+  01E7 77 20 6D 6F
+  3+  01EB 6E 69 74 6F
+  3+  01EF 72 20 70 72
+  3+  01F3 6F 67 72 61
+  3+  01F7 6D 0A
+  4+  01F9 28 63 29 20                  db "(c) Stephen Willcock 2024\n"
+  4+  01FD 53 74 65 70
+  4+  0201 68 65 6E 20
+  4+  0205 57 69 6C 6C
+  4+  0209 63 6F 63 6B
+  4+  020D 20 32 30 32
+  4+  0211 34 0A
+  5+  0213 68 74 74 70                  db "https://github.com/PainfulDiodes\n\n",0
+  5+  0217 73 3A 2F 2F
+  5+  021B 67 69 74 68
+  5+  021F 75 62 2E 63
+  5+  0223 6F 6D 2F 50
+  5+  0227 61 69 6E 66
+  5+  022B 75 6C 44 69
+  5+  022F 6F 64 65 73
+  5+  0233 0A 0A 00
+  6+  0236
+  7+  0236              BAD_CMD_MSG:
+  8+  0236 43 6F 6D 6D                  db "Command not recognised\n",0
+  8+  023A 61 6E 64 20
+  8+  023E 6E 6F 74 20
+  8+  0242 72 65 63 6F
+  8+  0246 67 6E 69 73
+  8+  024A 65 64 0A 00
+  9+  024E
+ 10+  024E              CMD_W_NULL_MSG:
+ 11+  024E 4E 6F 20 64                  db "No data to write\n",0
+ 11+  0252 61 74 61 20
+ 11+  0256 74 6F 20 77
+ 11+  025A 72 69 74 65
+ 11+  025E 0A 00
+# file closed: asm/messages.asm
+# file closed: beanzee.asm
+
+Value    Label
+------ - -----------------------------------------------------------
+0x01C1   _putchar_hex_n
+0x01B7   _putchar_hex_dgt
+0x019D   _hex_val_n
+0x0196   _hex_val_u_n
+0x018F   hex_val
+0x018B   _hex_byte_val_zero
+0x015C   _cmd_load_data
+0x0169   _cmd_load_end
+0x0139   _cmd_exec_df
+0x024E   CMD_W_NULL_MSG
+0x011C   _cmd_write_end
+0x0110   _cmd_write_data
+0x011F   _cmd_write_null
+0x00EE   _cmd_read_byte
+0x01A0   putchar_hex
+0x016C   hex_byte_val
+0x00DA   _cmd_read_row
+0x0236   BAD_CMD_MSG
+0x013D   _cmd_load
+0x0128   _cmd_execute
+0x0103   _cmd_write
+0x00CD   _cmd_read
+0x00A8   _get_cmd_end
+0x00A1   _get_cmd_esc
+0x0083   _get_cmd
+0x007B   PROMPT
+0x01C7   WELCOME_MSG
+0x0070   _usb_puts_end
+0x0064   _usb_puts_loop
+0x0063 X usb_puts
+0x0058   _usb_put_loop
+0x0056   _usb_put
+0x0052   _do_usb_put
+0x0044   _usb_no_char
+0x0034   _puts_end
+0x0028   _puts_loop
+0x0027   puts
+0x0047   usb_putchar
+0x001F   putchar
+0x0036   usb_readchar
+0x001B   readchar
+0x0013   getchar
+0x0072   MARVIN
+0x0010 X WARMSTART
+0x0027 X QUOTE
+0x005C X SLASH
+0x001B   ESC_E
+0x000D   ESC_R
+0x000A   ESC_N
+0x0009   ESC_T
+0x0008 X ESC_B
+0x0002 X CONSOLE_STATUS_BEANBOARD
+0x0001 X CONSOLE_STATUS_USB
+0x0007 X GPIO_IN
+0x0006 X GPIO_OUT
+0x0005 X LCD_DATA
+0x0004 X LCD_CTRL
+0x0003 X KEYSCAN_IN
+0x0002 X KEYSCAN_OUT
+0x0001   UM245R_DATA
+0x0000   UM245R_CTRL
+0xFFFF   STACK
+0xF020   CMD_BUFFER
+0xF010 X KEY_MATRIX_BUFFER
+0xF000 X CONSOLE_STATUS
+0x8000   RAMSTART
+0x0000   BEANBOARD
