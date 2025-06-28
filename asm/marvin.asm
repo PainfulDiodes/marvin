@@ -6,7 +6,7 @@
 
 ; MAIN PROGRAM LOOP
 
-START:
+MARVIN:
     ; point DE to zero - this is the default address argument for commands
     ld de,0x0000
 
