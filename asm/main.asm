@@ -1,8 +1,4 @@
-IFDEF ORGDEF
-    ORG ORGDEF
-ELSE
-    ORG 0x0000
-ENDIF
+ORG ORGDEF
     ld sp, STACK
 IF BEANBOARD
     call lcd_init

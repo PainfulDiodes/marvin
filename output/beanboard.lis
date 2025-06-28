@@ -104,20 +104,16 @@ asm/HD44780LCD.inc:
 beanboard.asm:
     10                          include "asm/main.asm"
 asm/main.asm:
-     1                          IFDEF ORGDEF
-     2                              ORG ORGDEF
-     3                          ELSE
-     4                              ORG 0x0000
-     5                          ENDIF
-     6  0000  31ffff                ld sp, STACK
-     7                          IF BEANBOARD
-     8  0003  cd0b02                call lcd_init
-     9  0006  cd6400                call beanboard_console_init
-    10                          ENDIF
-    11  0009  00000000000000    ALIGN 0x0010 ; fix the warmstart address across targets
-    12                          WARMSTART:
-    13  0010  c3b600                jp MARVIN
-    14                          
+     1                          ORG ORGDEF
+     2  0000  31ffff                ld sp, STACK
+     3                          IF BEANBOARD
+     4  0003  cd0b02                call lcd_init
+     5  0006  cd6400                call beanboard_console_init
+     6                          ENDIF
+     7  0009  00000000000000    ALIGN 0x0010 ; fix the warmstart address across targets
+     8                          WARMSTART:
+     9  0010  c3b600                jp MARVIN
+    10                          
 beanboard.asm:
     11                          include "asm/console.asm"
 asm/console.asm:
