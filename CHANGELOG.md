@@ -14,6 +14,7 @@
 * Renamed keyscan.asm > keymatrix.asm, keyscan > key_readchar (and associated labels)
 * lcd_puts and usb_puts functions
 * Allowed build targets (beanzee, beanboard) to diverge - removed ALIGN padding between labels; removed beanboard code from beanzee target
+* Added a WARMSTART label (with ALIGN padding) to fix a warm-start address across all targets - this is useful because, for example z88dk would like a CRT exit address as a CLI parameter
 
 
 # v1.1.0 Latest
