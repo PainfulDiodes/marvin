@@ -15,6 +15,7 @@
 * lcd_puts and usb_puts functions
 * Allowed build targets (beanzee, beanboard) to diverge - removed ALIGN padding between labels; removed beanboard code from beanzee target
 * Added a WARMSTART label (with ALIGN padding) to fix a warm-start address across all targets - this is useful because, for example z88dk would like a CRT exit address as a CLI parameter
+* Revise build scripts to use an output directory (one for each supported assembler)
 
 
 # v1.1.0 Latest
