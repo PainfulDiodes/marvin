@@ -1,4 +1,4 @@
-DEBOUNCE_DELAY  equ 0xf0
+DEBOUNCE_DELAY  equ 0x4000
 
 MOD_KEY_SHIFT   equ 0b00000001
 MOD_KEY_FN      equ 0b00000010
@@ -6,27 +6,8 @@ MOD_KEY_CONTROL equ 0b00000100
 MOD_KEY_ALT     equ 0b00001000
 MOD_KEY_CMD     equ 0b00010000
 
-ALIGN 0x10
-
-; initialise keyscan
-keyscan_init:
-    push bc
-    push hl
-    ld b,8
-    ld hl,KEYSCAN_BUFFER
-_keyscan_init_loop:
-    ld (hl),0
-    inc hl
-    djnz _keyscan_init_loop
-    ; end
-    pop hl
-    pop bc
-    ret
-
-ALIGN 0x10
-
-; return value in A
-keyscan:
+; return keyboard char value in A, or 0
+key_readchar:
     push bc
     push de
     push hl
@@ -35,8 +16,8 @@ keyscan:
     ; row counter - 0 => 7
     ld c,0x00                    
     ; location of previous values
-    ld hl,KEYSCAN_BUFFER
-    call _modifierkeys
+    ld hl,KEY_MATRIX_BUFFER
+    call modifierkeys
     ; initialise map pointer
     ld de,QWERTY_KEYMAP_L
     ; shift key down?
@@ -48,7 +29,7 @@ _keyscanloop:
     ; ASCII returned in A, or 0
     call _colscan 
     cp 0
-    jp nz,_delay
+    jp nz,key_readchar_end
     ; move the pointer of previous values to the next row slot
     inc hl                      
     ; increment row counter
@@ -59,19 +40,27 @@ _keyscanloop:
     rl b                        
     ; loop if not done all rows
     jr nc,_keyscanloop          
-    ; key debounce
-_delay:                         
-    ; set a to the length of the delay
-    ld b,DEBOUNCE_DELAY         
-_delayloop:                      
-    ; wait a few cycles
-    nop                         
-    ; no - loop again
-    djnz _delayloop             
-; end
+key_readchar_end:
+    ; debounce delay, restore state and return
+    call _debounce_delay
     pop hl
     pop de
     pop bc
+    ret
+
+_debounce_delay:
+    push af
+    push de
+    ld de,DEBOUNCE_DELAY
+_delay_loop:
+    dec de
+    nop
+    ld a, d
+    cp 0
+    jr nz,_delay_loop
+_delay_end:
+    pop de
+    pop af
     ret
 
 ; get row bitmap representing new keystrokes:  
@@ -102,9 +91,8 @@ _rowscan:
     pop de                      
     ret
 
-; get bitmap representing modifier keys:  
-; return value in A
-_modifierkeys:                       
+; return bitmap representing modifier keys in A
+modifierkeys:                       
     ld a,0b00010000 ; row 4
     ; output row strobe
     out (KEYSCAN_OUT),a            

@@ -1,12 +1,9 @@
-IFDEF ORGDEF
-    ORG ORGDEF
-ELSE
-    ORG 0x0000
-ENDIF
-
+ORG MARVINORG
     ld sp, STACK
 IF BEANBOARD
     call lcd_init
-    call keyscan_init
+    call beanboard_console_init
 ENDIF
-    jp START
+ALIGN 0x0010 ; fix the warmstart address across targets
+WARMSTART:
+    jp MARVIN

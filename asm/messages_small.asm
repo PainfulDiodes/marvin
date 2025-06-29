@@ -1,17 +1,11 @@
-ALIGN 0x10
-
-welcome_msg:    
+WELCOME_MSG:    
                 db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
-                db "v1.1.1_beta\n",0
+                db "v1.2\n",0
 
 
-ALIGN 0x10
-
-bad_cmd_msg:    
+BAD_CMD_MSG:    
                 db "Bad command\n",0
 
-ALIGN 0x10
-
-cmd_w_null_msg: 
+CMD_W_NULL_MSG: 
                 db "No data\n",0

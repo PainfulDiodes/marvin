@@ -6,16 +6,12 @@
 
 ; MAIN PROGRAM LOOP
 
-ALIGN 0x10
-
-START:
+MARVIN:
     ; point DE to zero - this is the default address argument for commands
     ld de,0x0000
 
-    ld hl,welcome_msg
+    ld hl,WELCOME_MSG
     call puts
-
-ALIGN 0x10
 
 PROMPT:
     ; point HL to the beginning of the input buffer
@@ -87,7 +83,7 @@ _get_cmd_end:
     cp ':' 
     jr z,_cmd_load
     ; otherwise error
-    ld hl,bad_cmd_msg
+    ld hl,BAD_CMD_MSG
     call puts
     ; loop back to the prompt
     jp PROMPT
@@ -181,7 +177,7 @@ _cmd_write_end:
     jp PROMPT
     ; w with no data
 _cmd_write_null:        
-    ld hl,cmd_w_null_msg
+    ld hl,CMD_W_NULL_MSG
     call puts
     ; and back to prompt
     jp PROMPT

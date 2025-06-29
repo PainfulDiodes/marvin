@@ -12,11 +12,10 @@ Marvin builds with:
 
 Shell scripts are included for building Marvin, which have been a convenience for me but may be of limited use depending on your environment (I am using zsh / macOS).
 
-The home directory has several build targets - assemble these to build a binary of Marvin; each will include the necessary additional assembly files from the asm directory.
+The home directory has different build targets - assemble these to build a binary of Marvin; each will include the necessary additional assembly files from the asm directory.
 
 * beanzee.asm - this is for BeanZee standalone, and expects there to be an FTDI UM245R USB module fitted. This build is also suitable for my Z80 breadboard computer
-* beanboard.asm - this is for BeanZee with the BeanBoard keyboard/display - it also currently expects there to be an FTDI UM245R USB module fitted
-* beanboard_proto.asm - this is not generally useful - it supports the key-mapping used in the earlier beanboard prototype
+* beanboard.asm - this is for BeanZee with the BeanBoard QWERTY keyboard and LCD display; console input can be taken either from the BeanZee USB or from the BeanBoard
 
 ## Marvin and BeanZee
 
@@ -59,17 +58,19 @@ When BeanZee is reset it responds with a Marvin welcome message and a prompt, si
     https://github.com/PainfulDiodes
     >
 
-Marvin interprets inputs character-by-character, echoing each character back to the terminal, and waits for a carriage return character (\r) before processing a command. 
+*Using BeanBoard, either the BeanZee USB or the BeanBoard keyboard and display can be used for the console. The default console input/output for BeanBoard is the keyboard and LCD display. Holding down the BeanBoard Shift key when resetting BeanZee will switch to using the USB for the console. Resetting without the Shift key will switch to using the BeanBoard keyboard/display.*
+
+Marvin interprets inputs character-by-character, echoing each character back to the console, and waits for a carriage return character (\r) before processing a command. 
 
 Newline (\n) characters are also interpreted as an end-of-command, and so a \r\n combination will result in an additional empty command. This is harmless, but will be visible as an additional prompt line.
 
-When sending responses back to the terminal, Marvin will terminate lines with \r\n. 
+When sending responses back to the console, Marvin will terminate lines with \r\n. 
 
 This behaviour has been found to work with VT100/ANSI terminal emulation, e.g. GNU screen.
 
 For simplicity, backspace for correcting a command is also not currently supported. However, hitting the escape key (\e) is recognised and it will cause everything on the current line to be ignored, and move to a new line and new prompt.
 
-Whitespace on a command is also ignored. This allows for very compact commands, or for commands to be spaced out to make them easier to read.
+Whitespace on a command is ignored. This allows for very compact commands, or for commands to be spaced out to make them easier to read.
 
 Values are entered in hexadecimal (no prefix or suffix) and upper or lower case letters may be used for these values.
 

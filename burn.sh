@@ -4,4 +4,4 @@
 set -x #echo on
 
 f=${1%.*} #extract base filename
-minipro -u -s -p AT28C64B -w $f.bin
+minipro -u -s -p AT28C64B -w output/$f.bin
