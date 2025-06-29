@@ -10,27 +10,41 @@ asm/main.inc:
      1                          ; start of user RAM
      2                          RAMSTART equ 0x8000
      3                          
-     4                          ; 8-byte status area
-     5                          CONSOLE_STATUS equ 0xf000
-     6                          ; 8-byte keyscan buffer
-     7                          KEY_MATRIX_BUFFER equ 0xf010
-     8                          ; command buffer
-     9                          CMD_BUFFER equ 0xf020
-    10                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
-    11                          STACK equ 0xffff
-    12                          
-    13                          UM245R_CTRL equ 0 ; serial control port
-    14                          UM245R_DATA equ 1 ; serial data port
-    15                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
-    16                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
-    17                          LCD_CTRL    equ 4 ; LCD control port
-    18                          LCD_DATA    equ 5 ; LCD data port
-    19                          GPIO_OUT    equ 6 ; either 6 or 7 will work
-    20                          GPIO_IN     equ 7 ; either 6 or 7 will work
-    21                          
-    22                          CONSOLE_STATUS_USB equ 1
-    23                          CONSOLE_STATUS_BEANBOARD equ 2
-    24                          
+     4                          SYSRAM equ 0xf000
+     5                          
+     6                          ; status area (16 bytes allocated, 1 used)
+     7                          ; only used on beanboard - TODO candidate for conditional assembly
+     8                          CONSOLE_STATUS equ SYSRAM
+     9                          CONSOLE_STATUS_SIZE equ 0x10
+    10                          
+    11                          ; buffer (16 bytes allocated, 8 used)
+    12                          ; only used on beanboard - TODO candidate for conditional assembly
+    13                          KEY_MATRIX_BUFFER equ SYSRAM+CONSOLE_STATUS_SIZE
+    14                          KEY_MATRIX_BUFFER_SIZE equ 0x10
+    15                          
+    16                          ; BeanBoard LCD buffer - same size as display, but has the potential to expand and support scrolling
+    17                          ; only used on beanboard - TODO candidate for conditional assembly
+    18                          LCD_BUFFER equ KEY_MATRIX_BUFFER+KEY_MATRIX_BUFFER_SIZE
+    19                          
+    20                          ; command buffer
+    21                          CMD_BUFFER equ LCD_BUFFER+LCD_BUFFER_LEN
+    22                          
+    23                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
+    24                          STACK equ 0xffff
+    25                          
+    26                          UM245R_CTRL equ 0 ; serial control port
+    27                          UM245R_DATA equ 1 ; serial data port
+    28                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
+    29                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
+    30                          LCD_CTRL    equ 4 ; LCD control port
+    31                          LCD_DATA    equ 5 ; LCD data port
+    32                          GPIO_OUT    equ 6 ; either 6 or 7 will work
+    33                          GPIO_IN     equ 7 ; either 6 or 7 will work
+    34                          
+    35                          ; CONSOLE_STATUS values
+    36                          CONSOLE_STATUS_USB equ 1
+    37                          CONSOLE_STATUS_BEANBOARD equ 2
+    38                          
 beanboard.asm:
      8                          include "asm/escapestring.inc"
 asm/escapestring.inc:
@@ -339,7 +353,7 @@ asm/marvin.asm:
     15                          
     16                          PROMPT:
     17                              ; point HL to the beginning of the input buffer
-    18  00bf  2120f0                ld hl,CMD_BUFFER
+    18  00bf  2170f0                ld hl,CMD_BUFFER
     19  00c2  3e3e                  ld a,'>'
     20  00c4  cd3500                call putchar
     21                          
@@ -388,7 +402,7 @@ asm/marvin.asm:
     64  00ee  77                    ld(hl),a
     65                          ; process command from buffer
     66                              ; point to start of buffer
-    67  00ef  2120f0                ld hl,CMD_BUFFER
+    67  00ef  2170f0                ld hl,CMD_BUFFER
     68                              ; load character from buffer
     69  00f2  7e                    ld a,(hl)
     70                              ; end of string?
