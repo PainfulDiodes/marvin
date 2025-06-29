@@ -212,7 +212,7 @@ asm/console.asm:
     93                          ; determine which console should be active - Reset=beanboard, shift-Reset=USB
     94                          beanboard_console_init:
     95                              ; check for modifier keys being held down
-    96  0064  cd3503                call modifierkeys
+    96  0064  cd4203                call modifierkeys
     97                              ; shift key down?
     98  0067  e601                  and MOD_KEY_SHIFT
     99                              ; yes shift
@@ -334,7 +334,7 @@ asm/marvin.asm:
     10                              ; point DE to zero - this is the default address argument for commands
     11  00b6  110000                ld de,0x0000
     12                          
-    13  00b9  21da03                ld hl,WELCOME_MSG
+    13  00b9  21e703                ld hl,WELCOME_MSG
     14  00bc  cd5500                call puts
     15                          
     16                          PROMPT:
@@ -407,7 +407,7 @@ asm/marvin.asm:
     83  0104  fe3a                  cp ':'
     84  0106  2879                  jr z,_cmd_load
     85                              ; otherwise error
-    86  0108  210104                ld hl,BAD_CMD_MSG
+    86  0108  210e04                ld hl,BAD_CMD_MSG
     87  010b  cd5500                call puts
     88                              ; loop back to the prompt
     89  010e  c3bf00                jp PROMPT
@@ -501,7 +501,7 @@ asm/marvin.asm:
    177  0160  c3bf00                jp PROMPT
    178                              ; w with no data
    179                          _cmd_write_null:
-   180  0163  210e04                ld hl,CMD_W_NULL_MSG
+   180  0163  211b04                ld hl,CMD_W_NULL_MSG
    181  0166  cd5500                call puts
    182                              ; and back to prompt
    183  0169  c3bf00                jp PROMPT
@@ -904,7 +904,7 @@ asm/HD44780LCD.asm:
 beanboard.asm:
     16                          include "asm/keymatrix.asm"
 asm/keymatrix.asm:
-     1                          DEBOUNCE_DELAY  equ 0xf0
+     1                          DEBOUNCE_DELAY  equ 0x4000
      2                          
      3                          MOD_KEY_SHIFT   equ 0b00000001
      4                          MOD_KEY_FN      equ 0b00000010
@@ -923,19 +923,19 @@ asm/keymatrix.asm:
     17  02fa  0e00                  ld c,0x00
     18                              ; location of previous values
     19  02fc  2110f0                ld hl,KEY_MATRIX_BUFFER
-    20  02ff  cd3503                call modifierkeys
+    20  02ff  cd4203                call modifierkeys
     21                              ; initialise map pointer
-    22  0302  115a03                ld de,QWERTY_KEYMAP_L
+    22  0302  116703                ld de,QWERTY_KEYMAP_L
     23                              ; shift key down?
     24  0305  e601                  and MOD_KEY_SHIFT
     25  0307  ca0d03                jp z,_keyscanloop
-    26  030a  119a03                ld de,QWERTY_KEYMAP_U
+    26  030a  11a703                ld de,QWERTY_KEYMAP_U
     27                          _keyscanloop:
-    28  030d  cd2803                call _rowscan
+    28  030d  cd3503                call _rowscan
     29                              ; ASCII returned in A, or 0
-    30  0310  cd4503                call _colscan
+    30  0310  cd5203                call _colscan
     31  0313  fe00                  cp 0
-    32  0315  c21f03                jp nz,_delay
+    32  0315  c21f03                jp nz,key_readchar_end
     33                              ; move the pointer of previous values to the next row slot
     34  0318  23                    inc hl
     35                              ; increment row counter
@@ -946,151 +946,159 @@ asm/keymatrix.asm:
     40  031b  cb10                  rl b
     41                              ; loop if not done all rows
     42  031d  30ee                  jr nc,_keyscanloop
-    43                              ; key debounce
-    44                          _delay:
-    45                              ; set a to the length of the delay
-    46  031f  06f0                  ld b,DEBOUNCE_DELAY
-    47                          _delayloop:
-    48                              ; wait a few cycles
-    49  0321  00                    nop
-    50                              ; no - loop again
-    51  0322  10fd                  djnz _delayloop
-    52                          ; end
-    53  0324  e1                    pop hl
-    54  0325  d1                    pop de
-    55  0326  c1                    pop bc
-    56  0327  c9                    ret
-    57                          
-    58                          ; get row bitmap representing new keystrokes:
-    59                          ; B contains row bit,
-    60                          ; C contains row count,
-    61                          ; HL contains a pointer to the old value.
-    62                          ; return value in A
-    63                          _rowscan:
-    64                              ; preserve registers
-    65  0328  d5                    push de
-    66                              ; fetch previous value for comparison
-    67  0329  7e                    ld a,(hl)
-    68                              ; invert A - we want to check keys becoming closed - so zeroed bits on the previous value are significant
-    69  032a  2f                    cpl
-    70                              ; store inverted previous value
-    71  032b  57                    ld d,a
-    72                              ; get the current row bit
-    73  032c  78                    ld a,b
-    74                              ; output row strobe
-    75  032d  d302                  out (KEYSCAN_OUT),a
-    76                              ; get column values
-    77  032f  db03                  in a,(KEYSCAN_IN)
-    78                              ; store the new value
-    79  0331  77                    ld (hl),a
-    80                              ; newVal AND ~oldVal means bits are set only when the previous bit value was 0
-    81  0332  a2                    and d
-    82                              ; restore registers
-    83  0333  d1                    pop de
-    84  0334  c9                    ret
-    85                          
-    86                          ; return bitmap representing modifier keys in A
-    87                          modifierkeys:
-    88  0335  3e10                  ld a,0b00010000 ; row 4
-    89                              ; output row strobe
-    90  0337  d302                  out (KEYSCAN_OUT),a
-    91                              ; get column values
-    92  0339  db03                  in a,(KEYSCAN_IN)
-    93  033b  e601                  and 0b00000001 ; row 4, bit 0 is SHIFT
-    94                              ; left shift modifier
-    95  033d  2003                  jr nz,_modifier_shift
-    96                              ; no modifiers
-    97  033f  3e00                  ld a,0
-    98  0341  c9                    ret
-    99                          _modifier_shift:
-   100  0342  3e01                  ld a,MOD_KEY_SHIFT
-   101  0344  c9                    ret
-   102                          
-   103                          ; A contains row bitmap representing new keystrokes,
-   104                          ; DE contains a pointer to the ASCII map for the row - which is incremented in the subroutine
-   105                          ; first printable character returned in A
-   106                          _colscan:
-   107                              ; preserve registers
-   108  0345  c5                    push bc
-   109                              ; initialise col bit mask - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-   110  0346  0e01                  ld c,0x01
-   111                              ; stash the bitmap
-   112  0348  47                    ld b,a
-   113                          _colscanloop:
-   114                              ; reload the bitmap
-   115  0349  78                    ld a,b
-   116                              ; mask the bitmap - use the column mask (C) over the bitmap value in A
-   117  034a  a1                    and c
-   118                              ; if zero then no keypress
-   119  034b  2805                  jr z,_colscanloopnext
-   120  034d  1a                    ld a,(de)
-   121                              ; ASCII is 0?
-   122  034e  fe00                  cp 0
-   123  0350  2006                  jr nz,_colscanend
-   124                          _colscanloopnext:
-   125                              ; increment character map pointer
-   126  0352  13                    inc de
-   127                              ; clear the carry flag
-   128  0353  b7                    or a
-   129                              ; shift row bit left - when we've done all 8, it will move to the carry flag
-   130  0354  cb11                  rl c
-   131                              ; loop if not done all rows
-   132  0356  30f1                  jr nc,_colscanloop
-   133                          _colscanend:
-   134                              ; restore registers
-   135  0358  c1                    pop bc
-   136  0359  c9                    ret
-   137                          
-   138                          ; define values for control keys
-   139                          ; modifiers have zero value
-   140                          QWERTY_SHIFT equ 0
-   141                          QWERTY_FN equ 0
-   142                          QWERTY_CTRL equ 0
-   143                          QWERTY_ALT equ 0
-   144                          QWERTY_CMD equ 0
-   145                          QWERTY_CURS_UP equ 1
-   146                          QWERTY_CURS_DOWN equ 2
-   147                          QWERTY_CURS_LEFT equ 3
-   148                          QWERTY_CURS_RIGHT equ 4
-   149                          QWERTY_CAPS equ 5
-   150                          
-   151                          QWERTY_KEYMAP_L:
-   152  035a  1b71776572747975      db ESC_E,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,ESC_B,'7','8','9'
+    43                          key_readchar_end:
+    44                              ; debounce delay, restore state and return
+    45  031f  cd2603                call _debounce_delay
+    46  0322  e1                    pop hl
+    47  0323  d1                    pop de
+    48  0324  c1                    pop bc
+    49  0325  c9                    ret
+    50                          
+    51                          _debounce_delay:
+    52  0326  f5                    push af
+    53  0327  d5                    push de
+    54  0328  110040                ld de,DEBOUNCE_DELAY
+    55                          _delay_loop:
+    56  032b  1b                    dec de
+    57  032c  00                    nop
+    58  032d  7a                    ld a, d
+    59  032e  fe00                  cp 0
+    60  0330  20f9                  jr nz,_delay_loop
+    61                          _delay_end:
+    62  0332  d1                    pop de
+    63  0333  f1                    pop af
+    64  0334  c9                    ret
+    65                          
+    66                          ; get row bitmap representing new keystrokes:
+    67                          ; B contains row bit,
+    68                          ; C contains row count,
+    69                          ; HL contains a pointer to the old value.
+    70                          ; return value in A
+    71                          _rowscan:
+    72                              ; preserve registers
+    73  0335  d5                    push de
+    74                              ; fetch previous value for comparison
+    75  0336  7e                    ld a,(hl)
+    76                              ; invert A - we want to check keys becoming closed - so zeroed bits on the previous value are significant
+    77  0337  2f                    cpl
+    78                              ; store inverted previous value
+    79  0338  57                    ld d,a
+    80                              ; get the current row bit
+    81  0339  78                    ld a,b
+    82                              ; output row strobe
+    83  033a  d302                  out (KEYSCAN_OUT),a
+    84                              ; get column values
+    85  033c  db03                  in a,(KEYSCAN_IN)
+    86                              ; store the new value
+    87  033e  77                    ld (hl),a
+    88                              ; newVal AND ~oldVal means bits are set only when the previous bit value was 0
+    89  033f  a2                    and d
+    90                              ; restore registers
+    91  0340  d1                    pop de
+    92  0341  c9                    ret
+    93                          
+    94                          ; return bitmap representing modifier keys in A
+    95                          modifierkeys:
+    96  0342  3e10                  ld a,0b00010000 ; row 4
+    97                              ; output row strobe
+    98  0344  d302                  out (KEYSCAN_OUT),a
+    99                              ; get column values
+   100  0346  db03                  in a,(KEYSCAN_IN)
+   101  0348  e601                  and 0b00000001 ; row 4, bit 0 is SHIFT
+   102                              ; left shift modifier
+   103  034a  2003                  jr nz,_modifier_shift
+   104                              ; no modifiers
+   105  034c  3e00                  ld a,0
+   106  034e  c9                    ret
+   107                          _modifier_shift:
+   108  034f  3e01                  ld a,MOD_KEY_SHIFT
+   109  0351  c9                    ret
+   110                          
+   111                          ; A contains row bitmap representing new keystrokes,
+   112                          ; DE contains a pointer to the ASCII map for the row - which is incremented in the subroutine
+   113                          ; first printable character returned in A
+   114                          _colscan:
+   115                              ; preserve registers
+   116  0352  c5                    push bc
+   117                              ; initialise col bit mask - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
+   118  0353  0e01                  ld c,0x01
+   119                              ; stash the bitmap
+   120  0355  47                    ld b,a
+   121                          _colscanloop:
+   122                              ; reload the bitmap
+   123  0356  78                    ld a,b
+   124                              ; mask the bitmap - use the column mask (C) over the bitmap value in A
+   125  0357  a1                    and c
+   126                              ; if zero then no keypress
+   127  0358  2805                  jr z,_colscanloopnext
+   128  035a  1a                    ld a,(de)
+   129                              ; ASCII is 0?
+   130  035b  fe00                  cp 0
+   131  035d  2006                  jr nz,_colscanend
+   132                          _colscanloopnext:
+   133                              ; increment character map pointer
+   134  035f  13                    inc de
+   135                              ; clear the carry flag
+   136  0360  b7                    or a
+   137                              ; shift row bit left - when we've done all 8, it will move to the carry flag
+   138  0361  cb11                  rl c
+   139                              ; loop if not done all rows
+   140  0363  30f1                  jr nc,_colscanloop
+   141                          _colscanend:
+   142                              ; restore registers
+   143  0365  c1                    pop bc
+   144  0366  c9                    ret
+   145                          
+   146                          ; define values for control keys
+   147                          ; modifiers have zero value
+   148                          QWERTY_SHIFT equ 0
+   149                          QWERTY_FN equ 0
+   150                          QWERTY_CTRL equ 0
+   151                          QWERTY_ALT equ 0
+   152                          QWERTY_CMD equ 0
+   153                          QWERTY_CURS_UP equ 1
+   154                          QWERTY_CURS_DOWN equ 2
+   155                          QWERTY_CURS_LEFT equ 3
+   156                          QWERTY_CURS_RIGHT equ 4
+   157                          QWERTY_CAPS equ 5
+   158                          
+   159                          QWERTY_KEYMAP_L:
+   160  0367  1b71776572747975      db ESC_E,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,ESC_B,'7','8','9'
               696f700508373839  
-   153  036a  096173646667686a      db ESC_T,'a','s','d','f','g','h','j','k','l',';',QUOTE,ESC_N,'4','5','6'
+   161  0377  096173646667686a      db ESC_T,'a','s','d','f','g','h','j','k','l',';',QUOTE,ESC_N,'4','5','6'
               6b6c3b270a343536  
-   154  037a  007a786376626e6d      db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',SLASH,QWERTY_CURS_UP,'1','2','3'
+   162  0387  007a786376626e6d      db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',SLASH,QWERTY_CURS_UP,'1','2','3'
               2c2e2f5c01313233  
-   155  038a  00000000205b5d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',ESC_N
+   163  0397  00000000205b5d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',ESC_N
               602d3d030204300a  
-   156                          QWERTY_KEYMAP_U:
-   157  039a  1b51574552545955      db ESC_E,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,ESC_B,'&','*','('
+   164                          QWERTY_KEYMAP_U:
+   165  03a7  1b51574552545955      db ESC_E,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,ESC_B,'&','*','('
               494f500508262a28  
-   158  03aa  094153444647484a      db ESC_T,'A','S','D','F','G','H','J','K','L',':','"',ESC_N,'$','%','^'
+   166  03b7  094153444647484a      db ESC_T,'A','S','D','F','G','H','J','K','L',':','"',ESC_N,'$','%','^'
               4b4c3a220a24255e  
-   159  03ba  005a584356424e4d      db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',SLASH,QWERTY_CURS_UP,'!','@','#'
+   167  03c7  005a584356424e4d      db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',SLASH,QWERTY_CURS_UP,'!','@','#'
               3c3e3f5c01214023  
-   160  03ca  00000000207b7d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',ESC_N
+   168  03d7  00000000207b7d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',ESC_N
               7e5f2b030204290a  
-   161                          
+   169                          
 beanboard.asm:
     17                          include "asm/messages_small.asm"
 asm/messages_small.asm:
      1                          WELCOME_MSG:
-     2  03da  5061696e66756c44                  db "PainfulDiodes\n"
+     2  03e7  5061696e66756c44                  db "PainfulDiodes\n"
               696f6465730a      
-     3  03e8  4d415256494e205a                  db "MARVIN Z80 monitor\n"
+     3  03f5  4d415256494e205a                  db "MARVIN Z80 monitor\n"
               3830206d6f6e6974  
               6f720a            
-     4  03fb  76312e320a00                      db "v1.2\n",0
+     4  0408  76312e320a00                      db "v1.2\n",0
      5                          
      6                          
      7                          BAD_CMD_MSG:
-     8  0401  42616420636f6d6d                  db "Bad command\n",0
+     8  040e  42616420636f6d6d                  db "Bad command\n",0
               616e640a00        
      9                          
     10                          CMD_W_NULL_MSG:
-    11  040e  4e6f20646174610a                  db "No data\n",0
+    11  041b  4e6f20646174610a                  db "No data\n",0
               00                
     12                          
 beanboard.asm:
