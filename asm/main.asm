@@ -1,4 +1,4 @@
-ORG ORGDEF
+ORG MARVINORG
     ld sp, STACK
 IF BEANBOARD
     call lcd_init
