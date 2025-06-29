@@ -645,8 +645,8 @@ beanzee.asm:
     14                          include "asm/messages.asm"
 asm/messages.asm:
      1                          WELCOME_MSG:
-     2  01c7  4d415256494e2076                  db "MARVIN v1.2\n"
-              312e320a          
+     2  01c7  4d415256494e2076                  db "MARVIN v1.3\n"
+              312e330a          
      3  01d3  412073696d706c65                  db "A simple Z80 homebrew monitor program\n"
               205a383020686f6d  
               6562726577206d6f  

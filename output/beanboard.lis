@@ -1090,7 +1090,7 @@ asm/messages_small.asm:
      3  03f5  4d415256494e205a                  db "MARVIN Z80 monitor\n"
               3830206d6f6e6974  
               6f720a            
-     4  0408  76312e320a00                      db "v1.2\n",0
+     4  0408  76312e330a00                      db "v1.3\n",0
      5                          
      6                          
      7                          BAD_CMD_MSG:
