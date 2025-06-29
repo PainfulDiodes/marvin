@@ -1,24 +1,21 @@
-# v1.2 WIP
+# v1.2
 * Remove beanboard_proto build target
 * Remove keyscan_init so that on reset the last keypress is not repeated on RESET
   * On RESET (and x0) keyscan_init was run which cleared the buffer
   * This meant that any key still held down will register after RESET - meaning an extra keypress is sensed after reset
   * The solution is to simply not clear the buffer - under normal startup a change may be detected, but this will normally be "no keys" and so will have no effect
 * Allow for multiple console devices
-  * BeanBoard/BeanZee have different build targets respecting different hardware configuration
-  * In order to maintain consistent entry points, the BeanZee target will include modules which are not used; but code will change between targets
-  * For BeanZee, console is fixed to USB
-  * For BeanBoard console may be USB or keyboard/LCD
-  * On RESET we sense for shift key to determine which is the active console: shift-RESET=USB, RESET=beanboard
+  * For the BeanZee target, console is fixed to USB
+  * For the BeanBoard target, console may be either USB or keyboard/LCD - on RESET we sense for Beanboard shift key to determine which is the active console: shift-RESET=USB, RESET=beanboard
   * This also helps with speeding up loading programs via the USB: LCD echoing seems to significantly slow the USB transfer speed
 * Renamed keyscan.asm > keymatrix.asm, keyscan > key_readchar (and associated labels)
 * lcd_puts and usb_puts functions
-* Allowed build targets (beanzee, beanboard) to diverge - removed ALIGN padding between labels; removed beanboard code from beanzee target
-* Added a WARMSTART label (with ALIGN padding) to fix a warm-start address across all targets - this is useful because, for example z88dk would like a CRT exit address as a CLI parameter
-* Revise build scripts to use an output directory (one for each supported assembler)
+* Build targets were previously kept in sync such that entry point addresses would work across all targets; now build targets (beanzee, beanboard) will not be consistent - beanboard code has been removed from from beanzee target and ALIGN padding between labels has been removed, with the exception of WARMSTART
+* Added a WARMSTART label (with ALIGN padding) to fix a consistent warm-start address across all targets
+* Revise build scripts to use an output directory (one directory for each supported assembler)
+* Fixed Beanboard keyboard debounce delay
 
-
-# v1.1.0 Latest
+# v1.1.0
  
 ## Summary
 Add support for BeanBoard  
