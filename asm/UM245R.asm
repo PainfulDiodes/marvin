@@ -12,8 +12,6 @@
 ; externally this is consistent with VT100/ANSI terminal behaviour
 ; and internally line endings are always \n
 
-ALIGN 0x10
-
 ; get character and return in A
 usb_readchar:
     ; get the USB status
@@ -34,8 +32,6 @@ usb_readchar:
 _usb_no_char:
     ld a,0
     ret
-
-ALIGN 0x10
 
 usb_putchar:
     ; newline?
@@ -67,3 +63,24 @@ _usb_put_loop:
     out (UM245R_DATA),a
     pop bc
     ret
+
+; print a zero-terminated string pointed to by hl to the USB
+usb_puts:
+    push hl
+_usb_puts_loop:
+    ; get character from string
+    ld a,(hl)
+    ; is it zero?
+    cp 0
+    ; yes
+    jr z, _usb_puts_end
+    ; no: send character
+    call usb_putchar
+    ; next character position
+    inc hl
+    ; loop for next character
+    jp _usb_puts_loop
+_usb_puts_end:
+    pop hl
+    ret
+
