@@ -1,4 +1,4 @@
-DEBOUNCE_DELAY  equ 0xf0
+DEBOUNCE_DELAY  equ 0x4000
 
 MOD_KEY_SHIFT   equ 0b00000001
 MOD_KEY_FN      equ 0b00000010
@@ -29,7 +29,7 @@ _keyscanloop:
     ; ASCII returned in A, or 0
     call _colscan 
     cp 0
-    jp nz,_delay
+    jp nz,key_readchar_end
     ; move the pointer of previous values to the next row slot
     inc hl                      
     ; increment row counter
@@ -40,19 +40,27 @@ _keyscanloop:
     rl b                        
     ; loop if not done all rows
     jr nc,_keyscanloop          
-    ; key debounce
-_delay:                         
-    ; set a to the length of the delay
-    ld b,DEBOUNCE_DELAY         
-_delayloop:                      
-    ; wait a few cycles
-    nop                         
-    ; no - loop again
-    djnz _delayloop             
-; end
+key_readchar_end:
+    ; debounce delay, restore state and return
+    call _debounce_delay
     pop hl
     pop de
     pop bc
+    ret
+
+_debounce_delay:
+    push af
+    push de
+    ld de,DEBOUNCE_DELAY
+_delay_loop:
+    dec de
+    nop
+    ld a, d
+    cp 0
+    jr nz,_delay_loop
+_delay_end:
+    pop de
+    pop af
     ret
 
 ; get row bitmap representing new keystrokes:  
