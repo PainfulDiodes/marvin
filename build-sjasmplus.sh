@@ -7,14 +7,18 @@
 
 # set -x #echo on
 
+org=0x0000
+orgname=MARVINORG
+
 f=${1%.*} #extract base filename
+
 if [ $# -gt 1 ]
 then
-    sjasmplus --lst=output-sj/$f.lis --lstlab --raw=output-sj/$f.bin --dirbol --define ORGDEF=$2  $f.asm
+    sjasmplus --lst=output-sj/$f.lis --lstlab --raw=output-sj/$f.bin --dirbol --define $organame=$2  $f.asm
     hexdump -C output-sj/$f.bin > output-sj/$f.hex
     z88dk-appmake +hex --org $2 -b output-sj/$f.bin -o output-sj/$f.ihx
 else
-    sjasmplus --lst=output-sj/$f.lis --lstlab --raw=output-sj/$f.bin --dirbol --define ORGDEF=0x0000 $f.asm
+    sjasmplus --lst=output-sj/$f.lis --lstlab --raw=output-sj/$f.bin --dirbol --define $orgname=$org $f.asm
     hexdump -C output-sj/$f.bin > output-sj/$f.hex
-    z88dk-appmake +hex -b output-sj/$f.bin -o output-sj/$f.ihx
+    z88dk-appmake +hex --org $org -b output-sj/$f.bin -o output-sj/$f.ihx
 fi

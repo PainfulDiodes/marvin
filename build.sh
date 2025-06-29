@@ -9,15 +9,17 @@
 # set -x #echo on
 
 org=0x0000
+orgname=MARVINORG
+
 f=${1%.*} #extract base filename
 
 if [ $# -gt 1 ]
 then
-    z88dk-z80asm -l -b -m -DORGDEF=$2 $f.asm -Ooutput
+    z88dk-z80asm -l -b -m -D$orgname=$2 $f.asm -Ooutput
     hexdump -C output/$f.bin > output/$f.hex
     z88dk-appmake +hex --org $2 -b output/$f.bin -o output/$f.ihx
 else
-    z88dk-z80asm -l -b -m -DORGDEF=$org $f.asm -Ooutput
+    z88dk-z80asm -l -b -m -D$orgname=$org $f.asm -Ooutput
     hexdump -C output/$f.bin > output/$f.hex
     z88dk-appmake +hex --org $org -b output/$f.bin -o output/$f.ihx
 fi

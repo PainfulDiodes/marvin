@@ -49,7 +49,7 @@ asm/escapestring.inc:
 beanzee.asm:
      9                          include "asm/main.asm"
 asm/main.asm:
-     1                          ORG ORGDEF
+     1                          ORG MARVINORG
      2  0000  31ffff                ld sp, STACK
      3                          IF BEANBOARD
      4                              call lcd_init
