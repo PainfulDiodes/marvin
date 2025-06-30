@@ -16,6 +16,10 @@ KEY_MATRIX_BUFFER_SIZE equ 0x10
 ; BeanBoard LCD buffer - same size as display, but has the potential to expand and support scrolling
 ; only used on beanboard - TODO candidate for conditional assembly
 LCD_BUFFER equ KEY_MATRIX_BUFFER+KEY_MATRIX_BUFFER_SIZE
+LCD_BUFFER_0 equ LCD_BUFFER
+LCD_BUFFER_1 equ LCD_BUFFER_0+LCD_LINE_LEN
+LCD_BUFFER_2 equ LCD_BUFFER_1+LCD_LINE_LEN
+LCD_BUFFER_3 equ LCD_BUFFER_2+LCD_LINE_LEN
 
 ; command buffer
 CMD_BUFFER equ LCD_BUFFER+LCD_BUFFER_LEN

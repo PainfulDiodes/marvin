@@ -18,6 +18,59 @@ lcd_init:
     pop af
     ret
 
+lcd_init_buffer:
+    push af
+    push hl
+    push bc
+    ld hl,LCD_BUFFER
+    ld b,LCD_BUFFER_LEN
+    ld a,' '
+_lcd_init_buffer_loop:
+    ld (hl), a
+    inc hl
+    djnz _lcd_init_buffer_loop
+    pop bc
+    pop hl
+    pop af
+    ret    
+
+__test: ;TODO
+    call lcd_print_buffer
+    jp WARMSTART
+
+lcd_print_buffer:
+    push af
+    push hl
+    push bc ; _lcd_print_line modifies
+    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_0_ADDR
+    ld hl,LCD_BUFFER_0
+    call _lcd_print_line
+    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+    ld hl,LCD_BUFFER_1
+    call _lcd_print_line
+    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+    ld hl,LCD_BUFFER_2
+    call _lcd_print_line
+    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+    ld hl,LCD_BUFFER_3
+    call _lcd_print_line
+    pop bc
+    pop hl
+    pop af
+    ret
+
+; a has LCD ADDR value for line 
+; hl points to line in buffer
+_lcd_print_line:
+	call lcd_putcmd
+    ld b,LCD_LINE_LEN
+_lcd_print_line_loop:
+    ld a,(hl)
+    call _lcd_putdata
+    inc hl
+    djnz _lcd_print_line_loop
+    ret
+
 ; transmit character in A to the LCD control port
 lcd_putcmd:                     
     push bc

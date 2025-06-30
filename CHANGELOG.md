@@ -1,3 +1,6 @@
+# v1.3
+* Buffer for LCD
+
 # v1.2
 * Remove beanboard_proto build target
 * Remove keyscan_init so that on reset the last keypress is not repeated on RESET
