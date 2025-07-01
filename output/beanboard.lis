@@ -29,26 +29,27 @@ asm/main.inc:
     20                          LCD_BUFFER_1 equ LCD_BUFFER_0+LCD_LINE_LEN
     21                          LCD_BUFFER_2 equ LCD_BUFFER_1+LCD_LINE_LEN
     22                          LCD_BUFFER_3 equ LCD_BUFFER_2+LCD_LINE_LEN
-    23                          
-    24                          ; command buffer
-    25                          CMD_BUFFER equ LCD_BUFFER+LCD_BUFFER_LEN
-    26                          
-    27                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
-    28                          STACK equ 0xffff
-    29                          
-    30                          UM245R_CTRL equ 0 ; serial control port
-    31                          UM245R_DATA equ 1 ; serial data port
-    32                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
-    33                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
-    34                          LCD_CTRL    equ 4 ; LCD control port
-    35                          LCD_DATA    equ 5 ; LCD data port
-    36                          GPIO_OUT    equ 6 ; either 6 or 7 will work
-    37                          GPIO_IN     equ 7 ; either 6 or 7 will work
-    38                          
-    39                          ; CONSOLE_STATUS values
-    40                          CONSOLE_STATUS_USB equ 1
-    41                          CONSOLE_STATUS_BEANBOARD equ 2
-    42                          
+    23                          LCD_BUFFER_OFFSET equ LCD_BUFFER_3+LCD_LINE_LEN
+    24                          
+    25                          ; command buffer
+    26                          CMD_BUFFER equ LCD_BUFFER_OFFSET+0x01
+    27                          
+    28                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
+    29                          STACK equ 0xffff
+    30                          
+    31                          UM245R_CTRL equ 0 ; serial control port
+    32                          UM245R_DATA equ 1 ; serial data port
+    33                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
+    34                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
+    35                          LCD_CTRL    equ 4 ; LCD control port
+    36                          LCD_DATA    equ 5 ; LCD data port
+    37                          GPIO_OUT    equ 6 ; either 6 or 7 will work
+    38                          GPIO_IN     equ 7 ; either 6 or 7 will work
+    39                          
+    40                          ; CONSOLE_STATUS values
+    41                          CONSOLE_STATUS_USB equ 1
+    42                          CONSOLE_STATUS_BEANBOARD equ 2
+    43                          
 beanboard.asm:
      8                          include "asm/escapestring.inc"
 asm/escapestring.inc:
@@ -125,10 +126,10 @@ asm/main.asm:
      1                          ORG MARVINORG
      2  0000  31ffff                ld sp, STACK
      3                          IF BEANBOARD
-     4  0003  cd0b02                call lcd_init
-     5  0006  cd2202                call lcd_init_buffer
+     4  0003  cd8102                call lcd_init
+     5  0006  cd1e02                call lcd_init_buffer
      6  0009  cd6400                call beanboard_console_init
-     7  000c  cd7300                call _beanboard_console_init_usb ; temporary lock to USB
+     7  000c  cd7300                call _beanboard_console_init_usb ; temporary lock to USB - TODO remove this line
      8                          ENDIF
      9  000f  00                ALIGN 0x0010 ; fix the warmstart address across targets
     10                          WARMSTART:
@@ -157,7 +158,7 @@ asm/console.asm:
     18  0027  2007                  jr nz,_readchar_usb
     19  0029  1808                  jr _readchar_end
     20                          _readchar_beanboard:
-    21  002b  cd4103                call key_readchar
+    21  002b  cd6b03                call key_readchar
     22  002e  1803                  jr _readchar_end
     23                          _readchar_usb:
     24  0030  cd7a00                call usb_readchar
@@ -187,7 +188,7 @@ asm/console.asm:
     48  0045  180a                  jr _putchar_end
     49                          _putchar_beanboard:
     50  0047  78                    ld a,b
-    51  0048  cd8402                call lcd_putchar
+    51  0048  cdae02                call lcd_putchar
     52  004b  1804                  jr _putchar_end
     53                          _putchar_usb:
     54  004d  78                    ld a,b
@@ -232,7 +233,7 @@ asm/console.asm:
     93                          ; determine which console should be active - Reset=beanboard, shift-Reset=USB
     94                          beanboard_console_init:
     95                              ; check for modifier keys being held down
-    96  0064  cd8e03                call modifierkeys
+    96  0064  cdb803                call modifierkeys
     97                              ; shift key down?
     98  0067  e601                  and MOD_KEY_SHIFT
     99                              ; yes shift
@@ -354,12 +355,12 @@ asm/marvin.asm:
     10                              ; point DE to zero - this is the default address argument for commands
     11  00b6  110000                ld de,0x0000
     12                          
-    13  00b9  213304                ld hl,WELCOME_MSG
+    13  00b9  215d04                ld hl,WELCOME_MSG
     14  00bc  cd5500                call puts
     15                          
     16                          PROMPT:
     17                              ; point HL to the beginning of the input buffer
-    18  00bf  2170f0                ld hl,CMD_BUFFER
+    18  00bf  2171f0                ld hl,CMD_BUFFER
     19  00c2  3e3e                  ld a,'>'
     20  00c4  cd3500                call putchar
     21                          
@@ -408,7 +409,7 @@ asm/marvin.asm:
     64  00ee  77                    ld(hl),a
     65                          ; process command from buffer
     66                              ; point to start of buffer
-    67  00ef  2170f0                ld hl,CMD_BUFFER
+    67  00ef  2171f0                ld hl,CMD_BUFFER
     68                              ; load character from buffer
     69  00f2  7e                    ld a,(hl)
     70                              ; end of string?
@@ -427,7 +428,7 @@ asm/marvin.asm:
     83  0104  fe3a                  cp ':'
     84  0106  2879                  jr z,_cmd_load
     85                              ; otherwise error
-    86  0108  215a04                ld hl,BAD_CMD_MSG
+    86  0108  218404                ld hl,BAD_CMD_MSG
     87  010b  cd5500                call puts
     88                              ; loop back to the prompt
     89  010e  c3bf00                jp PROMPT
@@ -521,7 +522,7 @@ asm/marvin.asm:
    177  0160  c3bf00                jp PROMPT
    178                              ; w with no data
    179                          _cmd_write_null:
-   180  0163  216704                ld hl,CMD_W_NULL_MSG
+   180  0163  219104                ld hl,CMD_W_NULL_MSG
    181  0166  cd5500                call puts
    182                              ; and back to prompt
    183  0169  c3bf00                jp PROMPT
@@ -718,262 +719,353 @@ asm/strings.asm:
 beanboard.asm:
     15                          include "asm/HD44780LCD.asm"
 asm/HD44780LCD.asm:
-     1                          LCD_COMMAND_0 equ LCD_FUNCTION_SET+LCD_DATA_LEN_8+LCD_DISP_LINES_2+LCD_FONT_8
-     2                          LCD_COMMAND_1 equ LCD_DISPLAY_ON_OFF_CONTROL+LCD_DISPLAY_ON+LCD_CURSOR_ON+LCD_BLINK_ON
-     3                          
-     4                          ; initialise LCD
-     5                          lcd_init:
-     6                          ; preserve registers
-     7  020b  f5                    push af
-     8                          ; intitialise device
-     9  020c  3e38              	ld a,LCD_COMMAND_0
-    10  020e  cd6e02            	call lcd_putcmd
-    11  0211  3e0f              	ld a,LCD_COMMAND_1
-    12  0213  cd6e02            	call lcd_putcmd
-    13  0216  3e01              	ld a,LCD_CLEAR_DISPLAY
-    14  0218  cd6e02            	call lcd_putcmd
-    15  021b  3e00                  ld a,0
-    16  021d  cd8402                call lcd_putchar
-    17                          ; restore registers
-    18  0220  f1                    pop af
-    19  0221  c9                    ret
-    20                          
-    21                          lcd_init_buffer:
-    22  0222  f5                    push af
-    23  0223  e5                    push hl
-    24  0224  c5                    push bc
-    25  0225  2120f0                ld hl,LCD_BUFFER
-    26  0228  0650                  ld b,LCD_BUFFER_LEN
-    27  022a  3e20                  ld a,' '
-    28                          _lcd_init_buffer_loop:
-    29  022c  77                    ld (hl), a
-    30  022d  23                    inc hl
-    31  022e  10fc                  djnz _lcd_init_buffer_loop
-    32  0230  c1                    pop bc
-    33  0231  e1                    pop hl
-    34  0232  f1                    pop af
-    35  0233  c9                    ret
-    36                          
-    37                          __test:
-    38  0234  cd3a02                call lcd_print_buffer
-    39  0237  c31000                jp WARMSTART
-    40                          
-    41                          lcd_print_buffer:
-    42  023a  f5                    push af
-    43  023b  e5                    push hl
-    44  023c  c5                    push bc ; _lcd_print_line modifies
-    45  023d  3e80                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_0_ADDR
-    46  023f  2120f0                ld hl,LCD_BUFFER_0
-    47  0242  cd6102                call _lcd_print_line
-    48  0245  3ec0                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
-    49  0247  2134f0                ld hl,LCD_BUFFER_1
-    50  024a  cd6102                call _lcd_print_line
-    51  024d  3e94                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
-    52  024f  2148f0                ld hl,LCD_BUFFER_2
-    53  0252  cd6102                call _lcd_print_line
-    54  0255  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
-    55  0257  215cf0                ld hl,LCD_BUFFER_3
-    56  025a  cd6102                call _lcd_print_line
-    57  025d  c1                    pop bc
-    58  025e  e1                    pop hl
-    59  025f  f1                    pop af
-    60  0260  c9                    ret
-    61                          
-    62                          ; a has LCD ADDR value for line
-    63                          ; hl points to line in buffer
-    64                          _lcd_print_line:
-    65  0261  cd6e02            	call lcd_putcmd
-    66  0264  0614                  ld b,LCD_LINE_LEN
-    67                          _lcd_print_line_loop:
-    68  0266  7e                    ld a,(hl)
-    69  0267  cddc02                call _lcd_putdata
-    70  026a  23                    inc hl
-    71  026b  10f9                  djnz _lcd_print_line_loop
-    72  026d  c9                    ret
-    73                          
-    74                          ; transmit character in A to the LCD control port
-    75                          lcd_putcmd:
-    76  026e  c5                    push bc
-    77                          ; save the transmit character
-    78  026f  47                    ld b,a
-    79                          _lcd_putcmd_loop:
-    80                          ; get the LCD status
-    81  0270  db04                  in a,(LCD_CTRL)
-    82                          ; busy ?
-    83  0272  cb7f                  bit 7,a
-    84                          ; yes
-    85  0274  20fa                  jr nz,_lcd_putcmd_loop
-    86                          ; no, restore the transmit character
-    87  0276  78                    ld a,b
-    88                          ; transmit the character
-    89  0277  d304                  out (LCD_CTRL),a
-    90  0279  c1                    pop bc
-    91  027a  c9                    ret
-    92                          
-    93                          ; get character from LCD data port and return in A
-    94                          lcd_getchar:
-    95                          ; get the LCD status
-    96  027b  db04                  in a,(LCD_CTRL)
-    97                          ; busy ?
-    98  027d  cb7f                  bit 7,a
-    99                          ; yes
-   100  027f  20fa                  jr nz,lcd_getchar
-   101                          ; no, get a character
-   102  0281  db05                  in a,(LCD_DATA)
-   103  0283  c9                    ret
-   104                          
-   105                          ; transmit character in A to the LCD data port
-   106                          lcd_putchar:
-   107                              ; newline char?
-   108  0284  fe0a                  cp ESC_N
-   109  0286  c2a402                jp nz,_lcd_putchar_printable
-   110                              ; newline - fill out the line until EOL
-   111                          _lcd_putchar_pad:
-   112  0289  3e20                  ld a,' '
-   113  028b  cddc02                call _lcd_putdata
-   114  028e  fe13                  cp LCD_EOL_0
-   115  0290  cabe02                jp z,_lcd_putchar_eol0
-   116  0293  fe53                  cp LCD_EOL_1
-   117  0295  cac502                jp z,_lcd_putchar_eol1
-   118  0298  fe27                  cp LCD_EOL_2
-   119  029a  cacc02                jp z,_lcd_putchar_eol2
-   120  029d  fe67                  cp LCD_EOL_3
-   121  029f  cad302                jp z,_lcd_putchar_eol3
-   122                              ; loop until EOL
-   123  02a2  18e5                  jr _lcd_putchar_pad
-   124                          _lcd_putchar_printable:
-   125  02a4  cddc02                call _lcd_putdata
-   126                              ; check for overflow - DDRAM address returned in A
-   127  02a7  fe13                  cp LCD_EOL_0
-   128  02a9  cabe02                jp z,_lcd_putchar_eol0
-   129  02ac  fe53                  cp LCD_EOL_1
-   130  02ae  cac502                jp z,_lcd_putchar_eol1
-   131  02b1  fe27                  cp LCD_EOL_2
-   132  02b3  cacc02                jp z,_lcd_putchar_eol2
-   133  02b6  fe67                  cp LCD_EOL_3
-   134  02b8  cad302                jp z,_lcd_putchar_eol3
-   135  02bb  c3db02                jp _lcd_putchar_end
-   136                          _lcd_putchar_eol0:
-   137  02be  3ec0                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
-   138  02c0  cd6e02            	call lcd_putcmd
-   139  02c3  1816                  jr _lcd_putchar_end
-   140                          _lcd_putchar_eol1:
-   141  02c5  3e94                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
-   142  02c7  cd6e02            	call lcd_putcmd
-   143  02ca  180f                  jr _lcd_putchar_end
-   144                          _lcd_putchar_eol2:
-   145  02cc  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
-   146  02ce  cd6e02            	call lcd_putcmd
-   147  02d1  1808                  jr _lcd_putchar_end
-   148                          _lcd_putchar_eol3:
-   149  02d3  cded02                call lcd_scroll
-   150  02d6  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
-   151  02d8  cd6e02            	call lcd_putcmd
-   152                          _lcd_putchar_end:
-   153  02db  c9                    ret
-   154                          
-   155                          ; transmit character in A to the LCD data port,
-   156                          ; return in A the DDRAM address where the character was sent
-   157                          _lcd_putdata:
-   158  02dc  c5                    push bc
-   159                              ; save the transmit character
-   160  02dd  47                    ld b,a
-   161                          __lcd_putdata_loop:
-   162                              ; get the LCD status
-   163  02de  db04                  in a,(LCD_CTRL)
-   164                              ; busy ?
-   165  02e0  cb7f                  bit 7,a
-   166                              ; yes
-   167  02e2  20fa                  jr nz,__lcd_putdata_loop
-   168                              ; no, reset the 'busy' bit and preserve the DDRAM address
-   169  02e4  e67f                  and 0b01111111
-   170  02e6  4f                    ld c,a
-   171                              ; restore the transmit character and send it
-   172  02e7  78                    ld a,b
-   173  02e8  d305                  out (LCD_DATA),a
-   174                              ; restore the DDRAM address
-   175  02ea  79                    ld a,c
-   176  02eb  c1                    pop bc
-   177  02ec  c9                    ret
-   178                          
-   179                          lcd_scroll:
-   180  02ed  c5                    push bc
-   181  02ee  d5                    push de
-   182  02ef  16c0                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
-   183  02f1  1e80                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_0_ADDR
-   184  02f3  cd0c03                call _lcd_scroll_line
-   185  02f6  1694                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
-   186  02f8  1ec0                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
-   187  02fa  cd0c03                call _lcd_scroll_line
-   188  02fd  16d4                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
-   189  02ff  1e94                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
-   190  0301  cd0c03                call _lcd_scroll_line
-   191  0304  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
-   192  0306  cd2503                call _lcd_scroll_clear_line
-   193  0309  d1                    pop de
-   194  030a  c1                    pop bc
-   195  030b  c9                    ret
-   196                          _lcd_scroll_line:
-   197                              ; b = character counter
-   198                              ; c = stash char
-   199                              ; d = source line to copy from
-   200                              ; e = destination line to copy to
-   201  030c  0614                  ld b,LCD_LINE_LEN
-   202                          _lcd_scroll_line_loop:
-   203                              ; load source
-   204  030e  7a                    ld a,d
-   205                              ; character counter is an offset
-   206  030f  80                    add b
-   207                              ; zero based index so -1
-   208  0310  3d                    dec a
-   209  0311  cd6e02                call lcd_putcmd
-   210  0314  cd7b02                call lcd_getchar
-   211                              ; stash the value
-   212  0317  4f                    ld c,a
-   213                              ; load destination
-   214  0318  7b                    ld a,e
-   215                              ; character counter is an offset
-   216  0319  80                    add b
-   217                              ; zero based index so -1
-   218  031a  3d                    dec a
-   219  031b  cd6e02                call lcd_putcmd
-   220                              ; recover the stashed value
-   221  031e  79                    ld a,c
-   222  031f  cddc02                call _lcd_putdata
-   223  0322  10ea                  djnz _lcd_scroll_line_loop
-   224  0324  c9                    ret
-   225                          _lcd_scroll_clear_line:
-   226                              ; a = destination line to clear
-   227                              ; b = character counter
-   228  0325  0614                  ld b,LCD_LINE_LEN
-   229  0327  cd6e02                call lcd_putcmd
-   230                          _lcd_scroll_clear_line_loop:
-   231  032a  3e20                  ld a,' '
-   232  032c  cddc02                call _lcd_putdata
-   233  032f  10f9                  djnz _lcd_scroll_clear_line_loop
-   234  0331  c9                    ret
-   235                          
-   236                          ; print a zero-terminated string pointed to by hl to the LCD
-   237                          lcd_puts:
-   238  0332  e5                    push hl
-   239                          _lcd_puts_loop:
-   240                              ; get character from string
-   241  0333  7e                    ld a,(hl)
-   242                              ; is it zero?
-   243  0334  fe00                  cp 0
-   244                              ; yes
-   245  0336  2807                  jr z, _lcd_puts_end
-   246                              ; no: send character
-   247  0338  cd8402                call lcd_putchar
-   248                              ; next character position
-   249  033b  23                    inc hl
-   250                              ; loop for next character
-   251  033c  c33303                jp _lcd_puts_loop
-   252                          _lcd_puts_end:
-   253  033f  e1                    pop hl
-   254  0340  c9                    ret
-   255                          
-   256                          
+     1                          __test: ;TODO
+     2  020b  cd1300                call getchar
+     3  020e  fe1b                  cp ESC_E
+     4  0210  ca1b02                jp z,__test_end
+     5  0213  cd6902                call _lcd_buffer_put
+     6  0216  cd3502                call lcd_print_buffer
+     7  0219  18f0                  jr __test
+     8                          __test_end:
+     9  021b  c31000                jp WARMSTART
+    10                          
+    11                          lcd_init_buffer:
+    12  021e  f5                    push af
+    13  021f  e5                    push hl
+    14  0220  c5                    push bc
+    15                              ; reset the buffer pointer offset
+    16  0221  2170f0                ld hl,LCD_BUFFER_OFFSET
+    17  0224  3600                  ld (hl),0x00
+    18                              ; loop to reset the buffer contents
+    19  0226  2120f0                ld hl,LCD_BUFFER
+    20  0229  0650                  ld b,LCD_BUFFER_LEN
+    21  022b  3e20                  ld a,' '
+    22                          _lcd_init_buffer_loop:
+    23  022d  77                    ld (hl), a
+    24  022e  23                    inc hl
+    25  022f  10fc                  djnz _lcd_init_buffer_loop
+    26  0231  c1                    pop bc
+    27  0232  e1                    pop hl
+    28  0233  f1                    pop af
+    29  0234  c9                    ret
+    30                          
+    31                          lcd_print_buffer:
+    32  0235  f5                    push af
+    33  0236  e5                    push hl
+    34  0237  c5                    push bc ; _lcd_print_line modifies
+    35  0238  3e80                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_0_ADDR
+    36  023a  2120f0                ld hl,LCD_BUFFER_0
+    37  023d  cd5c02                call _lcd_print_buffer_line
+    38  0240  3ec0                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+    39  0242  2134f0                ld hl,LCD_BUFFER_1
+    40  0245  cd5c02                call _lcd_print_buffer_line
+    41  0248  3e94                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+    42  024a  2148f0                ld hl,LCD_BUFFER_2
+    43  024d  cd5c02                call _lcd_print_buffer_line
+    44  0250  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+    45  0252  215cf0                ld hl,LCD_BUFFER_3
+    46  0255  cd5c02                call _lcd_print_buffer_line
+    47  0258  c1                    pop bc
+    48  0259  e1                    pop hl
+    49  025a  f1                    pop af
+    50  025b  c9                    ret
+    51                          
+    52                          ; a has LCD ADDR value for line
+    53                          ; hl points to line in buffer
+    54                          _lcd_print_buffer_line:
+    55  025c  cd9802            	call lcd_putcmd
+    56  025f  0614                  ld b,LCD_LINE_LEN
+    57                          _lcd_print_buffer_line_loop:
+    58  0261  7e                    ld a,(hl)
+    59  0262  cd0603                call _lcd_putdata
+    60  0265  23                    inc hl
+    61  0266  10f9                  djnz _lcd_print_buffer_line_loop
+    62  0268  c9                    ret
+    63                          
+    64                          ; ; transmit character in A to the LCD data port
+    65                          ; lcd_buffer_putchar:
+    66                          ;     ; newline char?
+    67                          ;     cp ESC_N
+    68                          ;     jp nz,_lcd_buffer_putchar_printable
+    69                          ;     ; newline - fill out the line until EOL
+    70                          ; _lcd_buffer_putchar_pad:
+    71                          ;     ld a,' '
+    72                          ;     call _lcd_buffer_put
+    73                          ;     cp LCD_EOL_0
+    74                          ;     jp z,_lcd_buffer_putchar_eol0
+    75                          ;     cp LCD_EOL_1
+    76                          ;     jp z,_lcd_buffer_putchar_eol1
+    77                          ;     cp LCD_EOL_2
+    78                          ;     jp z,_lcd_buffer_putchar_eol2
+    79                          ;     cp LCD_EOL_3
+    80                          ;     jp z,_lcd_buffer_putchar_eol3
+    81                          ;     ; loop until EOL
+    82                          ;     jr _lcd_buffer_putchar_pad
+    83                          ; _lcd_buffer_putchar_printable:
+    84                          ;     call _lcd_buffer_put
+    85                          ;     ; check for overflow - DDRAM address returned in A
+    86                          ;     cp LCD_EOL_0
+    87                          ;     jp z,_lcd_buffer_putchar_eol0
+    88                          ;     cp LCD_EOL_1
+    89                          ;     jp z,_lcd_buffer_putchar_eol1
+    90                          ;     cp LCD_EOL_2
+    91                          ;     jp z,_lcd_buffer_putchar_eol2
+    92                          ;     cp LCD_EOL_3
+    93                          ;     jp z,_lcd_buffer_putchar_eol3
+    94                          ;     jp _lcd_buffer_putchar_end
+    95                          ; _lcd_buffer_putchar_eol0:
+    96                          ;     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+    97                          ; 	call lcd_putcmd
+    98                          ;     jr _lcd_buffer_putchar_end
+    99                          ; _lcd_buffer_putchar_eol1:
+   100                          ;     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+   101                          ; 	call lcd_putcmd
+   102                          ;     jr _lcd_buffer_putchar_end
+   103                          ; _lcd_buffer_putchar_eol2:
+   104                          ;     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+   105                          ; 	call lcd_putcmd
+   106                          ;     jr _lcd_buffer_putchar_end
+   107                          ; _lcd_buffer_putchar_eol3:
+   108                          ;     call lcd_scroll
+   109                          ;     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+   110                          ; 	call lcd_putcmd
+   111                          ; _lcd_buffer_putchar_end:
+   112                          ;     ret
+   113                          
+   114                          ; put the character in A into the buffer at the current location and advance the location
+   115                          _lcd_buffer_put:
+   116  0269  c5                    push bc
+   117  026a  d5                    push de
+   118  026b  e5                    push hl
+   119                              ; stash the data
+   120  026c  57                    ld d,a
+   121                              ; get buffer offset as 16 bits
+   122  026d  0600                  ld b,0x00
+   123  026f  3a70f0                ld a,(LCD_BUFFER_OFFSET)
+   124  0272  4f                    ld c, a
+   125                              ; get buffer address
+   126  0273  2120f0                ld hl,LCD_BUFFER
+   127                              ; add the offset
+   128  0276  09                    add hl,bc
+   129                              ; put the data into the buffer location
+   130  0277  72                    ld(hl),d
+   131                              ; advance the buffer position
+   132  0278  79                    ld a,c
+   133  0279  3c                    inc a
+   134  027a  3270f0                ld(LCD_BUFFER_OFFSET),a
+   135  027d  e1                    pop hl
+   136  027e  d1                    pop de
+   137  027f  c1                    pop bc
+   138  0280  c9                    ret
+   139                          
+   140                          
+   141                          
+   142                          ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   143                          
+   144                          
+   145                          LCD_COMMAND_0 equ LCD_FUNCTION_SET+LCD_DATA_LEN_8+LCD_DISP_LINES_2+LCD_FONT_8
+   146                          LCD_COMMAND_1 equ LCD_DISPLAY_ON_OFF_CONTROL+LCD_DISPLAY_ON+LCD_CURSOR_ON+LCD_BLINK_ON
+   147                          
+   148                          ; initialise LCD
+   149                          lcd_init:
+   150                          ; preserve registers
+   151  0281  f5                    push af
+   152                          ; intitialise device
+   153  0282  3e38              	ld a,LCD_COMMAND_0
+   154  0284  cd9802            	call lcd_putcmd
+   155  0287  3e0f              	ld a,LCD_COMMAND_1
+   156  0289  cd9802            	call lcd_putcmd
+   157  028c  3e01              	ld a,LCD_CLEAR_DISPLAY
+   158  028e  cd9802            	call lcd_putcmd
+   159  0291  3e00                  ld a,0
+   160  0293  cdae02                call lcd_putchar
+   161                          ; restore registers
+   162  0296  f1                    pop af
+   163  0297  c9                    ret
+   164                          
+   165                          ; transmit character in A to the LCD control port
+   166                          lcd_putcmd:
+   167  0298  c5                    push bc
+   168                          ; save the transmit character
+   169  0299  47                    ld b,a
+   170                          _lcd_putcmd_loop:
+   171                          ; get the LCD status
+   172  029a  db04                  in a,(LCD_CTRL)
+   173                          ; busy ?
+   174  029c  cb7f                  bit 7,a
+   175                          ; yes
+   176  029e  20fa                  jr nz,_lcd_putcmd_loop
+   177                          ; no, restore the transmit character
+   178  02a0  78                    ld a,b
+   179                          ; transmit the character
+   180  02a1  d304                  out (LCD_CTRL),a
+   181  02a3  c1                    pop bc
+   182  02a4  c9                    ret
+   183                          
+   184                          ; get character from LCD data port and return in A
+   185                          lcd_getchar:
+   186                          ; get the LCD status
+   187  02a5  db04                  in a,(LCD_CTRL)
+   188                          ; busy ?
+   189  02a7  cb7f                  bit 7,a
+   190                          ; yes
+   191  02a9  20fa                  jr nz,lcd_getchar
+   192                          ; no, get a character
+   193  02ab  db05                  in a,(LCD_DATA)
+   194  02ad  c9                    ret
+   195                          
+   196                          ; transmit character in A to the LCD data port
+   197                          lcd_putchar:
+   198                              ; newline char?
+   199  02ae  fe0a                  cp ESC_N
+   200  02b0  c2ce02                jp nz,_lcd_putchar_printable
+   201                              ; newline - fill out the line until EOL
+   202                          _lcd_putchar_pad:
+   203  02b3  3e20                  ld a,' '
+   204  02b5  cd0603                call _lcd_putdata
+   205  02b8  fe13                  cp LCD_EOL_0
+   206  02ba  cae802                jp z,_lcd_putchar_eol0
+   207  02bd  fe53                  cp LCD_EOL_1
+   208  02bf  caef02                jp z,_lcd_putchar_eol1
+   209  02c2  fe27                  cp LCD_EOL_2
+   210  02c4  caf602                jp z,_lcd_putchar_eol2
+   211  02c7  fe67                  cp LCD_EOL_3
+   212  02c9  cafd02                jp z,_lcd_putchar_eol3
+   213                              ; loop until EOL
+   214  02cc  18e5                  jr _lcd_putchar_pad
+   215                          _lcd_putchar_printable:
+   216  02ce  cd0603                call _lcd_putdata
+   217                              ; check for overflow - DDRAM address returned in A
+   218  02d1  fe13                  cp LCD_EOL_0
+   219  02d3  cae802                jp z,_lcd_putchar_eol0
+   220  02d6  fe53                  cp LCD_EOL_1
+   221  02d8  caef02                jp z,_lcd_putchar_eol1
+   222  02db  fe27                  cp LCD_EOL_2
+   223  02dd  caf602                jp z,_lcd_putchar_eol2
+   224  02e0  fe67                  cp LCD_EOL_3
+   225  02e2  cafd02                jp z,_lcd_putchar_eol3
+   226  02e5  c30503                jp _lcd_putchar_end
+   227                          _lcd_putchar_eol0:
+   228  02e8  3ec0                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+   229  02ea  cd9802            	call lcd_putcmd
+   230  02ed  1816                  jr _lcd_putchar_end
+   231                          _lcd_putchar_eol1:
+   232  02ef  3e94                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+   233  02f1  cd9802            	call lcd_putcmd
+   234  02f4  180f                  jr _lcd_putchar_end
+   235                          _lcd_putchar_eol2:
+   236  02f6  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+   237  02f8  cd9802            	call lcd_putcmd
+   238  02fb  1808                  jr _lcd_putchar_end
+   239                          _lcd_putchar_eol3:
+   240  02fd  cd1703                call lcd_scroll
+   241  0300  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+   242  0302  cd9802            	call lcd_putcmd
+   243                          _lcd_putchar_end:
+   244  0305  c9                    ret
+   245                          
+   246                          ; transmit character in A to the LCD data port,
+   247                          ; return in A the DDRAM address where the character was sent
+   248                          _lcd_putdata:
+   249  0306  c5                    push bc
+   250                              ; save the transmit character
+   251  0307  47                    ld b,a
+   252                          __lcd_putdata_loop:
+   253                              ; get the LCD status
+   254  0308  db04                  in a,(LCD_CTRL)
+   255                              ; busy ?
+   256  030a  cb7f                  bit 7,a
+   257                              ; yes
+   258  030c  20fa                  jr nz,__lcd_putdata_loop
+   259                              ; no, reset the 'busy' bit and preserve the DDRAM address
+   260  030e  e67f                  and 0b01111111
+   261  0310  4f                    ld c,a
+   262                              ; restore the transmit character and send it
+   263  0311  78                    ld a,b
+   264  0312  d305                  out (LCD_DATA),a
+   265                              ; restore the DDRAM address
+   266  0314  79                    ld a,c
+   267  0315  c1                    pop bc
+   268  0316  c9                    ret
+   269                          
+   270                          lcd_scroll:
+   271  0317  c5                    push bc
+   272  0318  d5                    push de
+   273  0319  16c0                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+   274  031b  1e80                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_0_ADDR
+   275  031d  cd3603                call _lcd_scroll_line
+   276  0320  1694                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+   277  0322  1ec0                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+   278  0324  cd3603                call _lcd_scroll_line
+   279  0327  16d4                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+   280  0329  1e94                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+   281  032b  cd3603                call _lcd_scroll_line
+   282  032e  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+   283  0330  cd4f03                call _lcd_scroll_clear_line
+   284  0333  d1                    pop de
+   285  0334  c1                    pop bc
+   286  0335  c9                    ret
+   287                          _lcd_scroll_line:
+   288                              ; b = character counter
+   289                              ; c = stash char
+   290                              ; d = source line to copy from
+   291                              ; e = destination line to copy to
+   292  0336  0614                  ld b,LCD_LINE_LEN
+   293                          _lcd_scroll_line_loop:
+   294                              ; load source
+   295  0338  7a                    ld a,d
+   296                              ; character counter is an offset
+   297  0339  80                    add b
+   298                              ; zero based index so -1
+   299  033a  3d                    dec a
+   300  033b  cd9802                call lcd_putcmd
+   301  033e  cda502                call lcd_getchar
+   302                              ; stash the value
+   303  0341  4f                    ld c,a
+   304                              ; load destination
+   305  0342  7b                    ld a,e
+   306                              ; character counter is an offset
+   307  0343  80                    add b
+   308                              ; zero based index so -1
+   309  0344  3d                    dec a
+   310  0345  cd9802                call lcd_putcmd
+   311                              ; recover the stashed value
+   312  0348  79                    ld a,c
+   313  0349  cd0603                call _lcd_putdata
+   314  034c  10ea                  djnz _lcd_scroll_line_loop
+   315  034e  c9                    ret
+   316                          _lcd_scroll_clear_line:
+   317                              ; a = destination line to clear
+   318                              ; b = character counter
+   319  034f  0614                  ld b,LCD_LINE_LEN
+   320  0351  cd9802                call lcd_putcmd
+   321                          _lcd_scroll_clear_line_loop:
+   322  0354  3e20                  ld a,' '
+   323  0356  cd0603                call _lcd_putdata
+   324  0359  10f9                  djnz _lcd_scroll_clear_line_loop
+   325  035b  c9                    ret
+   326                          
+   327                          ; print a zero-terminated string pointed to by hl to the LCD
+   328                          lcd_puts:
+   329  035c  e5                    push hl
+   330                          _lcd_puts_loop:
+   331                              ; get character from string
+   332  035d  7e                    ld a,(hl)
+   333                              ; is it zero?
+   334  035e  fe00                  cp 0
+   335                              ; yes
+   336  0360  2807                  jr z, _lcd_puts_end
+   337                              ; no: send character
+   338  0362  cdae02                call lcd_putchar
+   339                              ; next character position
+   340  0365  23                    inc hl
+   341                              ; loop for next character
+   342  0366  c35d03                jp _lcd_puts_loop
+   343                          _lcd_puts_end:
+   344  0369  e1                    pop hl
+   345  036a  c9                    ret
+   346                          
+   347                          
 beanboard.asm:
     16                          include "asm/keymatrix.asm"
 asm/keymatrix.asm:
@@ -987,60 +1079,60 @@ asm/keymatrix.asm:
      8                          
      9                          ; return keyboard char value in A, or 0
     10                          key_readchar:
-    11  0341  c5                    push bc
-    12  0342  d5                    push de
-    13  0343  e5                    push hl
+    11  036b  c5                    push bc
+    12  036c  d5                    push de
+    13  036d  e5                    push hl
     14                              ; initial row bit - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-    15  0344  0601                  ld b,0x01
+    15  036e  0601                  ld b,0x01
     16                              ; row counter - 0 => 7
-    17  0346  0e00                  ld c,0x00
+    17  0370  0e00                  ld c,0x00
     18                              ; location of previous values
-    19  0348  2110f0                ld hl,KEY_MATRIX_BUFFER
-    20  034b  cd8e03                call modifierkeys
+    19  0372  2110f0                ld hl,KEY_MATRIX_BUFFER
+    20  0375  cdb803                call modifierkeys
     21                              ; initialise map pointer
-    22  034e  11b303                ld de,QWERTY_KEYMAP_L
+    22  0378  11dd03                ld de,QWERTY_KEYMAP_L
     23                              ; shift key down?
-    24  0351  e601                  and MOD_KEY_SHIFT
-    25  0353  ca5903                jp z,_keyscanloop
-    26  0356  11f303                ld de,QWERTY_KEYMAP_U
+    24  037b  e601                  and MOD_KEY_SHIFT
+    25  037d  ca8303                jp z,_keyscanloop
+    26  0380  111d04                ld de,QWERTY_KEYMAP_U
     27                          _keyscanloop:
-    28  0359  cd8103                call _rowscan
+    28  0383  cdab03                call _rowscan
     29                              ; ASCII returned in A, or 0
-    30  035c  cd9e03                call _colscan
-    31  035f  fe00                  cp 0
-    32  0361  c26b03                jp nz,key_readchar_end
+    30  0386  cdc803                call _colscan
+    31  0389  fe00                  cp 0
+    32  038b  c29503                jp nz,key_readchar_end
     33                              ; move the pointer of previous values to the next row slot
-    34  0364  23                    inc hl
+    34  038e  23                    inc hl
     35                              ; increment row counter
-    36  0365  0c                    inc c
+    36  038f  0c                    inc c
     37                              ; clear the carry flag
-    38  0366  b7                    or a
+    38  0390  b7                    or a
     39                              ; shift row bit left - when we've done all 8, it will move to the carry flag
-    40  0367  cb10                  rl b
+    40  0391  cb10                  rl b
     41                              ; loop if not done all rows
-    42  0369  30ee                  jr nc,_keyscanloop
+    42  0393  30ee                  jr nc,_keyscanloop
     43                          key_readchar_end:
     44                              ; debounce delay, restore state and return
-    45  036b  cd7203                call _debounce_delay
-    46  036e  e1                    pop hl
-    47  036f  d1                    pop de
-    48  0370  c1                    pop bc
-    49  0371  c9                    ret
+    45  0395  cd9c03                call _debounce_delay
+    46  0398  e1                    pop hl
+    47  0399  d1                    pop de
+    48  039a  c1                    pop bc
+    49  039b  c9                    ret
     50                          
     51                          _debounce_delay:
-    52  0372  f5                    push af
-    53  0373  d5                    push de
-    54  0374  110040                ld de,DEBOUNCE_DELAY
+    52  039c  f5                    push af
+    53  039d  d5                    push de
+    54  039e  110040                ld de,DEBOUNCE_DELAY
     55                          _delay_loop:
-    56  0377  1b                    dec de
-    57  0378  00                    nop
-    58  0379  7a                    ld a, d
-    59  037a  fe00                  cp 0
-    60  037c  20f9                  jr nz,_delay_loop
+    56  03a1  1b                    dec de
+    57  03a2  00                    nop
+    58  03a3  7a                    ld a, d
+    59  03a4  fe00                  cp 0
+    60  03a6  20f9                  jr nz,_delay_loop
     61                          _delay_end:
-    62  037e  d1                    pop de
-    63  037f  f1                    pop af
-    64  0380  c9                    ret
+    62  03a8  d1                    pop de
+    63  03a9  f1                    pop af
+    64  03aa  c9                    ret
     65                          
     66                          ; get row bitmap representing new keystrokes:
     67                          ; B contains row bit,
@@ -1049,78 +1141,78 @@ asm/keymatrix.asm:
     70                          ; return value in A
     71                          _rowscan:
     72                              ; preserve registers
-    73  0381  d5                    push de
+    73  03ab  d5                    push de
     74                              ; fetch previous value for comparison
-    75  0382  7e                    ld a,(hl)
+    75  03ac  7e                    ld a,(hl)
     76                              ; invert A - we want to check keys becoming closed - so zeroed bits on the previous value are significant
-    77  0383  2f                    cpl
+    77  03ad  2f                    cpl
     78                              ; store inverted previous value
-    79  0384  57                    ld d,a
+    79  03ae  57                    ld d,a
     80                              ; get the current row bit
-    81  0385  78                    ld a,b
+    81  03af  78                    ld a,b
     82                              ; output row strobe
-    83  0386  d302                  out (KEYSCAN_OUT),a
+    83  03b0  d302                  out (KEYSCAN_OUT),a
     84                              ; get column values
-    85  0388  db03                  in a,(KEYSCAN_IN)
+    85  03b2  db03                  in a,(KEYSCAN_IN)
     86                              ; store the new value
-    87  038a  77                    ld (hl),a
+    87  03b4  77                    ld (hl),a
     88                              ; newVal AND ~oldVal means bits are set only when the previous bit value was 0
-    89  038b  a2                    and d
+    89  03b5  a2                    and d
     90                              ; restore registers
-    91  038c  d1                    pop de
-    92  038d  c9                    ret
+    91  03b6  d1                    pop de
+    92  03b7  c9                    ret
     93                          
     94                          ; return bitmap representing modifier keys in A
     95                          modifierkeys:
-    96  038e  3e10                  ld a,0b00010000 ; row 4
+    96  03b8  3e10                  ld a,0b00010000 ; row 4
     97                              ; output row strobe
-    98  0390  d302                  out (KEYSCAN_OUT),a
+    98  03ba  d302                  out (KEYSCAN_OUT),a
     99                              ; get column values
-   100  0392  db03                  in a,(KEYSCAN_IN)
-   101  0394  e601                  and 0b00000001 ; row 4, bit 0 is SHIFT
+   100  03bc  db03                  in a,(KEYSCAN_IN)
+   101  03be  e601                  and 0b00000001 ; row 4, bit 0 is SHIFT
    102                              ; left shift modifier
-   103  0396  2003                  jr nz,_modifier_shift
+   103  03c0  2003                  jr nz,_modifier_shift
    104                              ; no modifiers
-   105  0398  3e00                  ld a,0
-   106  039a  c9                    ret
+   105  03c2  3e00                  ld a,0
+   106  03c4  c9                    ret
    107                          _modifier_shift:
-   108  039b  3e01                  ld a,MOD_KEY_SHIFT
-   109  039d  c9                    ret
+   108  03c5  3e01                  ld a,MOD_KEY_SHIFT
+   109  03c7  c9                    ret
    110                          
    111                          ; A contains row bitmap representing new keystrokes,
    112                          ; DE contains a pointer to the ASCII map for the row - which is incremented in the subroutine
    113                          ; first printable character returned in A
    114                          _colscan:
    115                              ; preserve registers
-   116  039e  c5                    push bc
+   116  03c8  c5                    push bc
    117                              ; initialise col bit mask - only 1 bit is ever set at a time - it is shifted from bit 0 to bit 7
-   118  039f  0e01                  ld c,0x01
+   118  03c9  0e01                  ld c,0x01
    119                              ; stash the bitmap
-   120  03a1  47                    ld b,a
+   120  03cb  47                    ld b,a
    121                          _colscanloop:
    122                              ; reload the bitmap
-   123  03a2  78                    ld a,b
+   123  03cc  78                    ld a,b
    124                              ; mask the bitmap - use the column mask (C) over the bitmap value in A
-   125  03a3  a1                    and c
+   125  03cd  a1                    and c
    126                              ; if zero then no keypress
-   127  03a4  2805                  jr z,_colscanloopnext
-   128  03a6  1a                    ld a,(de)
+   127  03ce  2805                  jr z,_colscanloopnext
+   128  03d0  1a                    ld a,(de)
    129                              ; ASCII is 0?
-   130  03a7  fe00                  cp 0
-   131  03a9  2006                  jr nz,_colscanend
+   130  03d1  fe00                  cp 0
+   131  03d3  2006                  jr nz,_colscanend
    132                          _colscanloopnext:
    133                              ; increment character map pointer
-   134  03ab  13                    inc de
+   134  03d5  13                    inc de
    135                              ; clear the carry flag
-   136  03ac  b7                    or a
+   136  03d6  b7                    or a
    137                              ; shift row bit left - when we've done all 8, it will move to the carry flag
-   138  03ad  cb11                  rl c
+   138  03d7  cb11                  rl c
    139                              ; loop if not done all rows
-   140  03af  30f1                  jr nc,_colscanloop
+   140  03d9  30f1                  jr nc,_colscanloop
    141                          _colscanend:
    142                              ; restore registers
-   143  03b1  c1                    pop bc
-   144  03b2  c9                    ret
+   143  03db  c1                    pop bc
+   144  03dc  c9                    ret
    145                          
    146                          ; define values for control keys
    147                          ; modifiers have zero value
@@ -1136,42 +1228,42 @@ asm/keymatrix.asm:
    157                          QWERTY_CAPS equ 5
    158                          
    159                          QWERTY_KEYMAP_L:
-   160  03b3  1b71776572747975      db ESC_E,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,ESC_B,'7','8','9'
+   160  03dd  1b71776572747975      db ESC_E,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,ESC_B,'7','8','9'
               696f700508373839  
-   161  03c3  096173646667686a      db ESC_T,'a','s','d','f','g','h','j','k','l',';',QUOTE,ESC_N,'4','5','6'
+   161  03ed  096173646667686a      db ESC_T,'a','s','d','f','g','h','j','k','l',';',QUOTE,ESC_N,'4','5','6'
               6b6c3b270a343536  
-   162  03d3  007a786376626e6d      db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',SLASH,QWERTY_CURS_UP,'1','2','3'
+   162  03fd  007a786376626e6d      db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',SLASH,QWERTY_CURS_UP,'1','2','3'
               2c2e2f5c01313233  
-   163  03e3  00000000205b5d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',ESC_N
+   163  040d  00000000205b5d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',ESC_N
               602d3d030204300a  
    164                          QWERTY_KEYMAP_U:
-   165  03f3  1b51574552545955      db ESC_E,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,ESC_B,'&','*','('
+   165  041d  1b51574552545955      db ESC_E,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,ESC_B,'&','*','('
               494f500508262a28  
-   166  0403  094153444647484a      db ESC_T,'A','S','D','F','G','H','J','K','L',':','"',ESC_N,'$','%','^'
+   166  042d  094153444647484a      db ESC_T,'A','S','D','F','G','H','J','K','L',':','"',ESC_N,'$','%','^'
               4b4c3a220a24255e  
-   167  0413  005a584356424e4d      db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',SLASH,QWERTY_CURS_UP,'!','@','#'
+   167  043d  005a584356424e4d      db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',SLASH,QWERTY_CURS_UP,'!','@','#'
               3c3e3f5c01214023  
-   168  0423  00000000207b7d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',ESC_N
+   168  044d  00000000207b7d20      db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',ESC_N
               7e5f2b030204290a  
    169                          
 beanboard.asm:
     17                          include "asm/messages_small.asm"
 asm/messages_small.asm:
      1                          WELCOME_MSG:
-     2  0433  5061696e66756c44                  db "PainfulDiodes\n"
+     2  045d  5061696e66756c44                  db "PainfulDiodes\n"
               696f6465730a      
-     3  0441  4d415256494e205a                  db "MARVIN Z80 monitor\n"
+     3  046b  4d415256494e205a                  db "MARVIN Z80 monitor\n"
               3830206d6f6e6974  
               6f720a            
-     4  0454  76312e330a00                      db "v1.3\n",0
+     4  047e  76312e330a00                      db "v1.3\n",0
      5                          
      6                          
      7                          BAD_CMD_MSG:
-     8  045a  42616420636f6d6d                  db "Bad command\n",0
+     8  0484  42616420636f6d6d                  db "Bad command\n",0
               616e640a00        
      9                          
     10                          CMD_W_NULL_MSG:
-    11  0467  4e6f20646174610a                  db "No data\n",0
+    11  0491  4e6f20646174610a                  db "No data\n",0
               00                
     12                          
 beanboard.asm:

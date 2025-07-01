@@ -1,3 +1,147 @@
+__test: ;TODO
+    call getchar
+    cp ESC_E
+    jp z,__test_end
+    call _lcd_buffer_put
+    call lcd_print_buffer
+    jr __test
+__test_end:
+    jp WARMSTART
+
+lcd_init_buffer:
+    push af
+    push hl
+    push bc
+    ; reset the buffer pointer offset
+    ld hl,LCD_BUFFER_OFFSET
+    ld (hl),0x00
+    ; loop to reset the buffer contents
+    ld hl,LCD_BUFFER
+    ld b,LCD_BUFFER_LEN
+    ld a,' '
+_lcd_init_buffer_loop:
+    ld (hl), a
+    inc hl
+    djnz _lcd_init_buffer_loop
+    pop bc
+    pop hl
+    pop af
+    ret    
+
+lcd_print_buffer:
+    push af
+    push hl
+    push bc ; _lcd_print_line modifies
+    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_0_ADDR
+    ld hl,LCD_BUFFER_0
+    call _lcd_print_buffer_line
+    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+    ld hl,LCD_BUFFER_1
+    call _lcd_print_buffer_line
+    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+    ld hl,LCD_BUFFER_2
+    call _lcd_print_buffer_line
+    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+    ld hl,LCD_BUFFER_3
+    call _lcd_print_buffer_line
+    pop bc
+    pop hl
+    pop af
+    ret
+
+; a has LCD ADDR value for line 
+; hl points to line in buffer
+_lcd_print_buffer_line:
+	call lcd_putcmd
+    ld b,LCD_LINE_LEN
+_lcd_print_buffer_line_loop:
+    ld a,(hl)
+    call _lcd_putdata
+    inc hl
+    djnz _lcd_print_buffer_line_loop
+    ret
+
+; ; transmit character in A to the LCD data port
+; lcd_buffer_putchar:
+;     ; newline char?
+;     cp ESC_N
+;     jp nz,_lcd_buffer_putchar_printable
+;     ; newline - fill out the line until EOL
+; _lcd_buffer_putchar_pad:
+;     ld a,' '
+;     call _lcd_buffer_put
+;     cp LCD_EOL_0                
+;     jp z,_lcd_buffer_putchar_eol0
+;     cp LCD_EOL_1                
+;     jp z,_lcd_buffer_putchar_eol1
+;     cp LCD_EOL_2                
+;     jp z,_lcd_buffer_putchar_eol2
+;     cp LCD_EOL_3                
+;     jp z,_lcd_buffer_putchar_eol3
+;     ; loop until EOL
+;     jr _lcd_buffer_putchar_pad 
+; _lcd_buffer_putchar_printable:
+;     call _lcd_buffer_put
+;     ; check for overflow - DDRAM address returned in A
+;     cp LCD_EOL_0                
+;     jp z,_lcd_buffer_putchar_eol0
+;     cp LCD_EOL_1                
+;     jp z,_lcd_buffer_putchar_eol1
+;     cp LCD_EOL_2                
+;     jp z,_lcd_buffer_putchar_eol2
+;     cp LCD_EOL_3                
+;     jp z,_lcd_buffer_putchar_eol3
+;     jp _lcd_buffer_putchar_end
+; _lcd_buffer_putchar_eol0:
+;     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+; 	call lcd_putcmd
+;     jr _lcd_buffer_putchar_end
+; _lcd_buffer_putchar_eol1:
+;     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+; 	call lcd_putcmd
+;     jr _lcd_buffer_putchar_end
+; _lcd_buffer_putchar_eol2:
+;     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+; 	call lcd_putcmd
+;     jr _lcd_buffer_putchar_end
+; _lcd_buffer_putchar_eol3:
+;     call lcd_scroll
+;     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+; 	call lcd_putcmd
+; _lcd_buffer_putchar_end:
+;     ret
+
+; put the character in A into the buffer at the current location and advance the location
+_lcd_buffer_put:
+    push bc
+    push de
+    push hl
+    ; stash the data
+    ld d,a
+    ; get buffer offset as 16 bits
+    ld b,0x00
+    ld a,(LCD_BUFFER_OFFSET)
+    ld c, a
+    ; get buffer address
+    ld hl,LCD_BUFFER
+    ; add the offset
+    add hl,bc
+    ; put the data into the buffer location
+    ld(hl),d
+    ; advance the buffer position
+    ld a,c
+    inc a
+    ld(LCD_BUFFER_OFFSET),a
+    pop hl
+    pop de
+    pop bc
+    ret 
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 LCD_COMMAND_0 equ LCD_FUNCTION_SET+LCD_DATA_LEN_8+LCD_DISP_LINES_2+LCD_FONT_8
 LCD_COMMAND_1 equ LCD_DISPLAY_ON_OFF_CONTROL+LCD_DISPLAY_ON+LCD_CURSOR_ON+LCD_BLINK_ON
 
@@ -16,59 +160,6 @@ lcd_init:
     call lcd_putchar
 ; restore registers
     pop af
-    ret
-
-lcd_init_buffer:
-    push af
-    push hl
-    push bc
-    ld hl,LCD_BUFFER
-    ld b,LCD_BUFFER_LEN
-    ld a,' '
-_lcd_init_buffer_loop:
-    ld (hl), a
-    inc hl
-    djnz _lcd_init_buffer_loop
-    pop bc
-    pop hl
-    pop af
-    ret    
-
-__test: ;TODO
-    call lcd_print_buffer
-    jp WARMSTART
-
-lcd_print_buffer:
-    push af
-    push hl
-    push bc ; _lcd_print_line modifies
-    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_0_ADDR
-    ld hl,LCD_BUFFER_0
-    call _lcd_print_line
-    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
-    ld hl,LCD_BUFFER_1
-    call _lcd_print_line
-    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
-    ld hl,LCD_BUFFER_2
-    call _lcd_print_line
-    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
-    ld hl,LCD_BUFFER_3
-    call _lcd_print_line
-    pop bc
-    pop hl
-    pop af
-    ret
-
-; a has LCD ADDR value for line 
-; hl points to line in buffer
-_lcd_print_line:
-	call lcd_putcmd
-    ld b,LCD_LINE_LEN
-_lcd_print_line_loop:
-    ld a,(hl)
-    call _lcd_putdata
-    inc hl
-    djnz _lcd_print_line_loop
     ret
 
 ; transmit character in A to the LCD control port
