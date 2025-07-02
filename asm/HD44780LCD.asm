@@ -79,18 +79,26 @@ _lcd_putchar_printable:
     jp z,_lcd_putchar_eol3
     jp _lcd_putchar_end
 _lcd_putchar_eol0:
+    ld a,'0'
+    call usb_putchar
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
 	call lcd_putcmd
     jr _lcd_putchar_end
 _lcd_putchar_eol1:
+    ld a,'1'
+    call usb_putchar
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
 	call lcd_putcmd
     jr _lcd_putchar_end
 _lcd_putchar_eol2:
+    ld a,'2'
+    call usb_putchar
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
 	call lcd_putcmd
     jr _lcd_putchar_end
 _lcd_putchar_eol3:
+    ld a,'3'
+    call usb_putchar
     call lcd_scroll
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
 	call lcd_putcmd
