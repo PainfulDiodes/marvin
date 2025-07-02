@@ -353,7 +353,7 @@ asm/marvin.asm:
     83  00c0  fe3a                  cp ':'
     84  00c2  2879                  jr z,_cmd_load
     85                              ; otherwise error
-    86  00c4  213602                ld hl,BAD_CMD_MSG
+    86  00c4  213802                ld hl,BAD_CMD_MSG
     87  00c7  cd2700                call puts
     88                              ; loop back to the prompt
     89  00ca  c37b00                jp PROMPT
@@ -447,7 +447,7 @@ asm/marvin.asm:
    177  011c  c37b00                jp PROMPT
    178                              ; w with no data
    179                          _cmd_write_null:
-   180  011f  214e02                ld hl,CMD_W_NULL_MSG
+   180  011f  215002                ld hl,CMD_W_NULL_MSG
    181  0122  cd2700                call puts
    182                              ; and back to prompt
    183  0125  c37b00                jp PROMPT
@@ -645,30 +645,30 @@ beanzee.asm:
     14                          include "asm/messages.asm"
 asm/messages.asm:
      1                          WELCOME_MSG:
-     2  01c7  4d415256494e2076                  db "MARVIN v1.2\n"
-              312e320a          
-     3  01d3  412073696d706c65                  db "A simple Z80 homebrew monitor program\n"
+     2  01c7  4d415256494e2076                  db "MARVIN v1.2.1\n"
+              312e322e310a      
+     3  01d5  412073696d706c65                  db "A simple Z80 homebrew monitor program\n"
               205a383020686f6d  
               6562726577206d6f  
               6e69746f72207072  
               6f6772616d0a      
-     4  01f9  2863292053746570                  db "(c) Stephen Willcock 2024\n"
+     4  01fb  2863292053746570                  db "(c) Stephen Willcock 2024\n"
               68656e2057696c6c  
               636f636b20323032  
               340a              
-     5  0213  68747470733a2f2f                  db "https://github.com/PainfulDiodes\n\n",0
+     5  0215  68747470733a2f2f                  db "https://github.com/PainfulDiodes\n\n",0
               6769746875622e63  
               6f6d2f5061696e66  
               756c44696f646573  
               0a0a00            
      6                          
      7                          BAD_CMD_MSG:
-     8  0236  436f6d6d616e6420                  db "Command not recognised\n",0
+     8  0238  436f6d6d616e6420                  db "Command not recognised\n",0
               6e6f74207265636f  
               676e697365640a00  
      9                          
     10                          CMD_W_NULL_MSG:
-    11  024e  4e6f206461746120                  db "No data to write\n",0
+    11  0250  4e6f206461746120                  db "No data to write\n",0
               746f207772697465  
               0a00              
     12                          
