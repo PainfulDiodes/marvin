@@ -56,12 +56,6 @@ lcd_putchar:
 _lcd_putchar_pad:
     ld a,' '
     call _lcd_putdata
-    cp LCD_EOL_0                
-    jp z,_lcd_putchar_eol0
-    cp LCD_EOL_1                
-    jp z,_lcd_putchar_eol1
-    cp LCD_EOL_2                
-    jp z,_lcd_putchar_eol2
     cp LCD_EOL_3                
     jp z,_lcd_putchar_eol3
     ; loop until EOL
@@ -69,37 +63,13 @@ _lcd_putchar_pad:
 _lcd_putchar_printable:
     call _lcd_putdata
     ; check for overflow - DDRAM address returned in A
-    cp LCD_EOL_0                
-    jp z,_lcd_putchar_eol0
-    cp LCD_EOL_1                
-    jp z,_lcd_putchar_eol1
-    cp LCD_EOL_2                
-    jp z,_lcd_putchar_eol2
     cp LCD_EOL_3                
     jp z,_lcd_putchar_eol3
     jp _lcd_putchar_end
-_lcd_putchar_eol0:
-    ld a,'0'
-    call usb_putchar
-    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
-	call lcd_putcmd
-    jr _lcd_putchar_end
-_lcd_putchar_eol1:
-    ld a,'1'
-    call usb_putchar
-    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
-	call lcd_putcmd
-    jr _lcd_putchar_end
-_lcd_putchar_eol2:
-    ld a,'2'
-    call usb_putchar
-    ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
-	call lcd_putcmd
-    jr _lcd_putchar_end
 _lcd_putchar_eol3:
-    ld a,'3'
-    call usb_putchar
+    ; line feed
     call lcd_scroll
+    ; carriage return
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
 	call lcd_putcmd
 _lcd_putchar_end:
@@ -111,13 +81,13 @@ _lcd_putdata:
     push bc
     ; save the transmit character
     ld b,a
-__lcd_putdata_loop: 
+_lcd_putdata_loop: 
     ; get the LCD status
     in a,(LCD_CTRL)
     ; busy ?
     bit 7,a
     ; yes
-    jr nz,__lcd_putdata_loop
+    jr nz,_lcd_putdata_loop
     ; no, reset the 'busy' bit and preserve the DDRAM address
     and 0b01111111
     ld c,a
