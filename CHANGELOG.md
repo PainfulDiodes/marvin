@@ -1,3 +1,8 @@
+# 1.2.1
+  * Fix LCD scroll/render error - occasionally cursor would land on line 3 and the text would be out of step
+  * LCD teletype style - always write on line 4 - would simplify the logic
+  * Added a WARMSTART2 label - dependable entry point across builds - goes to MARVIN prompt without welcome message
+
 # v1.2
 * Remove beanboard_proto build target
 * Remove keyscan_init so that on reset the last keypress is not repeated on RESET
