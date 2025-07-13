@@ -10,7 +10,7 @@ Marvin builds with:
 [z88dk-z80asm](https://github.com/z88dk/z88dk/wiki/Tool---z80asm) (the default), or  
 [sjasmplus](https://github.com/z00m128/sjasmplus)  
 
-Shell scripts are included for building Marvin, which have been a convenience for me but may be of limited use depending on your environment (I am using zsh / macOS).
+Shell scripts are included for building Marvin, which have been a convenience for me but may be of limited use depending on your environment (I am using bash / macOS).
 
 The home directory has different build targets - assemble these to build a binary of Marvin; each will include the necessary additional assembly files from the asm directory.
 
