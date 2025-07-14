@@ -22,9 +22,9 @@ then
         org=0x0000
     fi
 
-    sjasmplus  --nologo --msg=err --lst=output-sj/$f.lis --lstlab --raw=output-sj/$f.bin --dirbol --define MARVINORG=$org  $f.asm
-    hexdump -C output-sj/$f.bin > output-sj/$f.hex
-    z88dk-appmake +hex --org $org -b output-sj/$f.bin -o output-sj/$f.ihx
+    z88dk-z80asm -l -b -m -DMARVINORG=$org $f.asm -Ooutput
+    hexdump -C output/$f.bin > output/$f.hex
+    z88dk-appmake +hex --org $org -b output/$f.bin -o output/$f.ihx
 
 else  
     echo "Missing target"
