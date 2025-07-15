@@ -1,3 +1,6 @@
+# 1.2.1a
+* Improve build scripts - build both targets with both assemblers with a single command - heirarchical scripts
+
 # 1.2.1
   * Fix LCD scroll/render error - occasionally cursor would land on line 3 and the text would be out of step
   * LCD teletype style - always write on line 4 - would simplify the logic
