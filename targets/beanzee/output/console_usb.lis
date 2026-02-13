@@ -1,4 +1,4 @@
-asm/console_usb.asm:
+console_usb.asm:
      1                              PUBLIC getchar
      2                              PUBLIC readchar
      3                              PUBLIC putchar

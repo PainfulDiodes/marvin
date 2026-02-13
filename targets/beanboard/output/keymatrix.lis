@@ -1,6 +1,6 @@
-asm/keymatrix.asm:
+keymatrix.asm:
      1                              INCLUDE "asm/main.inc"
-asm/main.inc:
+../asm/main.inc:
      1                          IFNDEF _MAIN_INC
      2                          DEFINE _MAIN_INC
      3                          
@@ -30,9 +30,9 @@ asm/main.inc:
     27                          
     28                          ENDIF
     29                          
-asm/keymatrix.asm:
+keymatrix.asm:
      2                              INCLUDE "asm/escapestring.inc"
-asm/escapestring.inc:
+../asm/escapestring.inc:
      1                          IFNDEF _ESCAPESTRING_INC
      2                          DEFINE _ESCAPESTRING_INC
      3                          
@@ -50,7 +50,7 @@ asm/escapestring.inc:
     15                          
     16                          ENDIF
     17                          
-asm/keymatrix.asm:
+keymatrix.asm:
      3                          
      4                              PUBLIC key_readchar
      5                              PUBLIC modifierkeys
