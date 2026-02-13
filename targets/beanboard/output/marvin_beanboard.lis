@@ -50,7 +50,7 @@ marvin_beanboard.asm:
     18  0003  cd0000                call lcd_init
     19  0006  cd0000                call beanboard_console_init
     20                          
-    21                          ; jump table at fixed addresses
+    21                          ; jump table at fixed addresses - must match jumptable.inc
     22  0009  00000000000000    ALIGN 0x0010
     23  0010  c30000                jp MARVIN           ; 0x0010 - warm start (enter monitor)
     24  0013  c30000                jp PROMPT           ; 0x0013 - monitor prompt
