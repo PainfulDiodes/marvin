@@ -1,4 +1,4 @@
-    INCLUDE "asm/main.inc"
+    INCLUDE "asm/system.inc"
 
     PUBLIC getchar
     PUBLIC readchar

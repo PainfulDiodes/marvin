@@ -1,5 +1,5 @@
-    INCLUDE "asm/main.inc"
-    INCLUDE "asm/escapestring.inc"
+    INCLUDE "asm/system.inc"
+    INCLUDE "asm/escape.inc"
 
     PUBLIC MARVIN
     PUBLIC PROMPT
