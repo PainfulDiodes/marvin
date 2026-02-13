@@ -4,7 +4,6 @@
     PUBLIC MARVIN
     PUBLIC PROMPT
 
-IFDEF MODULAR
     EXTERN puts
     EXTERN putchar
     EXTERN getchar
@@ -13,7 +12,6 @@ IFDEF MODULAR
     EXTERN WELCOME_MSG
     EXTERN BAD_CMD_MSG
     EXTERN CMD_W_NULL_MSG
-ENDIF
 
 ; ****************************************************
 ; *  Marvin - a Z80 homebrew monitor program
