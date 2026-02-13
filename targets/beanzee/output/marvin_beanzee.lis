@@ -44,7 +44,7 @@ marvin_beanzee.asm:
     12                              ORG MARVINORG
     13  0000  31ffff                ld sp, STACK
     14                          
-    15                          ; jump table at fixed addresses
+    15                          ; jump table at fixed addresses - must match jumptable.inc
     16  0003  0000000000000000  ALIGN 0x0010
               0000000000        
     17  0010  c30000                jp MARVIN           ; 0x0010 - warm start (enter monitor)
