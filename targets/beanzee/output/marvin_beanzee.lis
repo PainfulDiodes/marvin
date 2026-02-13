@@ -1,6 +1,6 @@
-boot_beanzee.asm:
-     1                              INCLUDE "asm/main.inc"
-../asm/main.inc:
+marvin_beanzee.asm:
+     1                              INCLUDE "asm/system.inc"
+../asm/system.inc:
      1                          IFNDEF _MAIN_INC
      2                          DEFINE _MAIN_INC
      3                          
@@ -30,7 +30,7 @@ boot_beanzee.asm:
     27                          
     28                          ENDIF
     29                          
-boot_beanzee.asm:
+marvin_beanzee.asm:
      2                          
      3                              EXTERN MARVIN
      4                              EXTERN PROMPT
