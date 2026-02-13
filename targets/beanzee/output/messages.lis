@@ -1,4 +1,4 @@
-asm/messages.asm:
+messages.asm:
      1                              PUBLIC WELCOME_MSG
      2                              PUBLIC BAD_CMD_MSG
      3                              PUBLIC CMD_W_NULL_MSG

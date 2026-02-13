@@ -1,6 +1,6 @@
-asm/boot_beanboard.asm:
+boot_beanzee.asm:
      1                              INCLUDE "asm/main.inc"
-asm/main.inc:
+../asm/main.inc:
      1                          IFNDEF _MAIN_INC
      2                          DEFINE _MAIN_INC
      3                          
@@ -30,22 +30,19 @@ asm/main.inc:
     27                          
     28                          ENDIF
     29                          
-asm/boot_beanboard.asm:
+boot_beanzee.asm:
      2                          
      3                              EXTERN MARVIN
      4                              EXTERN PROMPT
-     5                              EXTERN lcd_init
-     6                              EXTERN beanboard_console_init
-     7                          
-     8                              ORG MARVINORG
-     9  0000  31ffff                ld sp, STACK
-    10  0003  cd0000                call lcd_init
-    11  0006  cd0000                call beanboard_console_init
-    12  0009  00000000000000    ALIGN 0x0010 ; fix the warmstart address across targets
-    13                          WARMSTART:
-    14  0010  c30000                jp MARVIN
-    15  0013  0000000000000000  ALIGN 0x0010
+     5                          
+     6                              ORG MARVINORG
+     7  0000  31ffff                ld sp, STACK
+     8  0003  0000000000000000  ALIGN 0x0010 ; fix the warmstart address across targets
               0000000000        
-    16                          WARMSTART2:
-    17  0020  c30000                jp PROMPT
-    18                          
+     9                          WARMSTART:
+    10  0010  c30000                jp MARVIN
+    11  0013  0000000000000000  ALIGN 0x0010
+              0000000000        
+    12                          WARMSTART2:
+    13  0020  c30000                jp PROMPT
+    14                          

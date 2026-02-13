@@ -1,6 +1,6 @@
-asm/console_beanboard.asm:
+console_beanboard.asm:
      1                              INCLUDE "asm/main.inc"
-asm/main.inc:
+../asm/main.inc:
      1                          IFNDEF _MAIN_INC
      2                          DEFINE _MAIN_INC
      3                          
@@ -30,7 +30,7 @@ asm/main.inc:
     27                          
     28                          ENDIF
     29                          
-asm/console_beanboard.asm:
+console_beanboard.asm:
      2                          
      3                              PUBLIC getchar
      4                              PUBLIC readchar

@@ -1,6 +1,6 @@
-asm/beanboard_init.asm:
+beanboard_init.asm:
      1                              INCLUDE "asm/main.inc"
-asm/main.inc:
+../asm/main.inc:
      1                          IFNDEF _MAIN_INC
      2                          DEFINE _MAIN_INC
      3                          
@@ -30,7 +30,7 @@ asm/main.inc:
     27                          
     28                          ENDIF
     29                          
-asm/beanboard_init.asm:
+beanboard_init.asm:
      2                          
      3                              PUBLIC beanboard_console_init
      4                          
