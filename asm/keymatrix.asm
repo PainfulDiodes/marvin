@@ -1,3 +1,10 @@
+    INCLUDE "asm/main.inc"
+    INCLUDE "asm/escapestring.inc"
+
+    PUBLIC key_readchar
+    PUBLIC modifierkeys
+    PUBLIC MOD_KEY_SHIFT
+
 DEBOUNCE_DELAY  equ 0x4000
 
 MOD_KEY_SHIFT   equ 0b00000001

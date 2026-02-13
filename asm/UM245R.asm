@@ -1,4 +1,11 @@
-; It is assumed that UM245R status signals are gated to the data bus as an IO port where: 
+    INCLUDE "asm/main.inc"
+    INCLUDE "asm/escapestring.inc"
+
+    PUBLIC usb_readchar
+    PUBLIC usb_putchar
+    PUBLIC usb_puts
+
+; It is assumed that UM245R status signals are gated to the data bus as an IO port where:
 ; /TXE = bit 0
 ; /RXF = bit 1 
 ; As per:

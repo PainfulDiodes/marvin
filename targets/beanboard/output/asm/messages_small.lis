@@ -1,0 +1,22 @@
+asm/messages_small.asm:
+     1                              PUBLIC WELCOME_MSG
+     2                              PUBLIC BAD_CMD_MSG
+     3                              PUBLIC CMD_W_NULL_MSG
+     4                          
+     5                          WELCOME_MSG:
+     6  0000  5061696e66756c44                  db "PainfulDiodes\n"
+              696f6465730a      
+     7  000e  4d415256494e205a                  db "MARVIN Z80 monitor\n"
+              3830206d6f6e6974  
+              6f720a            
+     8  0021  76312e322e310a00                  db "v1.2.1\n",0
+     9                          
+    10                          
+    11                          BAD_CMD_MSG:
+    12  0029  42616420636f6d6d                  db "Bad command\n",0
+              616e640a00        
+    13                          
+    14                          CMD_W_NULL_MSG:
+    15  0036  4e6f20646174610a                  db "No data\n",0
+              00                
+    16                          

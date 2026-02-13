@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 rm -f output/*.*
-rm -f output-sj/*.*
+rm -rf targets/beanzee/output/*
+rm -rf targets/beanboard/output/*

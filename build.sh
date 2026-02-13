@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
-echo "./build-z88dk.sh beanboard" $@
-./build-z88dk.sh beanboard $@
-echo "./build-z88dk.sh beanzee" $@
-./build-z88dk.sh beanzee $@
-echo "./build-sjasmplus.sh beanboard" $@
-./build-sjasmplus.sh beanboard $@
-echo "./build-sjasmplus.sh beanzee" $@
-./build-sjasmplus.sh beanzee $@
+
+# Build all targets or a named target
+# Usage: ./build.sh [target] [org]
+# Examples:
+#   ./build.sh              # build all targets
+#   ./build.sh beanzee      # build beanzee only
+#   ./build.sh beanboard    # build beanboard only
+
+if [ $# -gt 0 ]; then
+    target=$1
+    shift
+    echo "./targets/$target/build.sh" "$@"
+    ./targets/$target/build.sh "$@"
+else
+    echo "./targets/beanzee/build.sh"
+    ./targets/beanzee/build.sh
+    echo "./targets/beanboard/build.sh"
+    ./targets/beanboard/build.sh
+fi

@@ -1,0 +1,296 @@
+asm/HD44780LCD.asm:
+     1                              INCLUDE "asm/main.inc"
+asm/main.inc:
+     1                          IFNDEF _MAIN_INC
+     2                          DEFINE _MAIN_INC
+     3                          
+     4                          ; start of user RAM
+     5                          RAMSTART equ 0x8000
+     6                          
+     7                          ; 8-byte status area
+     8                          CONSOLE_STATUS equ 0xf000
+     9                          ; 8-byte keyscan buffer
+    10                          KEY_MATRIX_BUFFER equ 0xf010
+    11                          ; command buffer
+    12                          CMD_BUFFER equ 0xf020
+    13                          ; this should really be 0x0000 as the CPU will dec SP before PUSH
+    14                          STACK equ 0xffff
+    15                          
+    16                          UM245R_CTRL equ 0 ; serial control port
+    17                          UM245R_DATA equ 1 ; serial data port
+    18                          KEYSCAN_OUT equ 2 ; either 2 or 3 will work
+    19                          KEYSCAN_IN  equ 3 ; either 2 or 3 will work
+    20                          LCD_CTRL    equ 4 ; LCD control port
+    21                          LCD_DATA    equ 5 ; LCD data port
+    22                          GPIO_OUT    equ 6 ; either 6 or 7 will work
+    23                          GPIO_IN     equ 7 ; either 6 or 7 will work
+    24                          
+    25                          CONSOLE_STATUS_USB equ 1
+    26                          CONSOLE_STATUS_BEANBOARD equ 2
+    27                          
+    28                          ENDIF
+    29                          
+asm/HD44780LCD.asm:
+     2                              INCLUDE "asm/HD44780LCD.inc"
+asm/HD44780LCD.inc:
+     1                          IFNDEF _HD44780LCD_INC
+     2                          DEFINE _HD44780LCD_INC
+     3                          
+     4                          ; LCD commands
+     5                          LCD_CLEAR_DISPLAY equ 0x01
+     6                          LCD_RETURN_HOME equ 0x02
+     7                          LCD_ENTRY_MODE_SET equ 0x04
+     8                          LCD_DISPLAY_ON_OFF_CONTROL equ 0x08
+     9                          LCD_CURSOR_DISPLAY_SHIFT equ 0x10
+    10                          LCD_FUNCTION_SET equ 0x20
+    11                          LCD_SET_CGRAM_ADDR equ 0x40
+    12                          LCD_SET_DDRAM_ADDR equ 0x80
+    13                          
+    14                          ; LCD_ENTRY_MODE_SET options
+    15                          LCD_ENTRY_INC equ 0x02 ; left
+    16                          LCD_ENTRY_DEC equ 0x00 ; right
+    17                          LCD_ENTRY_SHIFT equ 0x01
+    18                          LCD_ENTRY_NO_SHIFT equ 0x00
+    19                          
+    20                          ; LCD_DISPLAY_ON_OFF_CONTROL options
+    21                          LCD_DISPLAY_ON equ 0x04
+    22                          LCD_DISPLAY_OFF equ 0x00
+    23                          LCD_CURSOR_ON equ 0x02
+    24                          LCD_CURSOR_OFF equ 0x00
+    25                          LCD_BLINK_ON equ 0x01
+    26                          LCD_BLINK_OFF equ 0x00
+    27                          
+    28                          ; LCD_CURSOR_DISPLAY_SHIFT options
+    29                          LCD_SHIFT_DISPLAY equ 0x08
+    30                          LCD_SHIFT_CURSOR equ 0x00
+    31                          LCD_SHIFT_RIGHT equ 0x04
+    32                          LCD_SHIFT_LEFT equ 0x00
+    33                          
+    34                          ; LCD_FUNCTION_SET options
+    35                          LCD_DATA_LEN_8 equ 0x10
+    36                          LCD_DATA_LEN_4 equ 0x00
+    37                          LCD_DISP_LINES_2 equ 0x08
+    38                          LCD_DISP_LINES_1 equ 0x00
+    39                          LCD_FONT_10 equ 0x04
+    40                          LCD_FONT_8 equ 0x00
+    41                          
+    42                          LCD_LINE_LEN equ 0x14
+    43                          LCD_NUM_LINES equ 4
+    44                          LCD_BUFFER_LEN equ LCD_LINE_LEN*LCD_NUM_LINES
+    45                          
+    46                          ; LCD_SET_DDRAM_ADDR options
+    47                          LCD_LINE_0_ADDR equ 0x00
+    48                          LCD_LINE_1_ADDR equ 0x40
+    49                          LCD_LINE_2_ADDR equ 0x00+LCD_LINE_LEN
+    50                          LCD_LINE_3_ADDR equ 0x40+LCD_LINE_LEN
+    51                          LCD_EOL_0 equ 0x00+LCD_LINE_LEN-1
+    52                          LCD_EOL_1 equ 0x40+LCD_LINE_LEN-1
+    53                          LCD_EOL_2 equ 0x00+LCD_LINE_LEN*2-1
+    54                          LCD_EOL_3 equ 0x40+LCD_LINE_LEN*2-1
+    55                          
+    56                          ENDIF
+    57                          
+asm/HD44780LCD.asm:
+     3                              INCLUDE "asm/escapestring.inc"
+asm/escapestring.inc:
+     1                          IFNDEF _ESCAPESTRING_INC
+     2                          DEFINE _ESCAPESTRING_INC
+     3                          
+     4                          ; escape character constants for assembler compatibility
+     5                          ; sjasmplus requires double quotes around escape sequences: "\n" and would not interpret '\n' but truncate
+     6                          ; z88dk-z80asm requires single quotes around so would correctly interpret '\n' but reject "\n"
+     7                          
+     8                          ESC_B equ 0x08 ; \b
+     9                          ESC_T equ 0x09 ; \t
+    10                          ESC_N equ 0x0a ; \n
+    11                          ESC_R equ 0x0d ; \r
+    12                          ESC_E equ 0x1b ; \e
+    13                          SLASH equ 0x5c ; \\
+    14                          QUOTE equ 0x27 ; \'
+    15                          
+    16                          ENDIF
+    17                          
+asm/HD44780LCD.asm:
+     4                          
+     5                              PUBLIC lcd_init
+     6                              PUBLIC lcd_putchar
+     7                          
+     8                          ; initialise LCD
+     9                          lcd_init:
+    10                          ; preserve registers
+    11  0000  f5                    push af
+    12                          ; intitialise device
+    13  0001  3e38              	ld a,LCD_FUNCTION_SET+LCD_DATA_LEN_8+LCD_DISP_LINES_2+LCD_FONT_8
+    14  0003  cd1700            	call lcd_putcmd
+    15  0006  3e0f              	ld a,LCD_DISPLAY_ON_OFF_CONTROL+LCD_DISPLAY_ON+LCD_CURSOR_ON+LCD_BLINK_ON
+    16  0008  cd1700            	call lcd_putcmd
+    17  000b  3e01              	ld a,LCD_CLEAR_DISPLAY
+    18  000d  cd1700            	call lcd_putcmd
+    19  0010  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+    20  0012  cd1700            	call lcd_putcmd
+    21                          
+    22                          ; restore registers
+    23  0015  f1                    pop af
+    24  0016  c9                    ret
+    25                          
+    26                          ; transmit character in A to the LCD control port
+    27                          lcd_putcmd:
+    28  0017  c5                    push bc
+    29                          ; save the transmit character
+    30  0018  47                    ld b,a
+    31                          _lcd_putcmd_loop:
+    32                          ; get the LCD status
+    33  0019  db04                  in a,(LCD_CTRL)
+    34                          ; busy ?
+    35  001b  cb7f                  bit 7,a
+    36                          ; yes
+    37  001d  20fa                  jr nz,_lcd_putcmd_loop
+    38                          ; no, restore the transmit character
+    39  001f  78                    ld a,b
+    40                          ; transmit the character
+    41  0020  d304                  out (LCD_CTRL),a
+    42  0022  c1                    pop bc
+    43  0023  c9                    ret
+    44                          
+    45                          ; get character from LCD data port and return in A
+    46                          lcd_getchar:
+    47                          ; get the LCD status
+    48  0024  db04                  in a,(LCD_CTRL)
+    49                          ; busy ?
+    50  0026  cb7f                  bit 7,a
+    51                          ; yes
+    52  0028  20fa                  jr nz,lcd_getchar
+    53                          ; no, get a character
+    54  002a  db05                  in a,(LCD_DATA)
+    55  002c  c9                    ret
+    56                          
+    57                          ; transmit character in A to the LCD data port
+    58                          lcd_putchar:
+    59                              ; newline char?
+    60  002d  fe0a                  cp ESC_N
+    61  002f  c23e00                jp nz,_lcd_putchar_printable
+    62                              ; newline - fill out the line until EOL
+    63                          _lcd_putchar_pad:
+    64  0032  3e20                  ld a,' '
+    65  0034  cd5200                call _lcd_putdata
+    66  0037  fe67                  cp LCD_EOL_3
+    67  0039  ca4900                jp z,_lcd_putchar_eol3
+    68                              ; loop until EOL
+    69  003c  18f4                  jr _lcd_putchar_pad
+    70                          _lcd_putchar_printable:
+    71  003e  cd5200                call _lcd_putdata
+    72                              ; check for overflow - DDRAM address returned in A
+    73  0041  fe67                  cp LCD_EOL_3
+    74  0043  ca4900                jp z,_lcd_putchar_eol3
+    75  0046  c35100                jp _lcd_putchar_end
+    76                          _lcd_putchar_eol3:
+    77                              ; line feed
+    78  0049  cd6300                call lcd_scroll
+    79                              ; carriage return
+    80  004c  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+    81  004e  cd1700            	call lcd_putcmd
+    82                          _lcd_putchar_end:
+    83  0051  c9                    ret
+    84                          
+    85                          ; transmit character in A to the LCD data port,
+    86                          ; return in A the DDRAM address where the character was sent
+    87                          _lcd_putdata:
+    88  0052  c5                    push bc
+    89                              ; save the transmit character
+    90  0053  47                    ld b,a
+    91                          _lcd_putdata_loop:
+    92                              ; get the LCD status
+    93  0054  db04                  in a,(LCD_CTRL)
+    94                              ; busy ?
+    95  0056  cb7f                  bit 7,a
+    96                              ; yes
+    97  0058  20fa                  jr nz,_lcd_putdata_loop
+    98                              ; no, reset the 'busy' bit and preserve the DDRAM address
+    99  005a  e67f                  and 0b01111111
+   100  005c  4f                    ld c,a
+   101                              ; restore the transmit character and send it
+   102  005d  78                    ld a,b
+   103  005e  d305                  out (LCD_DATA),a
+   104                              ; restore the DDRAM address
+   105  0060  79                    ld a,c
+   106  0061  c1                    pop bc
+   107  0062  c9                    ret
+   108                          
+   109                          lcd_scroll:
+   110  0063  c5                    push bc
+   111  0064  d5                    push de
+   112  0065  16c0                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+   113  0067  1e80                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_0_ADDR
+   114  0069  cd8200                call _lcd_scroll_line
+   115  006c  1694                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+   116  006e  1ec0                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_1_ADDR
+   117  0070  cd8200                call _lcd_scroll_line
+   118  0073  16d4                  ld d,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+   119  0075  1e94                  ld e,LCD_SET_DDRAM_ADDR+LCD_LINE_2_ADDR
+   120  0077  cd8200                call _lcd_scroll_line
+   121  007a  3ed4                  ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+   122  007c  cd9b00                call _lcd_scroll_clear_line
+   123  007f  d1                    pop de
+   124  0080  c1                    pop bc
+   125  0081  c9                    ret
+   126                          _lcd_scroll_line:
+   127                              ; b = character counter
+   128                              ; c = stash char
+   129                              ; d = source line to copy from
+   130                              ; e = destination line to copy to
+   131  0082  0614                  ld b,LCD_LINE_LEN
+   132                          _lcd_scroll_line_loop:
+   133                              ; load source
+   134  0084  7a                    ld a,d
+   135                              ; character counter is an offset
+   136  0085  80                    add b
+   137                              ; zero based index so -1
+   138  0086  3d                    dec a
+   139  0087  cd1700                call lcd_putcmd
+   140  008a  cd2400                call lcd_getchar
+   141                              ; stash the value
+   142  008d  4f                    ld c,a
+   143                              ; load destination
+   144  008e  7b                    ld a,e
+   145                              ; character counter is an offset
+   146  008f  80                    add b
+   147                              ; zero based index so -1
+   148  0090  3d                    dec a
+   149  0091  cd1700                call lcd_putcmd
+   150                              ; recover the stashed value
+   151  0094  79                    ld a,c
+   152  0095  cd5200                call _lcd_putdata
+   153  0098  10ea                  djnz _lcd_scroll_line_loop
+   154  009a  c9                    ret
+   155                          _lcd_scroll_clear_line:
+   156                              ; a = destination line to clear
+   157                              ; b = character counter
+   158  009b  0614                  ld b,LCD_LINE_LEN
+   159  009d  cd1700                call lcd_putcmd
+   160                          _lcd_scroll_clear_line_loop:
+   161  00a0  3e20                  ld a,' '
+   162  00a2  cd5200                call _lcd_putdata
+   163  00a5  10f9                  djnz _lcd_scroll_clear_line_loop
+   164  00a7  c9                    ret
+   165                          
+   166                          ; print a zero-terminated string pointed to by hl to the LCD
+   167                          lcd_puts:
+   168  00a8  e5                    push hl
+   169                          _lcd_puts_loop:
+   170                              ; get character from string
+   171  00a9  7e                    ld a,(hl)
+   172                              ; is it zero?
+   173  00aa  fe00                  cp 0
+   174                              ; yes
+   175  00ac  2807                  jr z, _lcd_puts_end
+   176                              ; no: send character
+   177  00ae  cd2d00                call lcd_putchar
+   178                              ; next character position
+   179  00b1  23                    inc hl
+   180                              ; loop for next character
+   181  00b2  c3a900                jp _lcd_puts_loop
+   182                          _lcd_puts_end:
+   183  00b5  e1                    pop hl
+   184  00b6  c9                    ret
+   185                          
+   186                          

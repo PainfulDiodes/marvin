@@ -1,0 +1,114 @@
+asm/strings.asm:
+     1                              PUBLIC hex_byte_val
+     2                              PUBLIC putchar_hex
+     3                          
+     4                          IFDEF MODULAR
+     5                              EXTERN putchar
+     6                          ENDIF
+     7                          
+     8                          ; string subroutines
+     9                          
+    10                          ; read 2 ASCII hex chars from memory by HL pointer, return converted value in A and advance HL pointer
+    11                          hex_byte_val:
+    12                              ; preserve BC
+    13  0000  c5                    push bc
+    14                              ; load 1st character from memory
+    15  0001  7e                    ld a,(hl)
+    16                              ; end of string?
+    17  0002  fe00                  cp 0
+    18                              ; yes: no value - return zero
+    19  0004  2819                  jr z,_hex_byte_val_zero
+    20                              ; no:
+    21                              ; advance the buffer pointer
+    22  0006  23                    inc hl
+    23                              ; convert first hex digit
+    24  0007  cd2300                call hex_val
+    25                              ; shift left 4 bits to put value into top nibble
+    26  000a  cb27                  sla a
+    27  000c  cb27                  sla a
+    28  000e  cb27                  sla a
+    29  0010  cb27                  sla a
+    30                              ; cache the result
+    31  0012  47                    ld b,a
+    32                              ; load 2nd character from memory
+    33  0013  7e                    ld a,(hl)
+    34                              ; end of string?
+    35  0014  fe00                  cp 0
+    36                              ; yes: incomplete byte - return zero
+    37  0016  2807                  jr z,_hex_byte_val_zero
+    38                              ; advance the buffer pointer
+    39  0018  23                    inc hl
+    40                              ; and convert 2nd hex digit
+    41  0019  cd2300                call hex_val
+    42                              ; add first and second digits
+    43  001c  80                    add a,b
+    44                              ; restore BC
+    45  001d  c1                    pop bc
+    46  001e  c9                    ret
+    47                          _hex_byte_val_zero:
+    48                              ; zero return value
+    49  001f  3e00                  ld a,0
+    50                              ; restore BC
+    51  0021  c1                    pop bc
+    52  0022  c9                    ret
+    53                          
+    54                          ; convert an ASCII hex char in A to a number value (lower 4 bits)
+    55                          hex_val:
+    56                              ; is it lowercase alphabetic?
+    57  0023  fe61                  cp 'a'
+    58                              ; no: uppercase/numeric
+    59  0025  3803                  jr c,_hex_val_u_n
+    60                              ; yes: alphabetic
+    61  0027  d657                  sub 'a'-0x0a
+    62  0029  c9                    ret
+    63                          _hex_val_u_n:
+    64                              ; is it uppercase alphabetic?
+    65  002a  fe41                  cp 'A'
+    66                              ; no: numeric
+    67  002c  3803                  jr c,_hex_val_n
+    68                              ; y:
+    69  002e  d637                  sub 'A'-0x0a
+    70  0030  c9                    ret
+    71                          _hex_val_n:
+    72                              ; numeric
+    73  0031  d630                  sub '0'
+    74  0033  c9                    ret
+    75                          
+    76                          ; convert value in A into an ASCII pair and send to console
+    77                          putchar_hex:
+    78  0034  f5                    push af
+    79  0035  c5                    push bc
+    80                              ; stash in B
+    81  0036  47                    ld b,a
+    82                              ; shift A right x4 e.g. transform 10110010 to 00001011
+    83  0037  cb3f                  srl a
+    84  0039  cb3f                  srl a
+    85  003b  cb3f                  srl a
+    86  003d  cb3f                  srl a
+    87                              ; most significant digit
+    88  003f  cd4b00                call _putchar_hex_dgt
+    89                              ; recover from stash
+    90  0042  78                    ld a,b
+    91                              ; clear the top 4 bits
+    92  0043  e60f                  and 0b00001111
+    93                              ; least significant digit
+    94  0045  cd4b00                call _putchar_hex_dgt
+    95  0048  c1                    pop bc
+    96  0049  f1                    pop af
+    97  004a  c9                    ret
+    98                          _putchar_hex_dgt:
+    99                              ; is it an alpha or numeric?
+   100  004b  fe0a                  cp 0x0a
+   101                              ; numeric
+   102  004d  3806                  jr c,_putchar_hex_n
+   103                              ; alpha
+   104                              ; for alpha add the base ascii for 'a' but then sub 10 / 0x0a as hex 'a' = 10d
+   105  004f  c657                  add a,'a'-0x0a
+   106  0051  cd0000                call putchar
+   107  0054  c9                    ret
+   108                          _putchar_hex_n:
+   109                              ; for numeric add the base ascii for '0'
+   110  0055  c630                  add a,'0'
+   111  0057  cd0000                call putchar
+   112  005a  c9                    ret
+   113                          

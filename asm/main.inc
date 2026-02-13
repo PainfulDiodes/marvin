@@ -1,3 +1,6 @@
+IFNDEF _MAIN_INC
+DEFINE _MAIN_INC
+
 ; start of user RAM
 RAMSTART equ 0x8000
 
@@ -21,3 +24,5 @@ GPIO_IN     equ 7 ; either 6 or 7 will work
 
 CONSOLE_STATUS_USB equ 1
 CONSOLE_STATUS_BEANBOARD equ 2
+
+ENDIF

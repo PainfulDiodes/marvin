@@ -1,3 +1,20 @@
+    INCLUDE "asm/main.inc"
+    INCLUDE "asm/escapestring.inc"
+
+    PUBLIC MARVIN
+    PUBLIC PROMPT
+
+IFDEF MODULAR
+    EXTERN puts
+    EXTERN putchar
+    EXTERN getchar
+    EXTERN hex_byte_val
+    EXTERN putchar_hex
+    EXTERN WELCOME_MSG
+    EXTERN BAD_CMD_MSG
+    EXTERN CMD_W_NULL_MSG
+ENDIF
+
 ; ****************************************************
 ; *  Marvin - a Z80 homebrew monitor program
 ; * (c) Stephen Willcock 2024

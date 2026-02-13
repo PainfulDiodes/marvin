@@ -1,4 +1,8 @@
-WELCOME_MSG:    
+    PUBLIC WELCOME_MSG
+    PUBLIC BAD_CMD_MSG
+    PUBLIC CMD_W_NULL_MSG
+
+WELCOME_MSG:
                 db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
                 db "v1.2.1\n",0
