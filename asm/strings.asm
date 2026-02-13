@@ -1,3 +1,10 @@
+    PUBLIC hex_byte_val
+    PUBLIC putchar_hex
+
+IFDEF MODULAR
+    EXTERN putchar
+ENDIF
+
 ; string subroutines
 
 ; read 2 ASCII hex chars from memory by HL pointer, return converted value in A and advance HL pointer

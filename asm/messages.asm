@@ -1,3 +1,7 @@
+    PUBLIC WELCOME_MSG
+    PUBLIC BAD_CMD_MSG
+    PUBLIC CMD_W_NULL_MSG
+
 WELCOME_MSG:
                 db "MARVIN v1.2.1\n"
                 db "A simple Z80 homebrew monitor program\n"

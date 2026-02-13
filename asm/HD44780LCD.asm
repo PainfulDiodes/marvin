@@ -1,3 +1,10 @@
+    INCLUDE "asm/main.inc"
+    INCLUDE "asm/HD44780LCD.inc"
+    INCLUDE "asm/escapestring.inc"
+
+    PUBLIC lcd_init
+    PUBLIC lcd_putchar
+
 ; initialise LCD
 lcd_init:
 ; preserve registers

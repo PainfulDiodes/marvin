@@ -1,0 +1,50 @@
+asm/console_usb.asm:
+     1                              PUBLIC getchar
+     2                              PUBLIC readchar
+     3                              PUBLIC putchar
+     4                              PUBLIC puts
+     5                          
+     6                              EXTERN usb_readchar
+     7                              EXTERN usb_putchar
+     8                          
+     9                          ; wait for a character and return in A
+    10                          getchar:
+    11  0000  cd0800                call readchar
+    12  0003  fe00                  cp 0
+    13  0005  c0                    ret nz
+    14  0006  18f8                  jr getchar
+    15                          
+    16                          ; read a character from the console and return in A - return 0 if there is no character
+    17                          readchar:
+    18  0008  cd0000                call usb_readchar
+    19  000b  c9                    ret
+    20                          
+    21                          ; sent character in A to the console
+    22                          putchar:
+    23  000c  c5                    push bc
+    24  000d  47                    ld b,a
+    25  000e  cd0000                call usb_putchar
+    26  0011  78                    ld a,b
+    27  0012  c1                    pop bc
+    28  0013  c9                    ret
+    29                          
+    30                          ; print a zero-terminated string pointed to by hl to the console
+    31                          puts:
+    32  0014  e5                    push hl
+    33                          _puts_loop:
+    34                              ; get character from string
+    35  0015  7e                    ld a,(hl)
+    36                              ; is it zero?
+    37  0016  fe00                  cp 0
+    38                              ; yes
+    39  0018  2807                  jr z, _puts_end
+    40                              ; no: send character
+    41  001a  cd0c00                call putchar
+    42                              ; next character position
+    43  001d  23                    inc hl
+    44                              ; loop for next character
+    45  001e  c31500                jp _puts_loop
+    46                          _puts_end:
+    47  0021  e1                    pop hl
+    48  0022  c9                    ret
+    49                          
