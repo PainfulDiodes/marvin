@@ -13,16 +13,16 @@ mkdir -p "$outdir"
 
 cd "$REPO_DIR/asm"
 z88dk-z80asm -l -b -m -I.. -DMARVINORG=$org \
-    boot_beanboard.asm \
+    marvin_beanboard.asm \
     console_beanboard.asm \
     beanboard_init.asm \
-    UM245R.asm \
-    marvin.asm \
-    strings.asm \
-    HD44780LCD.asm \
+    um245r.asm \
+    monitor.asm \
+    hex.asm \
+    hd44780.asm \
     keymatrix.asm \
     messages_small.asm \
     -O"$outdir"
 
-hexdump -C "$outdir/boot_beanboard.bin" > "$outdir/marvin.hex"
-z88dk-appmake +hex --org $org -b "$outdir/boot_beanboard.bin" -o "$outdir/marvin.ihx"
+hexdump -C "$outdir/marvin_beanboard.bin" > "$outdir/marvin.hex"
+z88dk-appmake +hex --org $org -b "$outdir/marvin_beanboard.bin" -o "$outdir/marvin.ihx"

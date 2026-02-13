@@ -1,6 +1,6 @@
-marvin.asm:
-     1                              INCLUDE "asm/main.inc"
-../asm/main.inc:
+monitor.asm:
+     1                              INCLUDE "asm/system.inc"
+../asm/system.inc:
      1                          IFNDEF _MAIN_INC
      2                          DEFINE _MAIN_INC
      3                          
@@ -30,9 +30,9 @@ marvin.asm:
     27                          
     28                          ENDIF
     29                          
-marvin.asm:
-     2                              INCLUDE "asm/escapestring.inc"
-../asm/escapestring.inc:
+monitor.asm:
+     2                              INCLUDE "asm/escape.inc"
+../asm/escape.inc:
      1                          IFNDEF _ESCAPESTRING_INC
      2                          DEFINE _ESCAPESTRING_INC
      3                          
@@ -50,7 +50,7 @@ marvin.asm:
     15                          
     16                          ENDIF
     17                          
-marvin.asm:
+monitor.asm:
      3                          
      4                              PUBLIC MARVIN
      5                              PUBLIC PROMPT

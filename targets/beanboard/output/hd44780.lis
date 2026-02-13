@@ -1,6 +1,6 @@
-HD44780LCD.asm:
-     1                              INCLUDE "asm/main.inc"
-../asm/main.inc:
+hd44780.asm:
+     1                              INCLUDE "asm/system.inc"
+../asm/system.inc:
      1                          IFNDEF _MAIN_INC
      2                          DEFINE _MAIN_INC
      3                          
@@ -30,9 +30,9 @@ HD44780LCD.asm:
     27                          
     28                          ENDIF
     29                          
-HD44780LCD.asm:
-     2                              INCLUDE "asm/HD44780LCD.inc"
-../asm/HD44780LCD.inc:
+hd44780.asm:
+     2                              INCLUDE "asm/hd44780.inc"
+../asm/hd44780.inc:
      1                          IFNDEF _HD44780LCD_INC
      2                          DEFINE _HD44780LCD_INC
      3                          
@@ -90,9 +90,9 @@ HD44780LCD.asm:
     55                          
     56                          ENDIF
     57                          
-HD44780LCD.asm:
-     3                              INCLUDE "asm/escapestring.inc"
-../asm/escapestring.inc:
+hd44780.asm:
+     3                              INCLUDE "asm/escape.inc"
+../asm/escape.inc:
      1                          IFNDEF _ESCAPESTRING_INC
      2                          DEFINE _ESCAPESTRING_INC
      3                          
@@ -110,7 +110,7 @@ HD44780LCD.asm:
     15                          
     16                          ENDIF
     17                          
-HD44780LCD.asm:
+hd44780.asm:
      4                          
      5                              PUBLIC lcd_init
      6                              PUBLIC lcd_putchar

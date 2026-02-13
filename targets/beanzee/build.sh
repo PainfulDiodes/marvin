@@ -13,13 +13,13 @@ mkdir -p "$outdir"
 
 cd "$REPO_DIR/asm"
 z88dk-z80asm -l -b -m -I.. -DMARVINORG=$org \
-    boot_beanzee.asm \
+    marvin_beanzee.asm \
     console_usb.asm \
-    UM245R.asm \
-    marvin.asm \
-    strings.asm \
+    um245r.asm \
+    monitor.asm \
+    hex.asm \
     messages.asm \
     -O"$outdir"
 
-hexdump -C "$outdir/boot_beanzee.bin" > "$outdir/marvin.hex"
-z88dk-appmake +hex --org $org -b "$outdir/boot_beanzee.bin" -o "$outdir/marvin.ihx"
+hexdump -C "$outdir/marvin_beanzee.bin" > "$outdir/marvin.hex"
+z88dk-appmake +hex --org $org -b "$outdir/marvin_beanzee.bin" -o "$outdir/marvin.ihx"

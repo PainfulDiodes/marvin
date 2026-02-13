@@ -1,6 +1,6 @@
 console_beanboard.asm:
-     1                              INCLUDE "asm/main.inc"
-../asm/main.inc:
+     1                              INCLUDE "asm/system.inc"
+../asm/system.inc:
      1                          IFNDEF _MAIN_INC
      2                          DEFINE _MAIN_INC
      3                          

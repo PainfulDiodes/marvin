@@ -1,6 +1,6 @@
-    INCLUDE "asm/main.inc"
-    INCLUDE "asm/HD44780LCD.inc"
-    INCLUDE "asm/escapestring.inc"
+    INCLUDE "asm/system.inc"
+    INCLUDE "asm/hd44780.inc"
+    INCLUDE "asm/escape.inc"
 
     PUBLIC lcd_init
     PUBLIC lcd_putchar
