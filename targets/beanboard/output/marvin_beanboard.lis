@@ -34,18 +34,33 @@ marvin_beanboard.asm:
      2                          
      3                              EXTERN MARVIN
      4                              EXTERN PROMPT
-     5                              EXTERN lcd_init
-     6                              EXTERN beanboard_console_init
-     7                          
-     8                              ORG MARVINORG
-     9  0000  31ffff                ld sp, STACK
-    10  0003  cd0000                call lcd_init
-    11  0006  cd0000                call beanboard_console_init
-    12  0009  00000000000000    ALIGN 0x0010 ; fix the warmstart address across targets
-    13                          WARMSTART:
-    14  0010  c30000                jp MARVIN
-    15  0013  0000000000000000  ALIGN 0x0010
-              0000000000        
-    16                          WARMSTART2:
-    17  0020  c30000                jp PROMPT
-    18                          
+     5                              EXTERN putchar
+     6                              EXTERN getchar
+     7                              EXTERN readchar
+     8                              EXTERN puts
+     9                              EXTERN putchar_hex
+    10                              EXTERN hex_byte_val
+    11                              EXTERN lcd_init
+    12                              EXTERN lcd_putchar
+    13                              EXTERN key_readchar
+    14                              EXTERN beanboard_console_init
+    15                          
+    16                              ORG MARVINORG
+    17  0000  31ffff                ld sp, STACK
+    18  0003  cd0000                call lcd_init
+    19  0006  cd0000                call beanboard_console_init
+    20                          
+    21                          ; jump table at fixed addresses
+    22  0009  00000000000000    ALIGN 0x0010
+    23  0010  c30000                jp MARVIN           ; 0x0010 - warm start (enter monitor)
+    24  0013  c30000                jp PROMPT           ; 0x0013 - monitor prompt
+    25  0016  c30000                jp putchar          ; 0x0016 - write character (A = char)
+    26  0019  c30000                jp getchar          ; 0x0019 - wait for character (returns A)
+    27  001c  c30000                jp readchar         ; 0x001C - non-blocking read (returns A, 0 = none)
+    28  001f  c30000                jp puts             ; 0x001F - print string (HL = address, zero-terminated)
+    29  0022  c30000                jp putchar_hex      ; 0x0022 - print A as two hex digits
+    30  0025  c30000                jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
+    31  0028  c30000                jp lcd_init         ; 0x0028 - initialise LCD
+    32  002b  c30000                jp lcd_putchar      ; 0x002B - write character to LCD
+    33  002e  c30000                jp key_readchar     ; 0x002E - read keyboard
+    34                          
