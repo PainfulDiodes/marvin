@@ -1,7 +1,6 @@
-# usage: ./burn.sh myfile
-#        ./burn.sh myfile.bin
+# usage: ./burn.sh target
 
 set -x #echo on
 
 f=${1%.*} #extract base filename
-minipro -u -s -p AT28C256 -w output/$f.bin
+minipro -u -s -p AT28C256 -w targets/$f/output/marvin_$f.bin
