@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
-rm -f output/*.*
-rm -rf targets/beanzee/output/*
-rm -rf targets/beanboard/output/*
+
+# Clean all target build outputs
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+"$SCRIPT_DIR/targets/beanzee/clean.sh"
+"$SCRIPT_DIR/targets/beanboard/clean.sh"
