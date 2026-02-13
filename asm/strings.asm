@@ -1,9 +1,7 @@
     PUBLIC hex_byte_val
     PUBLIC putchar_hex
 
-IFDEF MODULAR
     EXTERN putchar
-ENDIF
 
 ; string subroutines
 

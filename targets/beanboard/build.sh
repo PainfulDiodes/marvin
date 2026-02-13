@@ -12,7 +12,7 @@ outdir="$REPO_DIR/targets/beanboard/output"
 mkdir -p "$outdir"
 
 cd "$REPO_DIR/asm"
-z88dk-z80asm -l -b -m -I.. -DMODULAR -DMARVINORG=$org \
+z88dk-z80asm -l -b -m -I.. -DMARVINORG=$org \
     boot_beanboard.asm \
     console_beanboard.asm \
     beanboard_init.asm \
