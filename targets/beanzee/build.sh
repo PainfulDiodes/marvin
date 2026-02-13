@@ -21,5 +21,5 @@ z88dk-z80asm -l -b -m -I.. -DMARVINORG=$org \
     messages.asm \
     -O"$outdir"
 
-hexdump -C "$outdir/marvin_beanzee.bin" > "$outdir/marvin.hex"
-z88dk-appmake +hex --org $org -b "$outdir/marvin_beanzee.bin" -o "$outdir/marvin.ihx"
+hexdump -C "$outdir/marvin_beanzee.bin" > "$outdir/marvin_beanzee.hex"
+z88dk-appmake +hex --org $org -b "$outdir/marvin_beanzee.bin" -o "$outdir/marvin_beanzee.ihx"
