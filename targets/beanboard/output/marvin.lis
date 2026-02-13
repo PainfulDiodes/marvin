@@ -55,278 +55,276 @@ marvin.asm:
      4                              PUBLIC MARVIN
      5                              PUBLIC PROMPT
      6                          
-     7                          IFDEF MODULAR
-     8                              EXTERN puts
-     9                              EXTERN putchar
-    10                              EXTERN getchar
-    11                              EXTERN hex_byte_val
-    12                              EXTERN putchar_hex
-    13                              EXTERN WELCOME_MSG
-    14                              EXTERN BAD_CMD_MSG
-    15                              EXTERN CMD_W_NULL_MSG
-    16                          ENDIF
-    17                          
-    18                          ; ****************************************************
-    19                          ; *  Marvin - a Z80 homebrew monitor program
-    20                          ; * (c) Stephen Willcock 2024
-    21                          ; * https://github.com/PainfulDiodes
-    22                          ; ****************************************************
+     7                              EXTERN puts
+     8                              EXTERN putchar
+     9                              EXTERN getchar
+    10                              EXTERN hex_byte_val
+    11                              EXTERN putchar_hex
+    12                              EXTERN WELCOME_MSG
+    13                              EXTERN BAD_CMD_MSG
+    14                              EXTERN CMD_W_NULL_MSG
+    15                          
+    16                          ; ****************************************************
+    17                          ; *  Marvin - a Z80 homebrew monitor program
+    18                          ; * (c) Stephen Willcock 2024
+    19                          ; * https://github.com/PainfulDiodes
+    20                          ; ****************************************************
+    21                          
+    22                          ; MAIN PROGRAM LOOP
     23                          
-    24                          ; MAIN PROGRAM LOOP
-    25                          
-    26                          MARVIN:
-    27                              ; point DE to zero - this is the default address argument for commands
-    28  0000  110000                ld de,0x0000
-    29                          
-    30  0003  210000                ld hl,WELCOME_MSG
-    31  0006  cd0000                call puts
-    32                          
-    33                          PROMPT:
-    34                              ; point HL to the beginning of the input buffer
-    35  0009  2120f0                ld hl,CMD_BUFFER
-    36  000c  3e3e                  ld a,'>'
-    37  000e  cd0000                call putchar
-    38                          
-    39                          _get_cmd:
-    40                              ; get character from console
-    41  0011  cd0000                call getchar
-    42                              ; echo the character to console
-    43  0014  cd0000                call putchar
-    44                              ; is CR?
-    45  0017  fe0d                  cp ESC_R
-    46                              ; yes: skip this
-    47  0019  28f6                  jr z,_get_cmd
-    48                              ; is tab?
-    49  001b  fe09                  cp ESC_T
-    50                              ; yes: skip this
-    51  001d  28f2                  jr z,_get_cmd
-    52                              ; is space?
-    53  001f  fe20                  cp ' '
-    54                              ; yes - skip this
-    55  0021  28ee                  jr z,_get_cmd
-    56                              ; escape?
-    57  0023  fe1b                  cp ESC_E
-    58                              ; yes
-    59  0025  2808                  jr z, _get_cmd_esc
-    60                              ; end of line?
-    61  0027  fe0a                  cp ESC_N
-    62                              ; yes
-    63  0029  280b                  jr z, _get_cmd_end
-    64                              ; no: add character to the buffer
-    65  002b  77                    ld(hl),a
-    66                              ; move pointer to next buffer location - we're not checking for overrun
-    67  002c  23                    inc hl
-    68                              ; next character
-    69  002d  18e2                  jr _get_cmd
-    70                              ; do escape
-    71                          _get_cmd_esc:
-    72                              ; new line
-    73  002f  3e0a                  ld a,ESC_N
-    74  0031  cd0000                call putchar
-    75                              ; back to prompt
-    76  0034  18d3                  jr PROMPT
-    77                          _get_cmd_end:
-    78                              ; string terminator
-    79  0036  3e00                  ld a,0
-    80                              ; add terminator to end of buffer
-    81  0038  77                    ld(hl),a
-    82                          ; process command from buffer
-    83                              ; point to start of buffer
-    84  0039  2120f0                ld hl,CMD_BUFFER
-    85                              ; load character from buffer
-    86  003c  7e                    ld a,(hl)
-    87                              ; end of string?
-    88  003d  fe00                  cp 0
-    89                              ; yes - empty line - go back to prompt
-    90  003f  28c8                  jr z,PROMPT
-    91                              ; advance the buffer pointer
-    92  0041  23                    inc hl
-    93  0042  fe72                  cp 'r'
-    94  0044  2815                  jr z,_cmd_read
-    95  0046  fe77                  cp 'w'
-    96  0048  2847                  jr z,_cmd_write
-    97  004a  fe78                  cp 'x'
-    98  004c  2868                  jr z,_cmd_execute
-    99                              ; ':' = load from intel hex format
-   100  004e  fe3a                  cp ':'
-   101  0050  2879                  jr z,_cmd_load
-   102                              ; otherwise error
-   103  0052  210000                ld hl,BAD_CMD_MSG
-   104  0055  cd0000                call puts
-   105                              ; loop back to the prompt
-   106  0058  c30900                jp PROMPT
+    24                          MARVIN:
+    25                              ; point DE to zero - this is the default address argument for commands
+    26  0000  110000                ld de,0x0000
+    27                          
+    28  0003  210000                ld hl,WELCOME_MSG
+    29  0006  cd0000                call puts
+    30                          
+    31                          PROMPT:
+    32                              ; point HL to the beginning of the input buffer
+    33  0009  2120f0                ld hl,CMD_BUFFER
+    34  000c  3e3e                  ld a,'>'
+    35  000e  cd0000                call putchar
+    36                          
+    37                          _get_cmd:
+    38                              ; get character from console
+    39  0011  cd0000                call getchar
+    40                              ; echo the character to console
+    41  0014  cd0000                call putchar
+    42                              ; is CR?
+    43  0017  fe0d                  cp ESC_R
+    44                              ; yes: skip this
+    45  0019  28f6                  jr z,_get_cmd
+    46                              ; is tab?
+    47  001b  fe09                  cp ESC_T
+    48                              ; yes: skip this
+    49  001d  28f2                  jr z,_get_cmd
+    50                              ; is space?
+    51  001f  fe20                  cp ' '
+    52                              ; yes - skip this
+    53  0021  28ee                  jr z,_get_cmd
+    54                              ; escape?
+    55  0023  fe1b                  cp ESC_E
+    56                              ; yes
+    57  0025  2808                  jr z, _get_cmd_esc
+    58                              ; end of line?
+    59  0027  fe0a                  cp ESC_N
+    60                              ; yes
+    61  0029  280b                  jr z, _get_cmd_end
+    62                              ; no: add character to the buffer
+    63  002b  77                    ld(hl),a
+    64                              ; move pointer to next buffer location - we're not checking for overrun
+    65  002c  23                    inc hl
+    66                              ; next character
+    67  002d  18e2                  jr _get_cmd
+    68                              ; do escape
+    69                          _get_cmd_esc:
+    70                              ; new line
+    71  002f  3e0a                  ld a,ESC_N
+    72  0031  cd0000                call putchar
+    73                              ; back to prompt
+    74  0034  18d3                  jr PROMPT
+    75                          _get_cmd_end:
+    76                              ; string terminator
+    77  0036  3e00                  ld a,0
+    78                              ; add terminator to end of buffer
+    79  0038  77                    ld(hl),a
+    80                          ; process command from buffer
+    81                              ; point to start of buffer
+    82  0039  2120f0                ld hl,CMD_BUFFER
+    83                              ; load character from buffer
+    84  003c  7e                    ld a,(hl)
+    85                              ; end of string?
+    86  003d  fe00                  cp 0
+    87                              ; yes - empty line - go back to prompt
+    88  003f  28c8                  jr z,PROMPT
+    89                              ; advance the buffer pointer
+    90  0041  23                    inc hl
+    91  0042  fe72                  cp 'r'
+    92  0044  2815                  jr z,_cmd_read
+    93  0046  fe77                  cp 'w'
+    94  0048  2847                  jr z,_cmd_write
+    95  004a  fe78                  cp 'x'
+    96  004c  2868                  jr z,_cmd_execute
+    97                              ; ':' = load from intel hex format
+    98  004e  fe3a                  cp ':'
+    99  0050  2879                  jr z,_cmd_load
+   100                              ; otherwise error
+   101  0052  210000                ld hl,BAD_CMD_MSG
+   102  0055  cd0000                call puts
+   103                              ; loop back to the prompt
+   104  0058  c30900                jp PROMPT
+   105                          
+   106                          ; COMMANDS
    107                          
-   108                          ; COMMANDS
-   109                          
-   110                          ; READ
-   111                          ; read bytes from memory and send hex values to console
-   112                          _cmd_read:
-   113                              ; load character from buffer
-   114  005b  7e                    ld a,(hl)
-   115                              ; end of string?
-   116  005c  fe00                  cp 0
-   117                              ; yes: no address argument, so skip to read row
-   118  005e  2808                  jr z, _cmd_read_row
-   119                              ; parse first pair of characters
-   120  0060  cd0000                call hex_byte_val
-   121                              ; load into upper byte of memory pointer
-   122  0063  57                    ld d,a
-   123                              ; parse second pair of characters
-   124  0064  cd0000                call hex_byte_val
-   125                              ; load into lower byte of memory pointer
-   126  0067  5f                    ld e,a
-   127                          _cmd_read_row:
-   128                              ; initialise byte counter - each row will have this many bytes
-   129  0068  0e10                  ld c, 0x10
-   130                              ; print DE content: the read address
-   131  006a  7a                    ld a,d
-   132  006b  cd0000                call putchar_hex
-   133  006e  7b                    ld a,e
-   134  006f  cd0000                call putchar_hex
-   135                              ; separator between address and data
-   136  0072  3e3a                  ld a,':'
-   137  0074  cd0000                call putchar
-   138  0077  3e20                  ld a,' '
-   139  0079  cd0000                call putchar
-   140                              ; get a byte
-   141                          _cmd_read_byte:
-   142  007c  1a                    ld a,(de)
-   143                              ; and print it
-   144  007d  cd0000                call putchar_hex
-   145                              ; add space between bytes
-   146  0080  3e20                  ld a,' '
-   147  0082  cd0000                call putchar
-   148                              ; next address
-   149  0085  13                    inc de
-   150                              ; reduce byte counter
-   151                              ; TODO djnz ?
-   152  0086  0d                    dec c
-   153                              ; repeat if the counter is not 0
-   154  0087  20f3                  jr nz, _cmd_read_byte
-   155                              ; otherwise, new line
-   156  0089  3e0a                  ld a,ESC_N
-   157  008b  cd0000                call putchar
-   158                              ; and back to prompt
-   159  008e  c30900                jp PROMPT
+   108                          ; READ
+   109                          ; read bytes from memory and send hex values to console
+   110                          _cmd_read:
+   111                              ; load character from buffer
+   112  005b  7e                    ld a,(hl)
+   113                              ; end of string?
+   114  005c  fe00                  cp 0
+   115                              ; yes: no address argument, so skip to read row
+   116  005e  2808                  jr z, _cmd_read_row
+   117                              ; parse first pair of characters
+   118  0060  cd0000                call hex_byte_val
+   119                              ; load into upper byte of memory pointer
+   120  0063  57                    ld d,a
+   121                              ; parse second pair of characters
+   122  0064  cd0000                call hex_byte_val
+   123                              ; load into lower byte of memory pointer
+   124  0067  5f                    ld e,a
+   125                          _cmd_read_row:
+   126                              ; initialise byte counter - each row will have this many bytes
+   127  0068  0e10                  ld c, 0x10
+   128                              ; print DE content: the read address
+   129  006a  7a                    ld a,d
+   130  006b  cd0000                call putchar_hex
+   131  006e  7b                    ld a,e
+   132  006f  cd0000                call putchar_hex
+   133                              ; separator between address and data
+   134  0072  3e3a                  ld a,':'
+   135  0074  cd0000                call putchar
+   136  0077  3e20                  ld a,' '
+   137  0079  cd0000                call putchar
+   138                              ; get a byte
+   139                          _cmd_read_byte:
+   140  007c  1a                    ld a,(de)
+   141                              ; and print it
+   142  007d  cd0000                call putchar_hex
+   143                              ; add space between bytes
+   144  0080  3e20                  ld a,' '
+   145  0082  cd0000                call putchar
+   146                              ; next address
+   147  0085  13                    inc de
+   148                              ; reduce byte counter
+   149                              ; TODO djnz ?
+   150  0086  0d                    dec c
+   151                              ; repeat if the counter is not 0
+   152  0087  20f3                  jr nz, _cmd_read_byte
+   153                              ; otherwise, new line
+   154  0089  3e0a                  ld a,ESC_N
+   155  008b  cd0000                call putchar
+   156                              ; and back to prompt
+   157  008e  c30900                jp PROMPT
+   158                          
+   159                          ; WRITE
    160                          
-   161                          ; WRITE
-   162                          
-   163                          ; write bytes to memory interpreting hex values from console
-   164                          _cmd_write:
-   165                              ; load character from buffer
-   166  0091  7e                    ld a,(hl)
-   167                              ; end of string?
-   168  0092  fe00                  cp 0
-   169                              ; yes: no data
-   170  0094  2817                  jr z, _cmd_write_null
-   171                              ; parse first pair of characters - address high
-   172  0096  cd0000                call hex_byte_val
-   173                              ; load into upper byte of memory pointer
-   174  0099  57                    ld d,a
-   175                              ; parse second pair of characters - address low
-   176  009a  cd0000                call hex_byte_val
-   177                              ; load into lower byte of memory pointer
-   178  009d  5f                    ld e,a
-   179                          _cmd_write_data:
-   180                              ; load character from buffer
-   181  009e  7e                    ld a,(hl)
-   182                              ; end of string?
-   183  009f  fe00                  cp 0
-   184                              ; yes: we're done
-   185  00a1  2807                  jr z, _cmd_write_end
-   186                              ; parse data byte
-   187  00a3  cd0000                call hex_byte_val
-   188                              ; write byte to memory
-   189  00a6  12                    ld (de),a
-   190                              ; advance destination pointer
-   191  00a7  13                    inc de
-   192  00a8  18f4                  jr _cmd_write_data
-   193                          _cmd_write_end:
-   194  00aa  c30900                jp PROMPT
-   195                              ; w with no data
-   196                          _cmd_write_null:
-   197  00ad  210000                ld hl,CMD_W_NULL_MSG
-   198  00b0  cd0000                call puts
-   199                              ; and back to prompt
-   200  00b3  c30900                jp PROMPT
+   161                          ; write bytes to memory interpreting hex values from console
+   162                          _cmd_write:
+   163                              ; load character from buffer
+   164  0091  7e                    ld a,(hl)
+   165                              ; end of string?
+   166  0092  fe00                  cp 0
+   167                              ; yes: no data
+   168  0094  2817                  jr z, _cmd_write_null
+   169                              ; parse first pair of characters - address high
+   170  0096  cd0000                call hex_byte_val
+   171                              ; load into upper byte of memory pointer
+   172  0099  57                    ld d,a
+   173                              ; parse second pair of characters - address low
+   174  009a  cd0000                call hex_byte_val
+   175                              ; load into lower byte of memory pointer
+   176  009d  5f                    ld e,a
+   177                          _cmd_write_data:
+   178                              ; load character from buffer
+   179  009e  7e                    ld a,(hl)
+   180                              ; end of string?
+   181  009f  fe00                  cp 0
+   182                              ; yes: we're done
+   183  00a1  2807                  jr z, _cmd_write_end
+   184                              ; parse data byte
+   185  00a3  cd0000                call hex_byte_val
+   186                              ; write byte to memory
+   187  00a6  12                    ld (de),a
+   188                              ; advance destination pointer
+   189  00a7  13                    inc de
+   190  00a8  18f4                  jr _cmd_write_data
+   191                          _cmd_write_end:
+   192  00aa  c30900                jp PROMPT
+   193                              ; w with no data
+   194                          _cmd_write_null:
+   195  00ad  210000                ld hl,CMD_W_NULL_MSG
+   196  00b0  cd0000                call puts
+   197                              ; and back to prompt
+   198  00b3  c30900                jp PROMPT
+   199                          
+   200                          ; EXECUTE
    201                          
-   202                          ; EXECUTE
-   203                          
-   204                          ; start executing from given address
-   205                          _cmd_execute:
-   206                              ; load character from buffer
-   207  00b6  7e                    ld a,(hl)
-   208                              ; end of string?
-   209  00b7  fe00                  cp 0
-   210                              ; yes - no data
-   211  00b9  cac700                jp z, _cmd_exec_df
-   212                              ; parse first pair of characters - address high
-   213  00bc  cd0000                call hex_byte_val
-   214                              ; load into upper byte of memory pointer
-   215  00bf  57                    ld d,a
-   216                              ; parse second pair of characters - address low
-   217  00c0  cd0000                call hex_byte_val
-   218                              ; load into lower byte of memory pointer
-   219  00c3  5f                    ld e,a
-   220  00c4  626b                  ld hl,de
-   221                              ; execute from address
-   222  00c6  e9                    jp (hl)
-   223                              ; start executing from default address
-   224                          _cmd_exec_df:
-   225  00c7  210080                ld hl,RAMSTART
-   226                              ; execute from address
-   227  00ca  e9                    jp (hl)
+   202                          ; start executing from given address
+   203                          _cmd_execute:
+   204                              ; load character from buffer
+   205  00b6  7e                    ld a,(hl)
+   206                              ; end of string?
+   207  00b7  fe00                  cp 0
+   208                              ; yes - no data
+   209  00b9  cac700                jp z, _cmd_exec_df
+   210                              ; parse first pair of characters - address high
+   211  00bc  cd0000                call hex_byte_val
+   212                              ; load into upper byte of memory pointer
+   213  00bf  57                    ld d,a
+   214                              ; parse second pair of characters - address low
+   215  00c0  cd0000                call hex_byte_val
+   216                              ; load into lower byte of memory pointer
+   217  00c3  5f                    ld e,a
+   218  00c4  626b                  ld hl,de
+   219                              ; execute from address
+   220  00c6  e9                    jp (hl)
+   221                              ; start executing from default address
+   222                          _cmd_exec_df:
+   223  00c7  210080                ld hl,RAMSTART
+   224                              ; execute from address
+   225  00ca  e9                    jp (hl)
+   226                          
+   227                          ; LOAD
    228                          
-   229                          ; LOAD
-   230                          
-   231                          ; load from INTEL HEX - records are read from the buffer
-   232                          _cmd_load:
-   233                              ; load character from buffer
-   234  00cb  7e                    ld a,(hl)
-   235                              ; end of string?
-   236  00cc  fe00                  cp 0
-   237                              ; yes: no data - quit
-   238  00ce  caf700                jp z, _cmd_load_end
-   239                              ; parse first pair of characters - byte count
-   240  00d1  cd0000                call hex_byte_val
-   241  00d4  fe00                  cp 0
-   242                              ; yes - zero byte count - quit
-   243  00d6  caf700                jp z, _cmd_load_end
-   244                              ; load byte count into C
-   245  00d9  4f                    ld c,a
-   246                              ; parse address high
-   247  00da  cd0000                call hex_byte_val
-   248                              ; load into upper byte of memory pointer
-   249  00dd  57                    ld d,a
-   250                              ; parse address low
-   251  00de  cd0000                call hex_byte_val
-   252                              ; load into lower byte of memory pointer
-   253  00e1  5f                    ld e,a
-   254                              ; parse record type
-   255  00e2  cd0000                call hex_byte_val
-   256                              ; record type zero?
-   257  00e5  fe00                  cp 0
-   258                              ; no: quit
-   259  00e7  c2f700                jp nz, _cmd_load_end
-   260                          _cmd_load_data:
-   261                              ; load character from buffer
-   262  00ea  7e                    ld a,(hl)
-   263                              ; end of string?
-   264  00eb  fe00                  cp 0
-   265                              ; yes: we're done
-   266  00ed  2808                  jr z, _cmd_load_end
-   267                              ; no:
-   268                              ; parse data byte
-   269  00ef  cd0000                call hex_byte_val
-   270                              ; write byte to memory
-   271  00f2  12                    ld (de),a
-   272                              ; advance destination pointer
-   273  00f3  13                    inc de
-   274                              ; decrement byte counter
-   275                              ; TODO djnz
-   276  00f4  0d                    dec c
-   277                              ; if byte counter not zero then go again
-   278  00f5  20f3                  jr nz,_cmd_load_data
-   279                          _cmd_load_end:
-   280  00f7  c30900                jp PROMPT
-   281                          
+   229                          ; load from INTEL HEX - records are read from the buffer
+   230                          _cmd_load:
+   231                              ; load character from buffer
+   232  00cb  7e                    ld a,(hl)
+   233                              ; end of string?
+   234  00cc  fe00                  cp 0
+   235                              ; yes: no data - quit
+   236  00ce  caf700                jp z, _cmd_load_end
+   237                              ; parse first pair of characters - byte count
+   238  00d1  cd0000                call hex_byte_val
+   239  00d4  fe00                  cp 0
+   240                              ; yes - zero byte count - quit
+   241  00d6  caf700                jp z, _cmd_load_end
+   242                              ; load byte count into C
+   243  00d9  4f                    ld c,a
+   244                              ; parse address high
+   245  00da  cd0000                call hex_byte_val
+   246                              ; load into upper byte of memory pointer
+   247  00dd  57                    ld d,a
+   248                              ; parse address low
+   249  00de  cd0000                call hex_byte_val
+   250                              ; load into lower byte of memory pointer
+   251  00e1  5f                    ld e,a
+   252                              ; parse record type
+   253  00e2  cd0000                call hex_byte_val
+   254                              ; record type zero?
+   255  00e5  fe00                  cp 0
+   256                              ; no: quit
+   257  00e7  c2f700                jp nz, _cmd_load_end
+   258                          _cmd_load_data:
+   259                              ; load character from buffer
+   260  00ea  7e                    ld a,(hl)
+   261                              ; end of string?
+   262  00eb  fe00                  cp 0
+   263                              ; yes: we're done
+   264  00ed  2808                  jr z, _cmd_load_end
+   265                              ; no:
+   266                              ; parse data byte
+   267  00ef  cd0000                call hex_byte_val
+   268                              ; write byte to memory
+   269  00f2  12                    ld (de),a
+   270                              ; advance destination pointer
+   271  00f3  13                    inc de
+   272                              ; decrement byte counter
+   273                              ; TODO djnz
+   274  00f4  0d                    dec c
+   275                              ; if byte counter not zero then go again
+   276  00f5  20f3                  jr nz,_cmd_load_data
+   277                          _cmd_load_end:
+   278  00f7  c30900                jp PROMPT
+   279                          
