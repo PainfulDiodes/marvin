@@ -2,7 +2,7 @@
     INCLUDE "asm/escape.inc"
 
     PUBLIC MARVIN
-    PUBLIC PROMPT
+    PUBLIC monitor_prompt
 
     EXTERN puts
     EXTERN putchar
@@ -28,7 +28,7 @@ MARVIN:
     ld hl,WELCOME_MSG
     call puts
 
-PROMPT:
+monitor_prompt:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER            
     ld a,'>'
@@ -71,7 +71,7 @@ _get_cmd_esc:
     ld a,ESC_N
     call putchar
     ; back to prompt
-    jr PROMPT
+    jr monitor_prompt
 _get_cmd_end:
     ; string terminator
     ld a,0                  
@@ -85,7 +85,7 @@ _get_cmd_end:
     ; end of string?
     cp 0
     ; yes - empty line - go back to prompt
-    jr z,PROMPT
+    jr z,monitor_prompt
     ; advance the buffer pointer
     inc hl
     cp 'r'
@@ -101,7 +101,7 @@ _get_cmd_end:
     ld hl,BAD_CMD_MSG
     call puts
     ; loop back to the prompt
-    jp PROMPT
+    jp monitor_prompt
 
 ; COMMANDS
 
@@ -154,7 +154,7 @@ _cmd_read_byte:
     ld a,ESC_N
     call putchar
     ; and back to prompt
-    jp PROMPT
+    jp monitor_prompt
 
 ; WRITE
 
@@ -189,13 +189,13 @@ _cmd_write_data:
     inc de
     jr _cmd_write_data
 _cmd_write_end:
-    jp PROMPT
+    jp monitor_prompt
     ; w with no data
 _cmd_write_null:        
     ld hl,CMD_W_NULL_MSG
     call puts
     ; and back to prompt
-    jp PROMPT
+    jp monitor_prompt
 
 ; EXECUTE
 
@@ -275,4 +275,4 @@ _cmd_load_data:
     ; if byte counter not zero then go again
     jr nz,_cmd_load_data
 _cmd_load_end:
-    jp PROMPT
+    jp monitor_prompt
