@@ -1,0 +1,4 @@
+[submodule "bbcbasic"]
+	path = bbcbasic
+	url = https://github.com/PainfulDiodes/beanzee-bbc-basic.git
+	branch = master

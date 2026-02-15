@@ -1,3 +1,9 @@
+# 2.0.0
+* BBC BASIC Z80 added as git submodule (beanzee-bbc-basic)
+* Combined firmware builds for all three targets (beanzee, beanboard, beandeck)
+* Per-target ENTRY.asm (boot + jump table + platform functions) and BMOS.asm (BASIC OS interface)
+* Standalone Marvin build scripts retained for monitor-only ROM images
+
 # 1.2.1a
 * Improve build scripts - build both targets with both assemblers with a single command - heirarchical scripts
 

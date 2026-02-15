@@ -1,3 +1,8 @@
+; entry_beanboard.asm - Standalone Marvin Entry Point (BeanBoard target)
+;
+; Minimal boot + jump table for standalone Marvin (no BBC BASIC).
+; Initialises LCD and console, then boots to the monitor prompt.
+;
     INCLUDE "asm/system.inc"
 
     EXTERN MARVIN
