@@ -1,3 +1,8 @@
+; entry_beanzee.asm - Standalone Marvin Entry Point (BeanZee target)
+;
+; Minimal boot + jump table for standalone Marvin (no BBC BASIC).
+; Boots directly to the monitor prompt.
+;
     INCLUDE "asm/system.inc"
 
     EXTERN MARVIN

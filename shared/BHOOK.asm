@@ -1,0 +1,74 @@
+; BHOOK.Z80 - BeanZee Graphics/Sound Stubs
+;
+; All graphics and sound functions return "Sorry" error.
+; Can be expanded as BeanZee gains display capabilities
+; (RA8875 TFT, VGA adapter).
+;
+; cf. HOOK.Z80 (CP/M stubs)
+;
+    PUBLIC CLG
+    PUBLIC COLOUR
+    PUBLIC DRAW
+    PUBLIC ENVEL
+    PUBLIC GCOL
+    PUBLIC MODE
+    PUBLIC MOVE
+    PUBLIC PLOT
+    PUBLIC SOUND
+    PUBLIC PUTIMS
+    PUBLIC CIRCLE
+    PUBLIC ELLIPS
+    PUBLIC FILL
+    PUBLIC MOUSE
+    PUBLIC ORIGIN
+    PUBLIC RECTAN
+    PUBLIC LINE
+    PUBLIC TINT
+    PUBLIC WAIT
+    PUBLIC SYS
+    PUBLIC CSRON
+    PUBLIC CSROFF
+;
+    PUBLIC ADVAL
+    PUBLIC POINT
+    PUBLIC GETIMS
+    PUBLIC TINTFN
+    PUBLIC MODEFN
+    PUBLIC WIDFN
+;
+    EXTERN EXTERR
+;
+CLG:
+COLOUR:
+DRAW:
+ENVEL:
+GCOL:
+MODE:
+MOVE:
+PLOT:
+SOUND:
+ADVAL:
+POINT:
+GETIMS:
+PUTIMS:
+CIRCLE:
+ELLIPS:
+FILL:
+MOUSE:
+ORIGIN:
+RECTAN:
+LINE:
+TINT:
+TINTFN:
+MODEFN:
+WIDFN:
+WAIT:
+SYS:
+CSRON:
+CSROFF:
+    XOR A
+    CALL EXTERR
+    DEFM "Sorry"
+    DEFB 0
+;
+FIN:

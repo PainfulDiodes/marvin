@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-# Build Marvin + BBC BASIC for BeanBoard target
+# Build Marvin + BBC BASIC for BeanDeck target
 # Combined firmware: Marvin monitor + BBC BASIC interpreter
+#
+# BeanDeck uses the same Marvin modules as BeanBoard
+# (LCD, keyboard, console routing). SPI/TFT support will be
+# added when Marvin gains those drivers.
 #
 # Requires: z88dk (z88dk-z80asm)
 # Before first use, run: ../../bbcbasic/convert.sh
@@ -19,8 +23,8 @@ CODE_ORG="0x0000"
 DATA_ORG="0x8000"
 OUTPUT_NAME="marvin"
 
-echo "Building Marvin (beanboard)"
-echo "==========================="
+echo "Building Marvin (beandeck)"
+echo "=========================="
 
 if [ ! -f "$BASIC_SRC/MAIN.asm" ]; then
     echo "Error: Converted source files not found."
@@ -32,7 +36,7 @@ mkdir -p "$OUTDIR"
 rm -f "$OUTDIR"/*.o "$OUTDIR"/*.lis
 
 # ---- Marvin modules ----
-# BeanBoard includes LCD, keyboard, and console routing modules
+# BeanDeck uses same modules as BeanBoard (LCD, keyboard, console routing)
 
 MARVIN_MODULES="console_beanboard beanboard_init um245r monitor hex hd44780 keymatrix messages_small"
 
