@@ -1,18 +1,18 @@
 # Marvin
 
-Firmware for BeanZee Z80 homebrew hardware. Marvin has a simple [monitor program](./monitor.md) and includes RT Russell's BBCZ80 BASIC interpreter. BASIC calls Marvin's hardware drivers via a jump table at fixed ROM addresses.
+Monitor program for the BeanZee Z80 homebrew family. Marvin is a simple [monitor program](./monitor.md) and includes other embedded firmware, which currently is limited to RT Russell's [BBCZ80](https://github.com/PainfulDiodes/BBCZ80) BASIC interpreter. BBCZ80 calls Marvin's hardware drivers via a jump table at fixed ROM addresses.
 
 ## Hardware Targets
 
-- **beanzee** - consoleover USB serial only (UM245R)
-- **beanboard** - BeanZee + LCD display + keyboard
-- **beandeck** - BeanBoard + BeanBoardSPI + TFT display + flash cartridge storage
+- **beanzee** - console over USB serial only (UM245R)
+- **beanboard** - BeanZee + LCD display + keyboard + GPIO
+- **beandeck** - BeanBoard + TFT display / flash cartridge storage via BeanBoardSPI
 
 ## Building
 
 Requires [z88dk](https://github.com/z88dk/z88dk) (z88dk-z80asm).
 
-Clone with submodules:
+Clone repo with submodules:
 
 ```bash
 git clone --recurse-submodules https://github.com/PainfulDiodes/Marvin.git
@@ -72,7 +72,7 @@ See: [monitor](./monitor.md)
 
 ## BBC BASIC
 
-BBC BASIC Z80 interpreter included as a git submodule ([beanzee-bbc-basic](https://github.com/PainfulDiodes/beanzee-bbc-basic)). Monitor commands:
+BBC BASIC Z80 interpreter included as a git submodule - [beanzee-bbc-basic](https://github.com/PainfulDiodes/beanzee-bbc-basic). Monitor commands:
 
 - `*MON` - Drop into monitor
 - `BYE` - Return to monitor
