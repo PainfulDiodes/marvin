@@ -16,7 +16,7 @@
 ;     LF→CR conversion is harmless if keyboard returns CR directly.
 ;     Swallowing CR on output: Marvin's LCD driver uses LF for newline.
 ;
-; cf. bbcbasic/targets/beanzee/BMOS.asm (standalone version)
+; cf. BBCZ80/targets/beanzee/BMOS.asm (standalone version)
 ;
     PUBLIC OSINIT
     PUBLIC OSRDCH
