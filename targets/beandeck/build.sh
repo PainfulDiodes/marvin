@@ -8,14 +8,14 @@
 # added when Marvin gains those drivers.
 #
 # Requires: z88dk (z88dk-z80asm)
-# Before first use, run: ../../bbcbasic/convert.sh
+# Before first use, run: ../../BBCZ80/convert.sh
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$SCRIPT_DIR/../.."
 MARVIN_ASM="$REPO_DIR/asm"
-BASIC_SRC="$REPO_DIR/bbcbasic/src"
+BASIC_SRC="$REPO_DIR/BBCZ80/src"
 SHARED_DIR="$REPO_DIR/shared"
 OUTDIR="$SCRIPT_DIR/output"
 
@@ -28,7 +28,7 @@ echo "=========================="
 
 if [ ! -f "$BASIC_SRC/MAIN.asm" ]; then
     echo "Error: Converted source files not found."
-    echo "Run: bbcbasic/convert.sh"
+    echo "Run: BBCZ80/convert.sh"
     exit 1
 fi
 

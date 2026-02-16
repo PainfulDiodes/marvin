@@ -12,7 +12,7 @@
 ;   Output: CR swallowed (BASIC sends CR+LF via CRLF; swallow CR,
 ;           let Marvin expand LF to CR+LF)
 ;
-; cf. bbcbasic/targets/beanzee/BMOS.asm (standalone version)
+; cf. BBCZ80/targets/beanzee/BMOS.asm (standalone version)
 ;
     PUBLIC OSINIT
     PUBLIC OSRDCH

@@ -10,17 +10,17 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Check bbcbasic submodule is initialised
-if [ ! -f "$SCRIPT_DIR/bbcbasic/build.sh" ]; then
-    echo "Error: bbcbasic submodule not initialised."
+# Check BBCZ80 submodule is initialised
+if [ ! -f "$SCRIPT_DIR/BBCZ80/build.sh" ]; then
+    echo "Error: BBCZ80 submodule not initialised."
     echo "Run: git submodule update --init"
     exit 1
 fi
 
 # Convert BBC BASIC sources if not already done
-if [ ! -f "$SCRIPT_DIR/bbcbasic/src/MAIN.asm" ]; then
+if [ ! -f "$SCRIPT_DIR/BBCZ80/src/MAIN.asm" ]; then
     echo "=== Converting BBC BASIC sources ==="
-    cd "$SCRIPT_DIR/bbcbasic"
+    cd "$SCRIPT_DIR/BBCZ80"
     ./convert.sh
     cd "$SCRIPT_DIR"
     echo ""
