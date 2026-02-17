@@ -15,5 +15,5 @@ done
 # Clean assembler listing files
 rm -f "$SCRIPT_DIR"/asm/*.lis
 rm -f "$SCRIPT_DIR"/asm/drivers/*.lis
-rm -f "$SCRIPT_DIR"/shared/BBCZ80/*.lis
+rm -f "$SCRIPT_DIR"/targets/shared/BBCZ80/*.lis
 rm -f "$SCRIPT_DIR"/targets/*/BBCZ80/*.lis
