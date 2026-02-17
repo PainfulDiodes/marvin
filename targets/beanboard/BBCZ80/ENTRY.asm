@@ -61,17 +61,14 @@ ALIGN 0x0010
 ;
 ; ---- Boot Selection ----
 ;
-; BeanBoard: init LCD and determine console, then boot.
-;   Shift held at reset → Marvin monitor (USB console)
-;   No key → BBC BASIC (beanboard console: LCD + keyboard)
+; BeanBoard: init LCD and check which device to use for console, then boot.
+;   Shift held at reset → USB
+;   No key → beanboard console: LCD + keyboard
 ;
 _boot:
     call lcd_init
     call beanboard_console_init
-    ld a,(CONSOLE_STATUS)
-    cp CONSOLE_STATUS_USB
-    jp z, MARVIN        ; Shift held → Marvin (USB)
-    jp START            ; Default → BASIC (LCD + keyboard)
+    jp START
 ;
 ;
 ; ---- Platform Functions ----
