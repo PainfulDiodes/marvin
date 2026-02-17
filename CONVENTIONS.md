@@ -16,4 +16,4 @@ Marvin core modules use lowercase names with underscores and live in `asm/`.
 
 Standalone entry files for Marvin-only builds use `entry_<target>.asm` in `asm/`.
 
-Shared modules (e.g. BHOOK.asm) live in `shared/`.
+Shared BBC BASIC modules (BHOOK.asm, BMOS.asm) live in `targets/shared/BBCZ80/`.

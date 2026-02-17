@@ -14,7 +14,7 @@ REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 MARVIN_ASM="$REPO_DIR/asm"
 DRIVER_DIR="$REPO_DIR/asm/drivers"
 BASIC_SRC="$REPO_DIR/BBCZ80/src"
-SHARED_DIR="$REPO_DIR/shared"
+SHARED_DIR="$REPO_DIR/targets/shared"
 
 CODE_ORG="0x0000"
 DATA_ORG="0x8000"
