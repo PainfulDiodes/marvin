@@ -31,7 +31,7 @@ MARVIN:
 monitor_prompt:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER            
-    ld a,'>'
+    ld a,':'
     call putchar 
 
 _get_cmd:
