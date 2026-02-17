@@ -1,5 +1,5 @@
     INCLUDE "asm/system.inc"
-    INCLUDE "asm/hd44780.inc"
+    INCLUDE "asm/drivers/hd44780.inc"
     INCLUDE "asm/escape.inc"
 
     PUBLIC lcd_init

@@ -14,8 +14,8 @@ mkdir -p "$outdir"
 cd "$REPO_DIR/asm"
 z88dk-z80asm -l -b -m -I.. -DMARVINORG=$org \
     entry_beanzee.asm \
-    console_usb.asm \
-    um245r.asm \
+    console_beanzee.asm \
+    drivers/um245r.asm \
     monitor.asm \
     hex.asm \
     messages.asm \
