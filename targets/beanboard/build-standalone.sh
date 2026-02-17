@@ -15,12 +15,12 @@ cd "$REPO_DIR/asm"
 z88dk-z80asm -l -b -m -I.. -DMARVINORG=$org \
     entry_beanboard.asm \
     console_beanboard.asm \
-    beanboard_init.asm \
-    um245r.asm \
+    init_beanboard.asm \
+    drivers/um245r.asm \
     monitor.asm \
     hex.asm \
-    hd44780.asm \
-    keymatrix.asm \
+    drivers/hd44780.asm \
+    drivers/keymatrix.asm \
     messages_small.asm \
     -O"$outdir"
 
