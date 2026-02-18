@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Build Marvin + BBC BASIC firmware
+# Build Marvin + BBC BASIC
 # Usage: ./build.sh [target]
 # Examples:
 #   ./build.sh              # build all targets
@@ -106,12 +106,12 @@ build_target() {
     echo "  BMOS.asm"
     z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/BMOS.o" "$SHARED_DIR/BBCZ80/BMOS.asm"
 
-    # ---- Target entry point ----
+    # ---- Shared BBC BASIC entry point ----
 
     echo ""
-    echo "Assembling target entry point..."
+    echo "Assembling BBC BASIC entry point..."
     echo "  ENTRY.asm"
-    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/ENTRY.o" "$TARGET_DIR/BBCZ80/ENTRY.asm"
+    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/ENTRY.o" "$SHARED_DIR/BBCZ80/ENTRY.asm"
 
     # ---- Link ----
     # Boot module must be first (contains ORG 0x0000 and jump table)

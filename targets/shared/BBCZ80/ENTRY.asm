@@ -1,7 +1,7 @@
-; ENTRY.asm - BBC BASIC Platform Functions (BeanZee target)
+; ENTRY.asm - BBC BASIC Platform Functions
 ;
 ; Platform-specific functions required by BBC BASIC.
-; Boot code and jump table are in asm/boot_beanzee.asm.
+; Boot code and jump table are in asm/boot_<target>.asm.
 ;
 ; Provides:
 ;   - Platform functions (CLRSCN, PUTCSR, GETCSR, PUTIME, GETIME)
