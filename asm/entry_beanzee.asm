@@ -5,8 +5,8 @@
 ;
     INCLUDE "asm/system.inc"
 
-    EXTERN MARVIN
-    EXTERN monitor_prompt
+    EXTERN marvin_coldstart
+    EXTERN marvin_warmstart
     EXTERN putchar
     EXTERN getchar
     EXTERN readchar
@@ -19,8 +19,8 @@
 
 ; jump table at fixed addresses - must match jumptable.inc
 ALIGN 0x0010
-    jp MARVIN           ; 0x0010 - warm start (enter monitor)
-    jp monitor_prompt   ; 0x0013 - monitor prompt
+    jp marvin_coldstart  ; 0x0010 - cold start (enter monitor)
+    jp marvin_warmstart  ; 0x0013 - warm start (monitor prompt)
     jp putchar          ; 0x0016 - write character (A = char)
     jp getchar          ; 0x0019 - wait for character (returns A)
     jp readchar         ; 0x001C - non-blocking read (returns A, 0 = none)

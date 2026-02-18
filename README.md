@@ -54,8 +54,8 @@ Fixed ROM addresses at 0x0010 for platform-independent access:
 
 | Address | Function                              |
 |---------|---------------------------------------|
-| 0x0010  | Warm start (enter monitor)            |
-| 0x0013  | Monitor prompt                        |
+| 0x0010  | Cold start (enter monitor)            |
+| 0x0013  | Warm start (monitor prompt)           |
 | 0x0016  | putchar (A = char)                    |
 | 0x0019  | getchar (blocking, returns A)         |
 | 0x001C  | readchar (non-blocking, returns A)    |
