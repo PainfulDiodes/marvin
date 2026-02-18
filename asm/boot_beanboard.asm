@@ -6,7 +6,7 @@
 ; Provides:
 ;   - CPU boot at 0x0000 (SP init)
 ;   - Marvin jump table at 0x0010
-;   - Boot selection (init LCD and console, then start BASIC)
+;   - Boot selection (init LCD and console, then start monitor)
 ;
     EXTERN marvin_coldstart      ; monitor.asm - cold start
     EXTERN marvin_warmstart     ; monitor.asm - warm start
@@ -52,12 +52,12 @@ ALIGN 0x0010
 ;
 ; ---- Boot Selection ----
 ;
-; BeanBoard: init LCD and check which device to use for console, then boot.
-;   Shift held at reset → USB
+; BeanBoard: init LCD and select console, then boot to monitor.
+;   Shift held at reset → USB console
 ;   No key → beanboard console: LCD + keyboard
 ;
 _boot:
     call lcd_init
     call beanboard_console_init
-    jp START
+    jp marvin_coldstart
 ;

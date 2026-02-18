@@ -18,6 +18,8 @@
     EXTERN key_readchar
     EXTERN beanboard_console_init
 
+    PUBLIC START
+
     ORG MARVINORG
     ld sp, STACK
     call lcd_init
@@ -36,3 +38,7 @@ ALIGN 0x0010
     jp lcd_init         ; 0x0028 - initialise LCD
     jp lcd_putchar      ; 0x002B - write character to LCD
     jp key_readchar     ; 0x002E - read keyboard
+;
+; START stub - no BBC BASIC in standalone build
+START:
+    jp marvin_warmstart
