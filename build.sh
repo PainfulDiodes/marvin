@@ -27,14 +27,17 @@ BASIC_MODULES="MAIN EXEC EVAL ASMB MATH DATA"
 modules_for_target() {
     case $1 in
         beanzee)
+            BOOT_MODULE="boot_beanzee"
             MARVIN_MODULES="console_beanzee monitor hex messages"
             DRIVER_MODULES="um245r"
             ;;
         beanboard)
+            BOOT_MODULE="boot_beanboard"
             MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_small"
             DRIVER_MODULES="um245r hd44780 keymatrix"
             ;;
         beandeck)
+            BOOT_MODULE="boot_beandeck"
             MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_small"
             DRIVER_MODULES="um245r hd44780 keymatrix"
             ;;
@@ -60,6 +63,13 @@ build_target() {
 
     mkdir -p "$OUTDIR"
     rm -f "$OUTDIR"/*.o "$OUTDIR"/*.lis
+
+    # ---- Boot module ----
+
+    echo ""
+    echo "Assembling boot module..."
+    echo "  $BOOT_MODULE.asm"
+    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$BOOT_MODULE.o" "$MARVIN_ASM/$BOOT_MODULE.asm"
 
     # ---- Marvin modules ----
 
@@ -104,9 +114,9 @@ build_target() {
     z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/ENTRY.o" "$TARGET_DIR/BBCZ80/ENTRY.asm"
 
     # ---- Link ----
-    # ENTRY must be first (contains ORG 0x0000 and jump table)
+    # Boot module must be first (contains ORG 0x0000 and jump table)
 
-    ALL_OBJS="$OUTDIR/ENTRY.o"
+    ALL_OBJS="$OUTDIR/$BOOT_MODULE.o $OUTDIR/ENTRY.o"
     for module in $MARVIN_MODULES; do
         ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
     done
