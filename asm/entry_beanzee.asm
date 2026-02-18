@@ -14,6 +14,8 @@
     EXTERN putchar_hex
     EXTERN hex_byte_val
 
+    PUBLIC START
+
     ORG MARVINORG
     ld sp, STACK
 
@@ -32,3 +34,7 @@ ALIGN 0x0010
     jp _stub            ; 0x002E - key_readchar (not available on beanzee)
 _stub:
     ret
+;
+; START stub - no BBC BASIC in standalone build
+START:
+    jp marvin_warmstart

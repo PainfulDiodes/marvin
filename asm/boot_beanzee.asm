@@ -50,8 +50,8 @@ _stub:
 ;
 ; ---- Boot Selection ----
 ;
-; BeanZee (USB only): always boot to BBC BASIC
+; BeanZee (USB only): boot to Marvin monitor
 ;
 _boot:
-    jp START
+    jp marvin_coldstart
 ;
