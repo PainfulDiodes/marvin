@@ -294,15 +294,23 @@ _cmd_basic_key:
     call putchar
     ; cold start?
     cp 'c'
-    jp z,START
+    jr z,_cmd_basic_cold
     ; warm start?
     cp 'w'
-    jp z,START+3
+    jr z,_cmd_basic_warm
     ; escape?
     cp ESC_E
     jr z,_cmd_basic_esc
     ; ignore other keys
     jr _cmd_basic_key
+_cmd_basic_cold:
+    ld a,ESC_N
+    call putchar
+    jp START
+_cmd_basic_warm:
+    ld a,ESC_N
+    call putchar
+    jp START+3
 _cmd_basic_esc:
     ld a,ESC_N
     call putchar

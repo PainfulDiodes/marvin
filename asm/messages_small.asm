@@ -16,4 +16,5 @@ CMD_W_NULL_MSG:
                 db "No data\n",0
 
 BASIC_PROMPT_MSG:
-                db "(w)arm or (c)old start?\n",0
+                db "w: warm start\n"
+                db "c: cold start\n",0
