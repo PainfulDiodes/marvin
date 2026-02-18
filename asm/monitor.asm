@@ -1,8 +1,8 @@
     INCLUDE "asm/system.inc"
     INCLUDE "asm/escape.inc"
 
-    PUBLIC MARVIN
-    PUBLIC monitor_prompt
+    PUBLIC marvin_coldstart
+    PUBLIC marvin_warmstart
 
     EXTERN puts
     EXTERN putchar
@@ -21,14 +21,14 @@
 
 ; MAIN PROGRAM LOOP
 
-MARVIN:
+marvin_coldstart:
     ; point DE to zero - this is the default address argument for commands
     ld de,0x0000
 
     ld hl,WELCOME_MSG
     call puts
 
-monitor_prompt:
+marvin_warmstart:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER            
     ld a,':'
@@ -71,7 +71,7 @@ _get_cmd_esc:
     ld a,ESC_N
     call putchar
     ; back to prompt
-    jr monitor_prompt
+    jr marvin_warmstart
 _get_cmd_end:
     ; string terminator
     ld a,0                  
@@ -85,7 +85,7 @@ _get_cmd_end:
     ; end of string?
     cp 0
     ; yes - empty line - go back to prompt
-    jr z,monitor_prompt
+    jr z,marvin_warmstart
     ; advance the buffer pointer
     inc hl
     cp 'r'
@@ -101,7 +101,7 @@ _get_cmd_end:
     ld hl,BAD_CMD_MSG
     call puts
     ; loop back to the prompt
-    jp monitor_prompt
+    jp marvin_warmstart
 
 ; COMMANDS
 
@@ -154,7 +154,7 @@ _cmd_read_byte:
     ld a,ESC_N
     call putchar
     ; and back to prompt
-    jp monitor_prompt
+    jp marvin_warmstart
 
 ; WRITE
 
@@ -189,13 +189,13 @@ _cmd_write_data:
     inc de
     jr _cmd_write_data
 _cmd_write_end:
-    jp monitor_prompt
+    jp marvin_warmstart
     ; w with no data
 _cmd_write_null:        
     ld hl,CMD_W_NULL_MSG
     call puts
     ; and back to prompt
-    jp monitor_prompt
+    jp marvin_warmstart
 
 ; EXECUTE
 
@@ -275,4 +275,4 @@ _cmd_load_data:
     ; if byte counter not zero then go again
     jr nz,_cmd_load_data
 _cmd_load_end:
-    jp monitor_prompt
+    jp marvin_warmstart

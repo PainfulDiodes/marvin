@@ -8,8 +8,8 @@
 ;   - Marvin jump table at 0x0010
 ;   - Boot selection (init LCD and console, then start BASIC)
 ;
-    EXTERN MARVIN               ; monitor.asm - warm start
-    EXTERN monitor_prompt       ; monitor.asm - monitor prompt loop
+    EXTERN marvin_coldstart      ; monitor.asm - cold start
+    EXTERN marvin_warmstart     ; monitor.asm - warm start
     EXTERN putchar              ; console - write character
     EXTERN getchar              ; console - blocking read
     EXTERN readchar             ; console - non-blocking read
@@ -37,8 +37,8 @@
 ; Fixed ROM addresses - must match jumptable.inc
 ;
 ALIGN 0x0010
-    jp MARVIN           ; 0x0010 - warm start (enter monitor)
-    jp monitor_prompt   ; 0x0013 - monitor prompt
+    jp marvin_coldstart  ; 0x0010 - cold start (enter monitor)
+    jp marvin_warmstart  ; 0x0013 - warm start (monitor prompt)
     jp putchar          ; 0x0016 - write character (A = char)
     jp getchar          ; 0x0019 - wait for character (returns A)
     jp readchar         ; 0x001C - non-blocking read (returns A, 0 = none)

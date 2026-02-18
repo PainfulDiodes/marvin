@@ -275,7 +275,7 @@ RESET:
 ;BYE - Return to Marvin monitor.
 ;
 BYE:
-    JP MARVIN_WARMSTART ; Enter Marvin prompt
+    JP MARVIN_COLDSTART ; Enter Marvin prompt
 ;
 ;OSCLI - Process an "operating system" command.
 ;   Inputs: HL addresses command string (after '*')
@@ -306,7 +306,7 @@ _OSCLI_CHECK:
     AND 0DFH
     CP 'N'
     JR NZ,_OSCLI_BAD
-    JP MARVIN_WARMSTART ; *MON matched - enter monitor
+    JP MARVIN_COLDSTART ; *MON matched - enter monitor
 ;
 _OSCLI_BAD:
     LD A,254
