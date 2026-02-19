@@ -1,25 +1,37 @@
-; entry_beanzee.asm - Minimal Marvin Entry Point (BeanZee target)
+; entry_beanzee.asm - Entry Point (BeanZee target, combined firmware)
 ;
-; Minimal boot + jump table for Marvin without BBC BASIC.
-; Boots directly to the monitor prompt.
+; CPU reset vector, jump table, and boot function for the
+; combined Marvin + BBC BASIC firmware.
+;
+; Provides:
+;   - CPU boot at 0x0000 (SP init)
+;   - Marvin jump table at 0x0010
+;   - Boot selection (BeanZee: always BASIC)
+;
+    EXTERN marvin_coldstart      ; monitor.asm - cold start
+    EXTERN marvin_warmstart     ; monitor.asm - warm start
+    EXTERN putchar              ; console - write character
+    EXTERN getchar              ; console - blocking read
+    EXTERN readchar             ; console - non-blocking read
+    EXTERN puts                 ; console - print string
+    EXTERN putchar_hex          ; hex.asm - print hex byte
+    EXTERN hex_byte_val         ; hex.asm - parse hex pair
+    EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     INCLUDE "asm/system.inc"
-
-    EXTERN marvin_coldstart
-    EXTERN marvin_warmstart
-    EXTERN putchar
-    EXTERN getchar
-    EXTERN readchar
-    EXTERN puts
-    EXTERN putchar_hex
-    EXTERN hex_byte_val
-
-    PUBLIC START
-
-    ORG MARVINORG
+;
+;
+; ---- Boot Code ----
+;
+    ORG 0x0000
     ld sp, STACK
-
-; jump table at fixed addresses - must match jumptable.inc
+    jp _boot
+;
+;
+; ---- Jump Table ----
+;
+; Fixed ROM addresses - must match jumptable.inc
+;
 ALIGN 0x0010
     jp marvin_coldstart  ; 0x0010 - cold start (enter monitor)
     jp marvin_warmstart  ; 0x0013 - warm start (monitor prompt)
@@ -35,6 +47,11 @@ ALIGN 0x0010
 _stub:
     ret
 ;
-; START stub - no BBC BASIC in minimal build
-START:
-    jp marvin_warmstart
+;
+; ---- Boot Selection ----
+;
+; BeanZee (USB only): boot to Marvin monitor
+;
+_boot:
+    jp marvin_coldstart
+;

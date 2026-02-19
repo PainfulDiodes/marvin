@@ -1,31 +1,41 @@
-; entry_beanboard.asm - Minimal Marvin Entry Point (BeanBoard target)
+; entry_beanboard.asm - Entry Point (BeanBoard target, combined firmware)
 ;
-; Minimal boot + jump table for Marvin without BBC BASIC.
-; Initialises LCD and console, then boots to the monitor prompt.
+; CPU reset vector, jump table, and boot function for the
+; combined Marvin + BBC BASIC firmware.
+;
+; Provides:
+;   - CPU boot at 0x0000 (SP init)
+;   - Marvin jump table at 0x0010
+;   - Boot selection (init LCD and console, then start monitor)
+;
+    EXTERN marvin_coldstart      ; monitor.asm - cold start
+    EXTERN marvin_warmstart     ; monitor.asm - warm start
+    EXTERN putchar              ; console - write character
+    EXTERN getchar              ; console - blocking read
+    EXTERN readchar             ; console - non-blocking read
+    EXTERN puts                 ; console - print string
+    EXTERN putchar_hex          ; hex.asm - print hex byte
+    EXTERN hex_byte_val         ; hex.asm - parse hex pair
+    EXTERN lcd_init             ; hd44780.asm - LCD initialisation
+    EXTERN lcd_putchar          ; hd44780.asm - LCD character output
+    EXTERN key_readchar         ; keymatrix.asm - keyboard read
+    EXTERN beanboard_console_init ; beanboard_init.asm - console selection
+    EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     INCLUDE "asm/system.inc"
-
-    EXTERN marvin_coldstart
-    EXTERN marvin_warmstart
-    EXTERN putchar
-    EXTERN getchar
-    EXTERN readchar
-    EXTERN puts
-    EXTERN putchar_hex
-    EXTERN hex_byte_val
-    EXTERN lcd_init
-    EXTERN lcd_putchar
-    EXTERN key_readchar
-    EXTERN beanboard_console_init
-
-    PUBLIC START
-
-    ORG MARVINORG
+;
+;
+; ---- Boot Code ----
+;
+    ORG 0x0000
     ld sp, STACK
-    call lcd_init
-    call beanboard_console_init
-
-; jump table at fixed addresses - must match jumptable.inc
+    jp _boot
+;
+;
+; ---- Jump Table ----
+;
+; Fixed ROM addresses - must match jumptable.inc
+;
 ALIGN 0x0010
     jp marvin_coldstart  ; 0x0010 - cold start (enter monitor)
     jp marvin_warmstart  ; 0x0013 - warm start (monitor prompt)
@@ -39,6 +49,15 @@ ALIGN 0x0010
     jp lcd_putchar      ; 0x002B - write character to LCD
     jp key_readchar     ; 0x002E - read keyboard
 ;
-; START stub - no BBC BASIC in minimal build
-START:
-    jp marvin_warmstart
+;
+; ---- Boot Selection ----
+;
+; BeanBoard: init LCD and select console, then boot to monitor.
+;   Shift held at reset → USB console
+;   No key → beanboard console: LCD + keyboard
+;
+_boot:
+    call lcd_init
+    call beanboard_console_init
+    jp marvin_coldstart
+;
