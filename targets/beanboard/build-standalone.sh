@@ -21,7 +21,7 @@ z88dk-z80asm -l -b -m -I.. -DMARVINORG=$org \
     hex.asm \
     drivers/hd44780.asm \
     drivers/keymatrix.asm \
-    messages_small.asm \
+    messages_beanboard.asm \
     -O"$outdir"
 
 hexdump -C "$outdir/entry_beanboard.bin" > "$outdir/marvin_standalone.hex"

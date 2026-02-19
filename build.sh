@@ -33,12 +33,12 @@ modules_for_target() {
             ;;
         beanboard)
             BOOT_MODULE="boot_beanboard"
-            MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_small"
+            MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_beanboard"
             DRIVER_MODULES="um245r hd44780 keymatrix"
             ;;
         beandeck)
             BOOT_MODULE="boot_beandeck"
-            MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_small"
+            MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_beanboard"
             DRIVER_MODULES="um245r hd44780 keymatrix"
             ;;
         *)
