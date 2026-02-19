@@ -5,7 +5,7 @@ DEFINE _JUMPTABLE_INC
 ; Each entry is a 3-byte JP instruction
 ; Consumers call these addresses for Marvin I/O services
 ;
-; Must match the jump table in marvin_beanzee.asm / marvin_beanboard.asm
+; Must match the jump table in boot_<target>.asm / entry_<target>.asm
 
 MARVIN_COLDSTART    EQU 0x0010
 MARVIN_WARMSTART    EQU 0x0013
