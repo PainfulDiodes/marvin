@@ -1,6 +1,6 @@
-; entry_beanboard.asm - Standalone Marvin Entry Point (BeanBoard target)
+; entry_beanboard.asm - Minimal Marvin Entry Point (BeanBoard target)
 ;
-; Minimal boot + jump table for standalone Marvin (no BBC BASIC).
+; Minimal boot + jump table for Marvin without BBC BASIC.
 ; Initialises LCD and console, then boots to the monitor prompt.
 ;
     INCLUDE "asm/system.inc"
@@ -39,6 +39,6 @@ ALIGN 0x0010
     jp lcd_putchar      ; 0x002B - write character to LCD
     jp key_readchar     ; 0x002E - read keyboard
 ;
-; START stub - no BBC BASIC in standalone build
+; START stub - no BBC BASIC in minimal build
 START:
     jp marvin_warmstart

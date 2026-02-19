@@ -1,7 +1,10 @@
-; entry_beanzee.asm - Minimal Marvin Entry Point (BeanZee target)
+; entry_beandeck.asm - Minimal Marvin Entry Point (BeanDeck target)
 ;
 ; Minimal boot + jump table for Marvin without BBC BASIC.
-; Boots directly to the monitor prompt.
+; Initialises LCD and console, then boots to the monitor prompt.
+;
+; BeanDeck uses the same boot sequence as BeanBoard.
+; SPI/TFT initialisation is not yet implemented.
 ;
     INCLUDE "asm/system.inc"
 
@@ -13,11 +16,17 @@
     EXTERN puts
     EXTERN putchar_hex
     EXTERN hex_byte_val
+    EXTERN lcd_init
+    EXTERN lcd_putchar
+    EXTERN key_readchar
+    EXTERN beanboard_console_init
 
     PUBLIC START
 
     ORG MARVINORG
     ld sp, STACK
+    call lcd_init
+    call beanboard_console_init
 
 ; jump table at fixed addresses - must match jumptable.inc
 ALIGN 0x0010
@@ -29,11 +38,9 @@ ALIGN 0x0010
     jp puts             ; 0x001F - print string (HL = address, zero-terminated)
     jp putchar_hex      ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
-    jp _stub            ; 0x0028 - lcd_init (not available on beanzee)
-    jp _stub            ; 0x002B - lcd_putchar (not available on beanzee)
-    jp _stub            ; 0x002E - key_readchar (not available on beanzee)
-_stub:
-    ret
+    jp lcd_init         ; 0x0028 - initialise LCD
+    jp lcd_putchar      ; 0x002B - write character to LCD
+    jp key_readchar     ; 0x002E - read keyboard
 ;
 ; START stub - no BBC BASIC in minimal build
 START:
