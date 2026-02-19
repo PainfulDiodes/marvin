@@ -3,13 +3,14 @@
 ; CPU reset vector, jump table, and boot function for the
 ; combined Marvin + BBC BASIC firmware.
 ;
-; BeanDeck uses the same boot sequence as BeanBoard.
-; SPI/TFT initialisation is not yet implemented.
+; BeanDeck: USB console output, keyboard or USB input.
+;   Reset → keyboard input
+;   Shift-Reset → USB input
 ;
 ; Provides:
 ;   - CPU boot at 0x0000 (SP init)
 ;   - Marvin jump table at 0x0010
-;   - Boot selection (init LCD and console, then start monitor)
+;   - Boot selection (init console, then start monitor)
 ;
     EXTERN marvin_coldstart      ; monitor.asm - cold start
     EXTERN marvin_warmstart     ; monitor.asm - warm start
@@ -19,8 +20,6 @@
     EXTERN puts                 ; console - print string
     EXTERN putchar_hex          ; hex.asm - print hex byte
     EXTERN hex_byte_val         ; hex.asm - parse hex pair
-    EXTERN lcd_init             ; hd44780.asm - LCD initialisation
-    EXTERN lcd_putchar          ; hd44780.asm - LCD character output
     EXTERN key_readchar         ; keymatrix.asm - keyboard read
     EXTERN beanboard_console_init ; beanboard_init.asm - console selection
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
@@ -48,19 +47,20 @@ ALIGN 0x0010
     jp puts             ; 0x001F - print string (HL = address, zero-terminated)
     jp putchar_hex      ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
-    jp lcd_init         ; 0x0028 - initialise LCD
-    jp lcd_putchar      ; 0x002B - write character to LCD
+    jp _stub            ; 0x0028 - lcd_init (not yet available on beandeck)
+    jp _stub            ; 0x002B - lcd_putchar (not yet available on beandeck)
     jp key_readchar     ; 0x002E - read keyboard
+_stub:
+    ret
 ;
 ;
 ; ---- Boot Selection ----
 ;
-; BeanDeck: init LCD and select console, then boot to monitor.
-;   Shift held at reset → USB console
-;   No key → beanboard console: LCD + keyboard
+; BeanDeck: select console input source, then boot to monitor.
+;   Shift held at reset → USB console input
+;   No key → keyboard input
 ;
 _boot:
-    call lcd_init
     call beanboard_console_init
     jp marvin_coldstart
 ;

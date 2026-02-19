@@ -43,8 +43,8 @@ modules_for_target() {
             ;;
         beandeck)
             BOOT_MODULE="boot_beandeck"
-            MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_beanboard"
-            DRIVER_MODULES="um245r hd44780 keymatrix"
+            MARVIN_MODULES="console_beandeck init_beanboard monitor hex messages"
+            DRIVER_MODULES="um245r keymatrix"
             ;;
         *)
             echo "Error: unknown target '$1'"
@@ -70,7 +70,7 @@ minimal_modules_for_target() {
             ;;
         beandeck)
             ENTRY_MODULE="entry_beandeck"
-            MINIMAL_MODULES="console_beanboard init_beanboard drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix messages_beanboard"
+            MINIMAL_MODULES="console_beandeck init_beanboard drivers/um245r monitor hex drivers/keymatrix messages"
             ;;
     esac
 }
