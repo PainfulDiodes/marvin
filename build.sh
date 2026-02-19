@@ -32,17 +32,17 @@ BASIC_MODULES="MAIN EXEC EVAL ASMB MATH DATA"
 modules_for_target() {
     case $1 in
         beanzee)
-            BOOT_MODULE="boot_beanzee"
+            COMBINED_ENTRY="entry_beanzee"
             MARVIN_MODULES="console_beanzee monitor hex messages"
             DRIVER_MODULES="um245r"
             ;;
         beanboard)
-            BOOT_MODULE="boot_beanboard"
+            COMBINED_ENTRY="entry_beanboard"
             MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_beanboard"
             DRIVER_MODULES="um245r hd44780 keymatrix"
             ;;
         beandeck)
-            BOOT_MODULE="boot_beandeck"
+            COMBINED_ENTRY="entry_beandeck"
             MARVIN_MODULES="console_beandeck init_beanboard monitor hex messages"
             DRIVER_MODULES="um245r keymatrix"
             ;;
@@ -61,15 +61,15 @@ modules_for_target() {
 minimal_modules_for_target() {
     case $1 in
         beanzee)
-            ENTRY_MODULE="entry_beanzee"
+            MINIMAL_ENTRY="entry_beanzee_minimal"
             MINIMAL_MODULES="console_beanzee drivers/um245r monitor hex messages"
             ;;
         beanboard)
-            ENTRY_MODULE="entry_beanboard"
+            MINIMAL_ENTRY="entry_beanboard_minimal"
             MINIMAL_MODULES="console_beanboard init_beanboard drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix messages_beanboard"
             ;;
         beandeck)
-            ENTRY_MODULE="entry_beandeck"
+            MINIMAL_ENTRY="entry_beandeck_minimal"
             MINIMAL_MODULES="console_beandeck init_beanboard drivers/um245r monitor hex drivers/keymatrix messages"
             ;;
     esac
@@ -94,8 +94,8 @@ build_target() {
 
     echo ""
     echo "Assembling boot module..."
-    echo "  $BOOT_MODULE.asm"
-    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$BOOT_MODULE.o" "$MARVIN_ASM/$BOOT_MODULE.asm"
+    echo "  $COMBINED_ENTRY.asm"
+    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$COMBINED_ENTRY.o" "$MARVIN_ASM/$COMBINED_ENTRY.asm"
 
     # ---- Marvin modules ----
 
@@ -142,7 +142,7 @@ build_target() {
     # ---- Link ----
     # Boot module must be first (contains ORG 0x0000 and jump table)
 
-    ALL_OBJS="$OUTDIR/$BOOT_MODULE.o $OUTDIR/ENTRY.o"
+    ALL_OBJS="$OUTDIR/$COMBINED_ENTRY.o $OUTDIR/ENTRY.o"
     for module in $MARVIN_MODULES; do
         ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
     done
@@ -198,9 +198,9 @@ build_minimal() {
 
     echo ""
     echo "Assembling entry module..."
-    echo "  $ENTRY_MODULE.asm"
+    echo "  $MINIMAL_ENTRY.asm"
     z88dk-z80asm -l -m -DMARVINORG=$CODE_ORG -I"$REPO_DIR" \
-        -o"$OUTDIR/$ENTRY_MODULE.o" "$MARVIN_ASM/$ENTRY_MODULE.asm"
+        -o"$OUTDIR/$MINIMAL_ENTRY.o" "$MARVIN_ASM/$MINIMAL_ENTRY.asm"
 
     # ---- Marvin and driver modules ----
 
@@ -215,7 +215,7 @@ build_minimal() {
     # ---- Link ----
     # Entry module must be first (contains ORG and jump table)
 
-    ALL_OBJS="$OUTDIR/$ENTRY_MODULE.o"
+    ALL_OBJS="$OUTDIR/$MINIMAL_ENTRY.o"
     for module in $MINIMAL_MODULES; do
         local obj_name=$(basename "$module")
         ALL_OBJS="$ALL_OBJS $OUTDIR/$obj_name.o"
