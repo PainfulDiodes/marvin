@@ -4,7 +4,7 @@
 ; combined Marvin + BBC BASIC firmware.
 ;
 ; BeanDeck uses the same boot sequence as BeanBoard.
-; SPI/TFT initialisation is not required at boot time.
+; SPI/TFT initialisation is not yet implemented.
 ;
 ; Provides:
 ;   - CPU boot at 0x0000 (SP init)

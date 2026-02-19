@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
-# Build Marvin + BBC BASIC
+# Build Marvin firmware
 # Usage: ./build.sh [target]
 # Examples:
 #   ./build.sh              # build all targets
 #   ./build.sh beanzee      # build beanzee only
 #
-# Requires: z88dk (z88dk-z80asm)
+# Each target produces two builds:
+#   marvin.bin     - combined firmware (Marvin + BBC BASIC)
+#   marvin_minimal.bin - minimal firmware (Marvin monitor only)
+#
+# Requires: z88dk (z88dk-z80asm, z88dk-appmake)
 
 set -e
 
@@ -19,10 +23,11 @@ SHARED_DIR="$REPO_DIR/targets/shared"
 CODE_ORG="0x0000"
 DATA_ORG="0x8000"
 OUTPUT_NAME="marvin"
+MINIMAL_NAME="marvin_minimal"
 
 BASIC_MODULES="MAIN EXEC EVAL ASMB MATH DATA"
 
-# ---- Per-target module lists ----
+# ---- Per-target module lists (combined firmware) ----
 
 modules_for_target() {
     case $1 in
@@ -49,7 +54,28 @@ modules_for_target() {
     esac
 }
 
-# ---- Build a single target ----
+# ---- Per-target module lists (minimal firmware) ----
+# Module order determines link order and ROM layout.
+# Paths relative to asm/ directory (drivers use drivers/ prefix).
+
+minimal_modules_for_target() {
+    case $1 in
+        beanzee)
+            ENTRY_MODULE="entry_beanzee"
+            MINIMAL_MODULES="console_beanzee drivers/um245r monitor hex messages"
+            ;;
+        beanboard)
+            ENTRY_MODULE="entry_beanboard"
+            MINIMAL_MODULES="console_beanboard init_beanboard drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix messages_beanboard"
+            ;;
+        beandeck)
+            ENTRY_MODULE="entry_beandeck"
+            MINIMAL_MODULES="console_beanboard init_beanboard drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix messages_beanboard"
+            ;;
+    esac
+}
+
+# ---- Build combined firmware (Marvin + BBC BASIC) ----
 
 build_target() {
     local target=$1
@@ -154,6 +180,69 @@ build_target() {
     echo "  RAM: $DATA_ORG - data segment (initialised at runtime)"
 }
 
+# ---- Build minimal firmware (Marvin monitor only, no BBC BASIC) ----
+
+build_minimal() {
+    local target=$1
+    local TARGET_DIR="$REPO_DIR/targets/$target"
+    local OUTDIR="$TARGET_DIR/output"
+
+    minimal_modules_for_target "$target"
+
+    echo "Building Marvin minimal ($target)"
+    echo "==========================="
+
+    mkdir -p "$OUTDIR"
+
+    # ---- Entry module ----
+
+    echo ""
+    echo "Assembling entry module..."
+    echo "  $ENTRY_MODULE.asm"
+    z88dk-z80asm -l -m -DMARVINORG=$CODE_ORG -I"$REPO_DIR" \
+        -o"$OUTDIR/$ENTRY_MODULE.o" "$MARVIN_ASM/$ENTRY_MODULE.asm"
+
+    # ---- Marvin and driver modules ----
+
+    echo ""
+    echo "Assembling modules..."
+    for module in $MINIMAL_MODULES; do
+        local obj_name=$(basename "$module")
+        echo "  $module.asm"
+        z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
+    done
+
+    # ---- Link ----
+    # Entry module must be first (contains ORG and jump table)
+
+    ALL_OBJS="$OUTDIR/$ENTRY_MODULE.o"
+    for module in $MINIMAL_MODULES; do
+        local obj_name=$(basename "$module")
+        ALL_OBJS="$ALL_OBJS $OUTDIR/$obj_name.o"
+    done
+
+    echo ""
+    echo "Linking minimal modules at $CODE_ORG..."
+    z88dk-z80asm -b -m \
+        -o"$OUTDIR/$MINIMAL_NAME.bin" \
+        -r$CODE_ORG \
+        $ALL_OBJS
+
+    BIN_SIZE=$(wc -c < "$OUTDIR/$MINIMAL_NAME.bin" | tr -d ' ')
+
+    xxd "$OUTDIR/$MINIMAL_NAME.bin" > "$OUTDIR/$MINIMAL_NAME.hex"
+    z88dk-appmake +hex --org $CODE_ORG \
+        -b "$OUTDIR/$MINIMAL_NAME.bin" \
+        -o "$OUTDIR/$MINIMAL_NAME.ihx"
+
+    echo ""
+    echo "Minimal build complete:"
+    echo "  ROM image:   output/$MINIMAL_NAME.bin ($BIN_SIZE bytes at $CODE_ORG)"
+    echo "  Hex dump:    output/$MINIMAL_NAME.hex"
+    echo "  Intel HEX:   output/$MINIMAL_NAME.ihx"
+    echo "  Map file:    output/$MINIMAL_NAME.map"
+}
+
 # ---- Main ----
 
 # Check BBCZ80 submodule is initialised
@@ -174,9 +263,13 @@ fi
 
 if [ $# -gt 0 ]; then
     build_target "$1"
+    echo ""
+    build_minimal "$1"
 else
     for target in beanzee beanboard beandeck; do
         build_target "$target"
+        echo ""
+        build_minimal "$target"
         echo ""
     done
 fi
