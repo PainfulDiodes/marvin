@@ -12,8 +12,10 @@
     EXTERN WELCOME_MSG
     EXTERN BAD_CMD_MSG
     EXTERN CMD_W_NULL_MSG
+    IFDEF INCLUDE_BASIC
     EXTERN BASIC_PROMPT_MSG
     EXTERN START
+    ENDIF
 
 ; ****************************************************
 ; *  Marvin - a Z80 homebrew monitor program
@@ -96,8 +98,10 @@ _get_cmd_end:
     jr z,_cmd_write
     cp 'x'
     jr z,_cmd_execute
+    IFDEF INCLUDE_BASIC
     cp 'b'
     jp z,_cmd_basic
+    ENDIF
     ; ':' = load from intel hex format
     cp ':'
     jr z,_cmd_load
@@ -281,6 +285,8 @@ _cmd_load_data:
 _cmd_load_end:
     jp marvin_warmstart
 
+    IFDEF INCLUDE_BASIC
+
 ; BASIC
 
 ; launch BBC BASIC - prompt for warm or cold start
@@ -317,3 +323,5 @@ _cmd_basic_esc:
     ld a,ESC_N
     call putchar
     jp marvin_warmstart
+
+    ENDIF
