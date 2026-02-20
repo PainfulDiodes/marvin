@@ -25,7 +25,7 @@ DATA_ORG="0x8000"
 OUTPUT_NAME="marvin"
 MINIMAL_NAME="marvin_minimal"
 
-BASIC_MODULES="MAIN EXEC EVAL ASMB MATH DATA"
+BASIC_MODULES="EXEC EVAL ASMB MATH DATA"
 
 # ---- Per-target module lists (combined firmware) ----
 
@@ -35,16 +35,19 @@ modules_for_target() {
             COMBINED_ENTRY="entry_beanzee"
             MARVIN_MODULES="console_beanzee monitor hex messages"
             DRIVER_MODULES="um245r"
+            BASIC_MAIN="MAIN"
             ;;
         beanboard)
             COMBINED_ENTRY="entry_beanboard"
             MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_beanboard"
             DRIVER_MODULES="um245r hd44780 keymatrix"
+            BASIC_MAIN="MAIN_SM_DSP"
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
             MARVIN_MODULES="console_beandeck init_beanboard monitor hex messages"
             DRIVER_MODULES="um245r keymatrix"
+            BASIC_MAIN="MAIN"
             ;;
         *)
             echo "Error: unknown target '$1'"
@@ -117,6 +120,8 @@ build_target() {
 
     echo ""
     echo "Assembling BBC BASIC modules..."
+    echo "  $BASIC_MAIN.asm"
+    z88dk-z80asm -l -m -o"$OUTDIR/$BASIC_MAIN.o" "$BASIC_SRC/$BASIC_MAIN.asm"
     for module in $BASIC_MODULES; do
         EXTRA_FLAGS=""
         if [ "$module" = "DATA" ]; then
@@ -149,6 +154,7 @@ build_target() {
     for module in $DRIVER_MODULES; do
         ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
     done
+    ALL_OBJS="$ALL_OBJS $OUTDIR/$BASIC_MAIN.o"
     for module in $BASIC_MODULES; do
         ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
     done
