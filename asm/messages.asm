@@ -16,4 +16,4 @@ CMD_W_NULL_MSG:
                 db "No data to write\n",0
 
 BASIC_PROMPT_MSG:
-                db "BBC BASIC\n(w)arm or (c)old start?\n",0
+                db "BBC BASIC\nw: warm or c: cold start?\n",0
