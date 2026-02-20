@@ -106,7 +106,7 @@ build_target() {
     echo "Assembling Marvin modules..."
     for module in $MARVIN_MODULES; do
         echo "  $module.asm"
-        z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$module.o" "$MARVIN_ASM/$module.asm"
+        z88dk-z80asm -l -m -DINCLUDE_BASIC -I"$REPO_DIR" -o"$OUTDIR/$module.o" "$MARVIN_ASM/$module.asm"
     done
 
     echo ""
