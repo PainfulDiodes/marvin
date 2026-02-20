@@ -307,9 +307,11 @@ _cmd_basic_cold:
     ld a,ESC_N
     call putchar
     call putchar
+    call putchar
     jp START
 _cmd_basic_warm:
     ld a,ESC_N
+    call putchar
     call putchar
     call putchar
     jp START+3
