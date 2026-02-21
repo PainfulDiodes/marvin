@@ -17,7 +17,7 @@ set -e
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 MARVIN_ASM="$REPO_DIR/asm"
 DRIVER_DIR="$REPO_DIR/asm/drivers"
-BASIC_SRC="$REPO_DIR/BBCZ80/src"
+BASIC_SRC="$REPO_DIR/BBCZ80-repo/src"
 SHARED_DIR="$REPO_DIR/targets/shared"
 
 CODE_ORG="0x0000"
@@ -256,7 +256,7 @@ build_minimal() {
 # ---- Main ----
 
 # Check BBCZ80 submodule is initialised
-if [ ! -f "$REPO_DIR/BBCZ80/build.sh" ]; then
+if [ ! -f "$REPO_DIR/BBCZ80-repo/build.sh" ]; then
     echo "Error: BBCZ80 submodule not initialised."
     echo "Run: git submodule update --init"
     exit 1
@@ -265,7 +265,7 @@ fi
 # Convert BBC BASIC sources if not already done
 if [ ! -f "$BASIC_SRC/MAIN.asm" ]; then
     echo "=== Converting BBC BASIC sources ==="
-    cd "$REPO_DIR/BBCZ80"
+    cd "$REPO_DIR/BBCZ80-repo"
     ./convert.sh
     cd "$REPO_DIR"
     echo ""

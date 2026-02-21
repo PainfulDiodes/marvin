@@ -9,7 +9,7 @@
 ;   On beanboard/beandeck console: LF→CR is harmless (keyboard
 ;   returns CR directly), CR swallow is safe (LCD uses LF).
 ;
-; cf. BBCZ80/targets/beanzee/BMOS.asm (standalone version)
+; cf. BBCZ80-repo/targets/beanzee/BMOS.asm (standalone version)
 ;
     PUBLIC OSINIT
     PUBLIC OSRDCH
