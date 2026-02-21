@@ -1,0 +1,4 @@
+[submodule "BBCZ80-repo"]
+	path = BBCZ80-repo
+	url = https://github.com/PainfulDiodes/BBCZ80.git
+	branch = dev
