@@ -1,4 +1,0 @@
-[submodule "BBCZ80"]
-	path = BBCZ80
-	url = https://github.com/PainfulDiodes/BBCZ80.git
-	branch = master
