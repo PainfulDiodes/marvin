@@ -174,12 +174,16 @@ build_target() {
     BIN_SIZE=$(wc -c < "$OUTDIR/$OUTPUT_NAME.bin" | tr -d ' ')
 
     xxd "$OUTDIR/$OUTPUT_NAME.bin" > "$OUTDIR/$OUTPUT_NAME.hex"
+    z88dk-appmake +hex --org $CODE_ORG \
+        -b "$OUTDIR/$OUTPUT_NAME.bin" \
+        -o "$OUTDIR/$OUTPUT_NAME.ihx"
 
     echo ""
     echo "Build complete:"
-    echo "  ROM image: output/$OUTPUT_NAME.bin ($BIN_SIZE bytes at $CODE_ORG)"
-    echo "  Hex dump:  output/$OUTPUT_NAME.hex"
-    echo "  Map file:  output/$OUTPUT_NAME.map"
+    echo "  ROM image:   output/$OUTPUT_NAME.bin ($BIN_SIZE bytes at $CODE_ORG)"
+    echo "  Hex dump:    output/$OUTPUT_NAME.hex"
+    echo "  Intel HEX:   output/$OUTPUT_NAME.ihx"
+    echo "  Map file:    output/$OUTPUT_NAME.map"
     echo ""
     echo "Memory layout:"
     echo "  ROM: $CODE_ORG - code ($BIN_SIZE bytes)"
