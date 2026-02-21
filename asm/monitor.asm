@@ -34,8 +34,8 @@ marvin_coldstart:
 
 marvin_warmstart:
     ; point HL to the beginning of the input buffer
-    ld hl,CMD_BUFFER            
-    ld a,':'
+    ld hl,CMD_BUFFER
+    ld a,'$'
     call putchar 
 
 _get_cmd:
