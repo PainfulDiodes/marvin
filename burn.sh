@@ -1,4 +1,5 @@
-# usage: ./burn32k.sh [-m] [-8] target
+# Burn EEPROM using David Griffiths minipro - for AT28C256 and AT28C64B devices
+# usage: ./burn.sh [-m] [-8] target
 # -m : burn minimal build (marvin monitor only, no BBC BASIC)
 # -8 : use 8k EEPROM (AT28C64B) instead of 32k (AT28C256)
 
