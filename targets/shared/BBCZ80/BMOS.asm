@@ -267,10 +267,11 @@ _TEST_ESC:
 ;
 ; ---- System Control ----
 ;
-;RESET - Full cold restart.
+;RESET - Reset OS state. Called by the BASIC error handler before reporting an
+;error and returning to the command loop. Must return to caller.
 ;
 RESET:
-    RST 0               ; Jump to address 0x0000
+    RET                 ; No-op: no OS state to reset on Marvin
 ;
 ;BYE - Return to Marvin monitor.
 ;
