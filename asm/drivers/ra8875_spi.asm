@@ -36,28 +36,6 @@ SPI_IDLE        equ 0xFF    ; all deselected, reset released
 SPI_RESET       equ 0xFE    ; bit 0 low = reset asserted
 SPI_SELECT_0    equ 0xFD    ; bit 1 low = SPI0 selected
 
-; Serialisation delay - time for 74HCT299 to shift 8 bits
-SPI_SERIAL_DELAY equ 0x10 ;0xff
-
-; CS setup/hold delay - loop count after asserting or before deasserting CS
-SPI_CS_DELAY_VAL equ 0x01
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; internal utilities
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; CS setup/hold delay - called after asserting and before deasserting CS
-_spi_cs_delay:
-    push bc
-    ld b,SPI_CS_DELAY_VAL
-_spi_cs_delay_loop:
-    nop
-    djnz _spi_cs_delay_loop
-    pop bc
-    ret
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; transport interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,7 +66,6 @@ ra8875_cs_start:
     push af
     ld a,SPI_SELECT_0
     out (SPI_CTRL),a
-    ; call _spi_cs_delay
     pop af
     ret
 
@@ -97,7 +74,6 @@ ra8875_cs_start:
 ; Destroys: AF
 ra8875_cs_end:
     push af
-    ; call _spi_cs_delay
     ld a,SPI_IDLE
     out (SPI_CTRL),a
     pop af
@@ -106,30 +82,24 @@ ra8875_cs_end:
 
 ; Write a byte over hardware SPI
 ; Input: A = byte to send
-; Destroys: AF, B
+; Destroys: AF
 ra8875_write:
     out (SPI_DATA),a
-    push bc
-    ld b,SPI_SERIAL_DELAY
-_ra8875_write_delay:
+    nop ; short delay to allow for serialisation
     nop
-    djnz _ra8875_write_delay
-    pop bc
+    nop
     ret
 
 
 ; Read a byte over hardware SPI
 ; Sends a dummy byte (0x00) to clock in the response
 ; Output: A = byte received
-; Destroys: AF, B
+; Destroys: AF
 ra8875_read:
     ld a,0x00
     out (SPI_DATA),a
-    push bc
-    ld b,SPI_SERIAL_DELAY
-_ra8875_read_delay:
+    nop ; short delay to allow for serialisation
     nop
-    djnz _ra8875_read_delay
-    pop bc
+    nop
     in a,(SPI_DATA)
     ret
