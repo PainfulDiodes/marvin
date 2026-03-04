@@ -4,7 +4,7 @@
     PUBLIC BASIC_PROMPT_MSG
 
 WELCOME_MSG:
-                db "MARVIN v1.2.1\n"
+                db "MARVIN v2.0.0\n"
                 db "A simple Z80 homebrew monitor program\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n",0
