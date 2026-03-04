@@ -7,12 +7,12 @@
 ;   ra8875_gpio.asm - BeanBoard GPIO bit-bang SPI (beanboard)
 ;
 ; Transport interface (EXTERN - provided by transport module):
-;   ra8875_delay         - General timing delay
-;   ra8875_reset         - Hardware reset
-;   _ra8875_cs_start     - Assert CS with setup timing
-;   _ra8875_cs_end       - Deassert CS with hold timing
-;   _ra8875_write        - Write byte via SPI
-;   _ra8875_read         - Read byte via SPI
+;   ra8875_reset_assert  - Assert hardware RESET
+;   ra8875_reset_deassert - Deassert hardware RESET
+;   ra8875_cs_start      - Assert CS with setup timing
+;   ra8875_cs_end        - Deassert CS with hold timing
+;   ra8875_write         - Write byte via SPI
+;   ra8875_read          - Read byte via SPI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     PUBLIC ra8875_write_command
@@ -42,14 +42,39 @@
     PUBLIC ra8875_putchar
     PUBLIC ra8875_puts
 
-    EXTERN ra8875_delay
-    EXTERN ra8875_reset
-    EXTERN _ra8875_cs_start
-    EXTERN _ra8875_cs_end
-    EXTERN _ra8875_write
-    EXTERN _ra8875_read
+    EXTERN ra8875_reset_assert
+    EXTERN ra8875_reset_deassert
+    EXTERN ra8875_cs_start
+    EXTERN ra8875_cs_end
+    EXTERN ra8875_write
+    EXTERN ra8875_read
 
 INCLUDE "asm/drivers/ra8875.inc"
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; common timing and reset
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; 0x0e was the minimum needed for PLLC1/2 init with a 10MHz Z80 clock
+RA8875_DELAY_VAL equ 0xff
+
+; General timing delay - chip settling after PLL init etc.
+ra8875_delay:
+    push bc
+    ld b,RA8875_DELAY_VAL
+_ra8875_delay_loop:
+    nop
+    djnz _ra8875_delay_loop
+    pop bc
+    ret
+
+; Hardware reset - assert RESET, delay, then deassert
+ra8875_reset:
+    call ra8875_reset_assert
+    call ra8875_delay
+    call ra8875_reset_deassert
+    ret
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -62,12 +87,12 @@ ra8875_write_command:
     push af
     push bc
     ld c,a ; stash the data
-    call _ra8875_cs_start
+    call ra8875_cs_start
     ld a,RA8875_CMDWRITE
-    call _ra8875_write
+    call ra8875_write
     ld a,c ; recover the data to send
-    call _ra8875_write
-    call _ra8875_cs_end
+    call ra8875_write
+    call ra8875_cs_end
     pop bc
     pop af
     ret
@@ -78,12 +103,12 @@ ra8875_write_data:
     push af
     push bc
     ld c,a ; stash the data
-    call _ra8875_cs_start
+    call ra8875_cs_start
     ld a,RA8875_DATAWRITE
-    call _ra8875_write
+    call ra8875_write
     ld a,c ; recover the data to send
-    call _ra8875_write
-    call _ra8875_cs_end
+    call ra8875_write
+    call ra8875_cs_end
     pop bc
     pop af
     ret
@@ -92,12 +117,12 @@ ra8875_write_data:
 ; returns data in A
 ra8875_read_data:
     push bc
-    call _ra8875_cs_start
+    call ra8875_cs_start
     ld a,RA8875_DATAREAD
-    call _ra8875_write
-    call _ra8875_read
+    call ra8875_write
+    call ra8875_read
     ld b,a ; stash data
-    call _ra8875_cs_end
+    call ra8875_cs_end
     ld a,b ; restore data
     pop bc
     ret

@@ -6,28 +6,25 @@
 ; serialisation and 74HCT373 latch for chip select and reset control.
 ;
 ; Interface (PUBLIC):
-;   ra8875_delay         - General timing delay
-;   ra8875_reset         - Hardware reset via control register
-;   _ra8875_cs_start     - Assert CS with setup delay
-;   _ra8875_cs_end       - Deassert CS with hold delay
-;   _ra8875_write        - Write byte via hardware SPI
-;   _ra8875_read         - Read byte via hardware SPI
+;   ra8875_reset_assert  - Assert RESET via control register
+;   ra8875_reset_deassert - Deassert RESET via control register
+;   ra8875_cs_start      - Assert CS with setup delay
+;   ra8875_cs_end        - Deassert CS with hold delay
+;   ra8875_write         - Write byte via hardware SPI
+;   ra8875_read          - Read byte via hardware SPI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    PUBLIC ra8875_delay
-    PUBLIC ra8875_reset
-    PUBLIC _ra8875_cs_start
-    PUBLIC _ra8875_cs_end
-    PUBLIC _ra8875_write
-    PUBLIC _ra8875_read
+    PUBLIC ra8875_reset_assert
+    PUBLIC ra8875_reset_deassert
+    PUBLIC ra8875_cs_start
+    PUBLIC ra8875_cs_end
+    PUBLIC ra8875_write
+    PUBLIC ra8875_read
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; definitions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; 0x0e was the minimum needed for PLLC1/2 init with a 10MHz Z80 clock
-RA8875_DELAY_VAL equ 0xff
 
 ; SPI ports (BeanBoardSPI hardware)
 SPI_CTRL        equ 8       ; control register (74HCT373 latch)
@@ -65,23 +62,20 @@ _spi_cs_delay_loop:
 ; transport interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; delay
-ra8875_delay:
-    push bc
-    ld b,RA8875_DELAY_VAL
-_ra8875_delay_loop:
-    nop
-    djnz _ra8875_delay_loop
-    pop bc
-    ret
-
-
-; hardware reset of RA8875
-ra8875_reset:
+; Assert RA8875 RESET (active low via SPI control register)
+; Destroys: AF
+ra8875_reset_assert:
     push af
     ld a,SPI_RESET
     out (SPI_CTRL),a
-    call ra8875_delay
+    pop af
+    ret
+
+
+; Deassert RA8875 RESET (release)
+; Destroys: AF
+ra8875_reset_deassert:
+    push af
     ld a,SPI_IDLE
     out (SPI_CTRL),a
     pop af
@@ -90,7 +84,7 @@ ra8875_reset:
 
 ; Assert SPI0 chip select with setup delay
 ; Destroys: AF
-_ra8875_cs_start:
+ra8875_cs_start:
     push af
     ld a,SPI_SELECT_0
     out (SPI_CTRL),a
@@ -101,7 +95,7 @@ _ra8875_cs_start:
 
 ; Deassert SPI0 chip select with hold delay
 ; Destroys: AF
-_ra8875_cs_end:
+ra8875_cs_end:
     push af
     call _spi_cs_delay
     ld a,SPI_IDLE
@@ -113,7 +107,7 @@ _ra8875_cs_end:
 ; Write a byte over hardware SPI
 ; Input: A = byte to send
 ; Destroys: AF, B
-_ra8875_write:
+ra8875_write:
     out (SPI_DATA),a
     push bc
     ld b,SPI_SERIAL_DELAY
@@ -128,7 +122,7 @@ _ra8875_write_delay:
 ; Sends a dummy byte (0x00) to clock in the response
 ; Output: A = byte received
 ; Destroys: AF, B
-_ra8875_read:
+ra8875_read:
     ld a,0x00
     out (SPI_DATA),a
     push bc

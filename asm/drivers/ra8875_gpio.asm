@@ -6,20 +6,20 @@
 ; control of SCK, MOSI, MISO, CS, and RESET signals.
 ;
 ; Interface (PUBLIC):
-;   ra8875_delay         - General timing delay
-;   ra8875_reset         - Hardware reset via GPIO
-;   _ra8875_cs_start     - Assert CS
-;   _ra8875_cs_end       - Deassert CS
-;   _ra8875_write        - Write byte via bit-bang SPI
-;   _ra8875_read         - Read byte via bit-bang SPI
+;   ra8875_reset_assert  - Assert RESET via GPIO
+;   ra8875_reset_deassert - Deassert RESET via GPIO
+;   ra8875_cs_start      - Assert CS
+;   ra8875_cs_end        - Deassert CS
+;   ra8875_write         - Write byte via bit-bang SPI
+;   ra8875_read          - Read byte via bit-bang SPI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    PUBLIC ra8875_delay
-    PUBLIC ra8875_reset
-    PUBLIC _ra8875_cs_start
-    PUBLIC _ra8875_cs_end
-    PUBLIC _ra8875_write
-    PUBLIC _ra8875_read
+    PUBLIC ra8875_reset_assert
+    PUBLIC ra8875_reset_deassert
+    PUBLIC ra8875_cs_start
+    PUBLIC ra8875_cs_end
+    PUBLIC ra8875_write
+    PUBLIC ra8875_read
 
 INCLUDE "asm/system.inc"
 
@@ -27,9 +27,6 @@ INCLUDE "asm/system.inc"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; definitions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; 0x0e was the minimum needed for PLLC1/2 init with a 10MHz Z80 clock
-RA8875_DELAY_VAL equ 0xff
 
 ; Pin definitions for RA8875 SPI on GPIO port
 ; GPO
@@ -61,23 +58,20 @@ GPO_HIGH_STATE   equ 1 << RA8875_MOSI | 1 << RA8875_RESET
 ; transport interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; delay
-ra8875_delay:
-    push bc
-    ld b,RA8875_DELAY_VAL
-_ra8875_delay_loop:
-    nop
-    djnz _ra8875_delay_loop
-    pop bc
-    ret
-
-
-; hardware reset of RA8875
-ra8875_reset:
+; Assert RA8875 RESET (active low via GPIO)
+; Destroys: AF
+ra8875_reset_assert:
     push af
     ld a,GPO_RESET_STATE
     out (GPIO_OUT),a
-    call ra8875_delay
+    pop af
+    ret
+
+
+; Deassert RA8875 RESET (release)
+; Destroys: AF
+ra8875_reset_deassert:
+    push af
     ld a,GPO_INACTIVE_STATE
     out (GPIO_OUT),a
     pop af
@@ -87,7 +81,7 @@ ra8875_reset:
 ; Assert chip select (CS active/low)
 ; No setup delay required - bit-bang timing is sufficient
 ; Destroys: AF
-_ra8875_cs_start:
+ra8875_cs_start:
     push af
     ld a,GPO_ACTIVE_STATE
     out (GPIO_OUT),a
@@ -97,7 +91,7 @@ _ra8875_cs_start:
 
 ; Deassert chip select (CS inactive/high)
 ; Destroys: AF
-_ra8875_cs_end:
+ra8875_cs_end:
     push af
     ld a,GPO_INACTIVE_STATE
     out (GPIO_OUT),a
@@ -108,7 +102,7 @@ _ra8875_cs_end:
 ; Write a byte over SPI without readback
 ; Input: A = byte to send
 ; Destroys: AF, B, D
-_ra8875_write:
+ra8875_write:
     ; bit counter
     ld b,8
 _ra8875_write_loop:
@@ -138,7 +132,7 @@ _ra8875_write_bit:
 ; Sends a dummy byte (0x00) during the read
 ; Output: A = byte received
 ; Destroys: AF, B, D
-_ra8875_read:
+ra8875_read:
     ; bit counter
     ld b,8
     ; Initialize received byte
