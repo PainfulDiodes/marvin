@@ -37,10 +37,10 @@ SPI_RESET       equ 0xFE    ; bit 0 low = reset asserted
 SPI_SELECT_0    equ 0xFD    ; bit 1 low = SPI0 selected
 
 ; Serialisation delay - time for 74HCT299 to shift 8 bits
-SPI_SERIAL_DELAY equ 0xff
+SPI_SERIAL_DELAY equ 0x10 ;0xff
 
 ; CS setup/hold delay - loop count after asserting or before deasserting CS
-SPI_CS_DELAY_VAL equ 0xff
+SPI_CS_DELAY_VAL equ 0x01
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,7 +88,7 @@ ra8875_cs_start:
     push af
     ld a,SPI_SELECT_0
     out (SPI_CTRL),a
-    call _spi_cs_delay
+    ; call _spi_cs_delay
     pop af
     ret
 
@@ -97,7 +97,7 @@ ra8875_cs_start:
 ; Destroys: AF
 ra8875_cs_end:
     push af
-    call _spi_cs_delay
+    ; call _spi_cs_delay
     ld a,SPI_IDLE
     out (SPI_CTRL),a
     pop af
