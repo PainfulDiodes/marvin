@@ -40,13 +40,13 @@ modules_for_target() {
         beanboard)
             COMBINED_ENTRY="entry_beanboard"
             MARVIN_MODULES="console_beanboard init_beanboard monitor hex messages_beanboard"
-            DRIVER_MODULES="um245r hd44780 keymatrix"
+            DRIVER_MODULES="um245r hd44780 keymatrix ra8875 ra8875_gpio"
             BASIC_MAIN="MAIN_SM_DSP"
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
             MARVIN_MODULES="console_beandeck init_beanboard monitor hex messages"
-            DRIVER_MODULES="um245r keymatrix"
+            DRIVER_MODULES="um245r keymatrix ra8875 ra8875_spi"
             BASIC_MAIN="MAIN"
             ;;
         *)
@@ -69,11 +69,11 @@ minimal_modules_for_target() {
             ;;
         beanboard)
             MINIMAL_ENTRY="entry_beanboard_minimal"
-            MINIMAL_MODULES="console_beanboard init_beanboard drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix messages_beanboard"
+            MINIMAL_MODULES="console_beanboard init_beanboard drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix drivers/ra8875 drivers/ra8875_gpio messages_beanboard"
             ;;
         beandeck)
             MINIMAL_ENTRY="entry_beandeck_minimal"
-            MINIMAL_MODULES="console_beandeck init_beanboard drivers/um245r monitor hex drivers/keymatrix messages"
+            MINIMAL_MODULES="console_beandeck init_beanboard drivers/um245r monitor hex drivers/keymatrix drivers/ra8875 drivers/ra8875_spi messages"
             ;;
     esac
 }
