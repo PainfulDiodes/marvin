@@ -39,13 +39,21 @@ _readchar_end:
     pop hl
     ret
 
-; send character in A to console (USB and RA8875 display)
+; send character in A to console
 putchar:
     push bc
     push de
     push hl
     ld b,a
-    call usb_putchar
+    ld hl,CONSOLE_STATUS
+    ld a,CONSOLE_STATUS_BEANBOARD
+    and (hl)
+    jr nz,_putchar_ra8875
+    ld a,CONSOLE_STATUS_USB
+    and (hl)
+    jr nz,_putchar_usb
+    jr _putchar_done
+_putchar_ra8875:
     ld a,b
     cp 0x0a                     ; newline?
     jr z,_putchar_newline
@@ -59,6 +67,10 @@ _putchar_newline:
     add hl,de
     ld (RA8875_CURSOR_Y),hl
     call ra8875_cursor_y        ; advance Y by one character height (16px)
+    jr _putchar_done
+_putchar_usb:
+    ld a,b
+    call usb_putchar
 _putchar_done:
     ld a,b
     pop hl
