@@ -367,6 +367,9 @@ ra8875_initialise:
     call ra8875_display_on
     call ra8875_adafruit_tft_enable
     call _ra8875_backlight_init
+    call ra8875_text_mode
+    ld a,RA8875_CURSOR_BLINK_RATE
+    call ra8875_cursor_blink
 
     cmp a ; clear error flag
     ret
