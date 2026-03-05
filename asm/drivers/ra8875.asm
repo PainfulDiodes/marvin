@@ -21,18 +21,9 @@
     PUBLIC ra8875_read_reg
     PUBLIC ra8875_write_reg
     PUBLIC ra8875_reg_0_check
-    PUBLIC ra8875_pllc1_init
-    PUBLIC ra8875_pllc2_init
-    PUBLIC ra8875_sysr_init
-    PUBLIC ra8875_pcsr_init
-    PUBLIC ra8875_horizontal_settings_init
-    PUBLIC ra8875_vertical_settings_init
-    PUBLIC ra8875_horizontal_active_window_init
-    PUBLIC ra8875_vertical_active_window_init
     PUBLIC ra8875_clear_window
     PUBLIC ra8875_display_on
     PUBLIC ra8875_adafruit_tft_enable
-    PUBLIC ra8875_backlight_init
     PUBLIC ra8875_initialise
     PUBLIC ra8875_text_mode
     PUBLIC ra8875_cursor_blink
@@ -162,7 +153,7 @@ ra8875_reg_0_check:
     cp RA8875_REG_0_VAL ; sets Z flag if matched
     ret
 
-ra8875_pllc1_init:
+_ra8875_pllc1_init:
     push af
     push bc
     ld a,RA8875_PLLC1
@@ -173,7 +164,7 @@ ra8875_pllc1_init:
     pop af
     ret
 
-ra8875_pllc2_init:
+_ra8875_pllc2_init:
     push af
     push bc
     ld a,RA8875_PLLC2
@@ -184,7 +175,7 @@ ra8875_pllc2_init:
     pop af
     ret
 
-ra8875_sysr_init:
+_ra8875_sysr_init:
     push af
     push bc
     ld a,RA8875_SYSR
@@ -194,7 +185,7 @@ ra8875_sysr_init:
     pop af
     ret
 
-ra8875_pcsr_init:
+_ra8875_pcsr_init:
     push af
     push bc
     ld a,RA8875_PCSR
@@ -205,7 +196,7 @@ ra8875_pcsr_init:
     pop af
     ret
 
-ra8875_horizontal_settings_init:
+_ra8875_horizontal_settings_init:
     push af
     push bc
     ld a,RA8875_HDWR
@@ -227,7 +218,7 @@ ra8875_horizontal_settings_init:
     pop af
     ret
 
-ra8875_vertical_settings_init:
+_ra8875_vertical_settings_init:
     push af
     push bc
     ld a,RA8875_VDHR0
@@ -255,7 +246,7 @@ ra8875_vertical_settings_init:
     pop af
     ret
 
-ra8875_horizontal_active_window_init:
+_ra8875_horizontal_active_window_init:
     push af
     push bc
     ld a,RA8875_HSAW0
@@ -274,7 +265,7 @@ ra8875_horizontal_active_window_init:
     pop af
     ret
 
-ra8875_vertical_active_window_init:
+_ra8875_vertical_active_window_init:
     push af
     push bc
     ld a,RA8875_VSAW0
@@ -330,7 +321,7 @@ ra8875_adafruit_tft_enable:
     ret
 
 ; PWM1 wired for backlight control
-ra8875_backlight_init:
+_ra8875_backlight_init:
     push af
     push bc
     ld a,RA8875_P1CR
@@ -352,29 +343,29 @@ ra8875_initialise:
     call ra8875_reg_0_check
     ret nz ; error
 
-    call ra8875_pllc1_init
+    call _ra8875_pllc1_init
     call ra8875_reg_0_check
     ret nz ; error
 
-    call ra8875_pllc2_init
+    call _ra8875_pllc2_init
     call ra8875_reg_0_check
     ret nz ; error
 
-    call ra8875_sysr_init
+    call _ra8875_sysr_init
 
-    call ra8875_pcsr_init
+    call _ra8875_pcsr_init
     call ra8875_reg_0_check
     ret nz ; error
 
-    call ra8875_horizontal_settings_init
-    call ra8875_vertical_settings_init
-    call ra8875_horizontal_active_window_init
-    call ra8875_vertical_active_window_init
+    call _ra8875_horizontal_settings_init
+    call _ra8875_vertical_settings_init
+    call _ra8875_horizontal_active_window_init
+    call _ra8875_vertical_active_window_init
     call ra8875_clear_window
 
     call ra8875_display_on
     call ra8875_adafruit_tft_enable
-    call ra8875_backlight_init
+    call _ra8875_backlight_init
 
     cmp a ; clear error flag
     ret
