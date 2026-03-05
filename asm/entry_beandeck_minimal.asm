@@ -17,11 +17,16 @@
     EXTERN hex_byte_val
     EXTERN key_readchar
     EXTERN beanboard_console_init
+    EXTERN ra8875_initialise    ; ra8875.asm - display init
+    EXTERN ra8875_putchar       ; ra8875.asm - write character to display
 
     PUBLIC START
 
     ORG MARVINORG
     ld sp, STACK
+    call ra8875_initialise
+    ld hl,0
+    ld (RA8875_CURSOR_Y),hl     ; initialise cursor Y to 0
     call beanboard_console_init
 
 ; jump table at fixed addresses - must match jumptable.inc
@@ -34,8 +39,8 @@ ALIGN 0x0010
     jp puts             ; 0x001F - print string (HL = address, zero-terminated)
     jp putchar_hex      ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
-    jp _stub            ; 0x0028 - lcd_init (not yet available on beandeck)
-    jp _stub            ; 0x002B - lcd_putchar (not yet available on beandeck)
+    jp ra8875_initialise ; 0x0028 - display init
+    jp ra8875_putchar   ; 0x002B - display putchar (A = char)
     jp key_readchar     ; 0x002E - read keyboard
 _stub:
     ret

@@ -9,6 +9,8 @@
     EXTERN usb_putchar
     EXTERN key_readchar
     EXTERN ra8875_putchar
+    EXTERN ra8875_cursor_x
+    EXTERN ra8875_cursor_y
 
 ; wait for a character and return in A
 getchar:
@@ -40,11 +42,27 @@ _readchar_end:
 ; send character in A to console (USB and RA8875 display)
 putchar:
     push bc
+    push de
+    push hl
     ld b,a
     call usb_putchar
     ld a,b
+    cp 0x0a                     ; newline?
+    jr z,_putchar_newline
     call ra8875_putchar
+    jr _putchar_done
+_putchar_newline:
+    ld hl,0
+    call ra8875_cursor_x        ; reset X to 0
+    ld hl,(RA8875_CURSOR_Y)
+    ld de,16
+    add hl,de
+    ld (RA8875_CURSOR_Y),hl
+    call ra8875_cursor_y        ; advance Y by one character height (16px)
+_putchar_done:
     ld a,b
+    pop hl
+    pop de
     pop bc
     ret
 
