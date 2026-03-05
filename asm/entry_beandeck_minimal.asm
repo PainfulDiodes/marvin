@@ -27,6 +27,13 @@
     call ra8875_initialise
     ld hl,0
     ld (RA8875_CURSOR_Y),hl     ; initialise cursor Y to 0
+    ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
+_boot_settle:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_settle
     call beanboard_console_init
 
 ; jump table at fixed addresses - must match jumptable.inc
