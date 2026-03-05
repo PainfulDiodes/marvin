@@ -15,6 +15,7 @@
 ;   ra8875_read          - Read byte via SPI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    PUBLIC ra8875_reset
     PUBLIC ra8875_write_command
     PUBLIC ra8875_write_data
     PUBLIC ra8875_read_data
@@ -51,7 +52,7 @@ INCLUDE "asm/drivers/ra8875.inc"
 RA8875_DELAY_VAL equ 0xff
 
 ; General timing delay - chip settling after PLL init etc.
-ra8875_delay:
+_ra8875_delay:
     push bc
     ld b,RA8875_DELAY_VAL
 _ra8875_delay_loop:
@@ -63,7 +64,7 @@ _ra8875_delay_loop:
 ; Hardware reset - assert RESET, delay, then deassert
 ra8875_reset:
     call ra8875_reset_assert
-    call ra8875_delay
+    call _ra8875_delay
     call ra8875_reset_deassert
     ret
 
@@ -159,7 +160,7 @@ _ra8875_pllc1_init:
     ld a,RA8875_PLLC1
     ld b,RA8875_PLLC1_VAL
     call ra8875_write_reg
-    call ra8875_delay
+    call _ra8875_delay
     pop bc
     pop af
     ret
@@ -170,7 +171,7 @@ _ra8875_pllc2_init:
     ld a,RA8875_PLLC2
     ld b,RA8875_PLLC2_VAL
     call ra8875_write_reg
-    call ra8875_delay
+    call _ra8875_delay
     pop bc
     pop af
     ret
@@ -191,7 +192,7 @@ _ra8875_pcsr_init:
     ld a,RA8875_PCSR
     ld b,RA8875_PCSR_VAL
     call ra8875_write_reg
-    call ra8875_delay
+    call _ra8875_delay
     pop bc
     pop af
     ret
