@@ -64,6 +64,8 @@ _stub:
 ;
 _boot:
     call ra8875_initialise
+    ld hl,0
+    ld (RA8875_CURSOR_Y),hl     ; initialise cursor Y to 0
     call beanboard_console_init
     jp marvin_coldstart
 ;
