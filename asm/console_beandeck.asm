@@ -8,6 +8,7 @@
     EXTERN usb_readchar
     EXTERN usb_putchar
     EXTERN key_readchar
+    EXTERN ra8875_putchar
 
 ; wait for a character and return in A
 getchar:
@@ -36,11 +37,13 @@ _readchar_end:
     pop hl
     ret
 
-; send character in A to USB console
+; send character in A to console (USB and RA8875 display)
 putchar:
     push bc
     ld b,a
     call usb_putchar
+    ld a,b
+    call ra8875_putchar
     ld a,b
     pop bc
     ret

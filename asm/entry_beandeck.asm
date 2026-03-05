@@ -22,6 +22,8 @@
     EXTERN hex_byte_val         ; hex.asm - parse hex pair
     EXTERN key_readchar         ; keymatrix.asm - keyboard read
     EXTERN beanboard_console_init ; beanboard_init.asm - console selection
+    EXTERN ra8875_initialise    ; ra8875.asm - display init
+    EXTERN ra8875_putchar       ; ra8875.asm - write character to display
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     INCLUDE "asm/system.inc"
@@ -47,8 +49,8 @@ ALIGN 0x0010
     jp puts             ; 0x001F - print string (HL = address, zero-terminated)
     jp putchar_hex      ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
-    jp _stub            ; 0x0028 - lcd_init (not yet available on beandeck)
-    jp _stub            ; 0x002B - lcd_putchar (not yet available on beandeck)
+    jp ra8875_initialise ; 0x0028 - display init
+    jp ra8875_putchar   ; 0x002B - display putchar (A = char)
     jp key_readchar     ; 0x002E - read keyboard
 _stub:
     ret
@@ -61,6 +63,7 @@ _stub:
 ;   No key → keyboard input
 ;
 _boot:
+    call ra8875_initialise
     call beanboard_console_init
     jp marvin_coldstart
 ;
