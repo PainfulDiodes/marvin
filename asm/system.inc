@@ -7,6 +7,8 @@ RAMSTART equ 0x8000
 ; 8-byte status area
 CONSOLE_STATUS equ 0xf000
 RA8875_CURSOR_Y equ 0xf001  ; 2-byte RA8875 text cursor Y position (pixels)
+RA8875_CURSOR_X equ 0xf003  ; 1-byte column counter (0-99)
+RA8875_SCROLL_Y equ 0xf004  ; 2-byte vertical scroll offset (VOFS, pixels)
 ; 8-byte keyscan buffer
 KEY_MATRIX_BUFFER equ 0xf010
 ; command buffer

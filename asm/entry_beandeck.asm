@@ -66,6 +66,9 @@ _boot:
     call ra8875_initialise
     ld hl,0
     ld (RA8875_CURSOR_Y),hl     ; initialise cursor Y to 0
+    ld (RA8875_SCROLL_Y),hl     ; initialise scroll offset to 0
+    xor a
+    ld (RA8875_CURSOR_X),a      ; initialise column counter to 0
     ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
 _boot_settle:
     nop
