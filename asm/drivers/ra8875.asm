@@ -28,6 +28,8 @@
     PUBLIC ra8875_initialise
     PUBLIC ra8875_text_mode
     PUBLIC ra8875_cursor_blink
+    PUBLIC ra8875_cursor_hide
+    PUBLIC ra8875_cursor_show
     PUBLIC ra8875_cursor_x
     PUBLIC ra8875_cursor_y
     PUBLIC ra8875_memory_read_write_command
@@ -415,6 +417,28 @@ ra8875_cursor_blink:
     ld a,b ; restore blink rate
     call ra8875_write_data
     pop bc
+    pop af
+    ret
+
+; Hide text cursor (clear MWCR0 bit 6)
+ra8875_cursor_hide:
+    push af
+    ld a,RA8875_MWCR0
+    call ra8875_write_command
+    call ra8875_read_data
+    and 0b10111111              ; clear cursor visible bit (bit 6)
+    call ra8875_write_data
+    pop af
+    ret
+
+; Show text cursor (set MWCR0 bit 6)
+ra8875_cursor_show:
+    push af
+    ld a,RA8875_MWCR0
+    call ra8875_write_command
+    call ra8875_read_data
+    or RA8875_MWCR0_CURSOR      ; set cursor visible bit (bit 6)
+    call ra8875_write_data
     pop af
     ret
 
