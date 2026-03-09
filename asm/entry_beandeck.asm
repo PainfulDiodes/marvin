@@ -66,10 +66,10 @@ _stub:
 _boot:
     call ra8875_initialise
     ld hl,0
-    ld (RA8875_CURSOR_Y),hl     ; initialise cursor Y to 0
+    ld (RA8875_CURSOR_Y_PIX),hl ; initialise cursor Y to 0
     xor a
     ld (RA8875_CURSOR_X),a      ; initialise cursor X to 0
-    ld (RA8875_ROW),a           ; initialise row to 0
+    ld (RA8875_CURSOR_Y),a      ; initialise row to 0
     ; fill framebuffer with spaces
     ld hl,RA8875_FRAMEBUFFER
     ld (hl),' '

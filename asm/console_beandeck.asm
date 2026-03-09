@@ -64,7 +64,7 @@ _putchar_ra8875:
     jr z,_putchar_newline
     call ra8875_putchar         ; write char to display
     ; write B (char) to framebuffer[row][col]
-    ld a,(RA8875_ROW)
+    ld a,(RA8875_CURSOR_Y)
     add a,a                     ; A = row * 2 (word index into table)
     ld e,a
     ld d,0                      ; DE = row * 2
@@ -93,7 +93,7 @@ _putchar_ra8875:
     jr _putchar_done
 _putchar_newline:
     ; pad remaining columns in framebuffer row with spaces
-    ld a,(RA8875_ROW)
+    ld a,(RA8875_CURSOR_Y)
     add a,a                     ; A = row * 2
     ld e,a
     ld d,0
@@ -137,22 +137,22 @@ _putchar_done:
     pop bc
     ret
 
-; advance RA8875_ROW and RA8875_CURSOR_Y by one row.
+; advance RA8875_CURSOR_Y and RA8875_CURSOR_Y_PIX by one row.
 ; When already at last row, scroll: shift framebuffer up, clear last row, redraw display.
 ; Preserves BC, DE, HL.
 _beandeck_advance_line:
     push bc
     push de
     push hl
-    ld a,(RA8875_ROW)
+    ld a,(RA8875_CURSOR_Y)
     cp RA8875_ROWS-1            ; already at last row?
     jr z,_beandeck_scroll       ; yes: scroll
     inc a
-    ld (RA8875_ROW),a
-    ld hl,(RA8875_CURSOR_Y)
+    ld (RA8875_CURSOR_Y),a
+    ld hl,(RA8875_CURSOR_Y_PIX)
     ld de,RA8875_CHAR_H
     add hl,de
-    ld (RA8875_CURSOR_Y),hl
+    ld (RA8875_CURSOR_Y_PIX),hl
     call ra8875_cursor_y
     pop hl
     pop de
@@ -195,9 +195,9 @@ _redraw_loop:
     call ra8875_cursor_x
     ld hl,RA8875_LAST_ROW_Y                     ; 464 = 29 * 16
     call ra8875_cursor_y
-    ld (RA8875_CURSOR_Y),hl                     ; update RAM cursor Y
+    ld (RA8875_CURSOR_Y_PIX),hl                     ; update RAM cursor Y
     call ra8875_cursor_show
-    ; RA8875_ROW stays 29, RA8875_CURSOR_X stays 0
+    ; RA8875_CURSOR_Y stays 29, RA8875_CURSOR_X stays 0
     pop hl
     pop de
     pop bc
