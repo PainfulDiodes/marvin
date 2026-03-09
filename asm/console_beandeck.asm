@@ -91,7 +91,7 @@ _putchar_ra8875:
     ; line wrap: reset X, advance Y
     xor a
     ld (RA8875_CURSOR_X),a
-    call _beandeck_advance_line
+    call _advance_line
     jr _putchar_done
 _putchar_newline:
     ; pad remaining columns in framebuffer row with spaces
@@ -126,7 +126,7 @@ _newline_pad_done:
     call ra8875_cursor_hide
     ld hl,0
     call ra8875_cursor_x
-    call _beandeck_advance_line
+    call _advance_line
     call ra8875_cursor_show
     jr _putchar_done
 _putchar_usb:
@@ -142,13 +142,13 @@ _putchar_done:
 ; advance RA8875_CURSOR_Y and RA8875_CURSOR_Y_PIX by one row.
 ; When already at last row, scroll: shift framebuffer up, clear last row, redraw display.
 ; Preserves BC, DE, HL.
-_beandeck_advance_line:
+_advance_line:
     push bc
     push de
     push hl
     ld a,(RA8875_CURSOR_Y)
     cp RA8875_ROWS-1            ; already at last row?
-    jr z,_beandeck_scroll       ; yes: scroll
+    jr z,_scroll       ; yes: scroll
     inc a
     ld (RA8875_CURSOR_Y),a
     ld hl,(RA8875_CURSOR_Y_PIX)
@@ -161,7 +161,7 @@ _beandeck_advance_line:
     pop bc
     ret
 
-_beandeck_scroll:
+_scroll:
     ; shift framebuffer up one row: rows 1-29 become rows 0-28
     ld hl,RA8875_FRAMEBUFFER + RA8875_COLS      ; src = row 1
     ld de,RA8875_FRAMEBUFFER                    ; dst = row 0
