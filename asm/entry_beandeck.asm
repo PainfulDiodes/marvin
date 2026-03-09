@@ -27,6 +27,7 @@
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     INCLUDE "asm/system.inc"
+    INCLUDE "asm/drivers/ra8875.inc"
 ;
 ;
 ; ---- Boot Code ----
@@ -65,7 +66,16 @@ _stub:
 _boot:
     call ra8875_initialise
     ld hl,0
-    ld (RA8875_CURSOR_Y),hl     ; initialise cursor Y to 0
+    ld (RA8875_CURSOR_Y_PIX),hl ; initialise cursor Y to 0
+    xor a
+    ld (RA8875_CURSOR_X),a      ; initialise cursor X to 0
+    ld (RA8875_CURSOR_Y),a      ; initialise row to 0
+    ; fill framebuffer with spaces
+    ld hl,RA8875_FRAMEBUFFER
+    ld (hl),' '
+    ld de,RA8875_FRAMEBUFFER+1
+    ld bc,RA8875_ROWS * RA8875_COLS - 1
+    ldir
     ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
 _boot_settle:
     nop

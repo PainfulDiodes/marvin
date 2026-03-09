@@ -396,3 +396,11 @@ RA8875_REG_0_VAL equ 0x75
 
 ; default cursor blink rate
 RA8875_CURSOR_BLINK_RATE equ 0x20
+
+; character and display dimensions (800x480, 8x16 internal font)
+RA8875_CHAR_W    equ 8
+RA8875_CHAR_H    equ 16
+RA8875_COLS      equ 100
+RA8875_ROWS      equ 30
+RA8875_SCREEN_H  equ 480
+RA8875_LAST_ROW_Y equ RA8875_SCREEN_H-RA8875_CHAR_H ; (RA8875_ROWS-1) * RA8875_CHAR_H

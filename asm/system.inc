@@ -6,7 +6,11 @@ RAMSTART equ 0x8000
 
 ; 8-byte status area
 CONSOLE_STATUS equ 0xf000
-RA8875_CURSOR_Y equ 0xf001  ; 2-byte RA8875 text cursor Y position (pixels)
+RA8875_CURSOR_Y_PIX equ 0xf001  ; 2-byte RA8875 text cursor Y position (pixels)
+RA8875_CURSOR_X     equ 0xf003  ; 1-byte column counter (0-99)
+RA8875_CURSOR_Y     equ 0xf004  ; 1-byte logical row (0-29)
+; framebuffer: 30*100 = 3000 bytes (0xf100-0xfcb7), stack above 0xfcb8
+RA8875_FRAMEBUFFER equ 0xf100
 ; 8-byte keyscan buffer
 KEY_MATRIX_BUFFER equ 0xf010
 ; command buffer

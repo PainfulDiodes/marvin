@@ -26,7 +26,7 @@
     ld sp, STACK
     call ra8875_initialise
     ld hl,0
-    ld (RA8875_CURSOR_Y),hl     ; initialise cursor Y to 0
+    ld (RA8875_CURSOR_Y_PIX),hl ; initialise cursor Y to 0
     ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
 _boot_settle:
     nop
