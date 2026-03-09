@@ -426,7 +426,7 @@ ra8875_cursor_hide:
     ld a,RA8875_MWCR0
     call ra8875_write_command
     call ra8875_read_data
-    and 0b10111111              ; clear cursor visible bit (bit 6)
+    and ~RA8875_MWCR0_CURSOR    ; clear cursor visible bit (bit 6)
     call ra8875_write_data
     pop af
     ret
