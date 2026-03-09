@@ -1,6 +1,8 @@
     INCLUDE "asm/system.inc"
     INCLUDE "asm/drivers/ra8875.inc"
 
+RA8875_FRAMEBUFFER_END equ RA8875_FRAMEBUFFER + RA8875_ROWS * RA8875_COLS
+
     PUBLIC getchar
     PUBLIC readchar
     PUBLIC putchar
@@ -63,25 +65,11 @@ _putchar_ra8875:
     cp 0x0a                     ; newline?
     jr z,_putchar_newline
     call ra8875_putchar         ; write char to display
-    ; write B (char) to framebuffer[row][col]
-    ; _fb_row_offsets is composed of 16-bit words, therefore in order to 
-    ; access the desired word we need to double the index (row number)
-    ld a,(RA8875_CURSOR_Y)
-    add a,a                     ; A = row * 2 (word index into table)
-    ld e,a
-    ld d,0                      ; DE = row * 2
-    ld hl,_fb_row_offsets
-    add hl,de                   ; HL = &_fb_row_offsets[row]
-    ld e,(hl)
+    ; write B (char) to framebuffer via direct write pointer
+    ld hl,(FB_WRITE_PTR)
+    ld (hl),b                   ; store char
     inc hl
-    ld d,(hl)                   ; DE = row_offset (row * 100)
-    ld hl,RA8875_FRAMEBUFFER
-    add hl,de                   ; HL = &framebuffer[row * 100]
-    ld a,(RA8875_CURSOR_X)
-    ld e,a
-    ld d,0
-    add hl,de                   ; HL = &framebuffer[row * 100 + col]
-    ld (hl),b                   ; store char (B preserved throughout)
+    ld (FB_WRITE_PTR),hl        ; advance pointer (no wrap check: rows never straddle buffer end)
     ; update X column counter
     ld a,(RA8875_CURSOR_X)
     inc a
@@ -95,29 +83,17 @@ _putchar_ra8875:
     jr _putchar_done
 _putchar_newline:
     ; pad remaining columns in framebuffer row with spaces
-    ld a,(RA8875_CURSOR_Y)
-    add a,a                     ; A = row * 2
-    ld e,a
-    ld d,0
-    ld hl,_fb_row_offsets
-    add hl,de
-    ld e,(hl)
-    inc hl
-    ld d,(hl)                   ; DE = row * 100
-    ld hl,RA8875_FRAMEBUFFER
-    add hl,de                   ; HL = row start in framebuffer
-    ld a,(RA8875_CURSOR_X)
-    ld e,a
-    ld d,0
-    add hl,de                   ; HL = current position in row
+    ld hl,RA8875_CURSOR_X
     ld a,RA8875_COLS
-    sub e                       ; A = remaining columns
+    sub (hl)                    ; A = remaining columns (100 - col)
     jr z,_newline_pad_done
     ld b,a
+    ld hl,(FB_WRITE_PTR)        ; HL = current write position
 _newline_pad_loop:
     ld (hl),' '
     inc hl
     djnz _newline_pad_loop
+    ld (FB_WRITE_PTR),hl        ; HL now at next row start (wrap checked in _advance_line)
 _newline_pad_done:
     ld b,0x0a                   ; restore B = newline char (djnz clobbered B)
     ; reset X and set hardware cursor X to 0
@@ -140,12 +116,23 @@ _putchar_done:
     ret
 
 ; advance RA8875_CURSOR_Y and RA8875_CURSOR_Y_PIX by one row.
-; When already at last row, scroll: shift framebuffer up, clear last row, redraw display.
+; When already at last row, scroll: advance FB_SCREEN_START (circular), clear new last row, redraw display.
 ; Preserves BC, DE, HL.
 _advance_line:
     push bc
     push de
     push hl
+    ; check and apply circular buffer wrap (FB_WRITE_PTR wraps only at row boundaries)
+    ld hl,(FB_WRITE_PTR)
+    ld a,h
+    cp RA8875_FRAMEBUFFER_END >> 8
+    jr nz,_advance_no_wrap
+    ld a,l
+    cp RA8875_FRAMEBUFFER_END & 0xff
+    jr nz,_advance_no_wrap
+    ld hl,RA8875_FRAMEBUFFER    ; wrap to buffer start
+    ld (FB_WRITE_PTR),hl
+_advance_no_wrap:
     ld a,(RA8875_CURSOR_Y)
     cp RA8875_ROWS-1            ; already at last row?
     jr z,_scroll       ; yes: scroll
@@ -162,42 +149,71 @@ _advance_line:
     ret
 
 _scroll:
-    ; shift framebuffer up one row: rows 1-29 become rows 0-28
-    ld hl,RA8875_FRAMEBUFFER + RA8875_COLS      ; src = row 1
-    ld de,RA8875_FRAMEBUFFER                    ; dst = row 0
-    ld bc,(RA8875_ROWS-1) * RA8875_COLS         ; 2900 bytes
-    ldir
+    ; advance FB_SCREEN_START by one row (circular): logical row 0 moves forward
+    ld hl,(FB_SCREEN_START)
+    ld de,RA8875_COLS           ; 100
+    add hl,de
+    ; wrap check: HL == 0xfcb8 (past end of physical buffer)?
+    ld a,h
+    cp RA8875_FRAMEBUFFER_END >> 8
+    jr nz,_scroll_no_wrap
+    ld a,l
+    cp RA8875_FRAMEBUFFER_END & 0xff
+    jr nz,_scroll_no_wrap
+    ld hl,RA8875_FRAMEBUFFER    ; wrap to physical start
+_scroll_no_wrap:
+    ld (FB_SCREEN_START),hl
 
-    ; clear last row in framebuffer with spaces
-    ld hl,RA8875_FRAMEBUFFER + (RA8875_ROWS-1) * RA8875_COLS
+    ; clear new last row: FB_WRITE_PTR points to it (invariant: FB_WRITE_PTR == old FB_SCREEN_START)
+    ld hl,(FB_WRITE_PTR)
     ld (hl),' '
-    ld de,RA8875_FRAMEBUFFER + (RA8875_ROWS-1) * RA8875_COLS + 1
+    ld d,h
+    ld e,l
+    inc de
     ld bc,RA8875_COLS-1
     ldir
 
-    ; redraw display: set cursor to (0,0), bulk-write all 3000 chars
+    ; redraw display: set cursor to (0,0), bulk-write all 3000 chars in two segments
     call ra8875_cursor_hide
     ld hl,0
     call ra8875_cursor_x
     call ra8875_cursor_y
     call ra8875_memory_read_write_command       ; issue MRWC once for bulk write
-    ld hl,RA8875_FRAMEBUFFER
-    ld bc,RA8875_ROWS * RA8875_COLS             ; 3000
-_redraw_loop:
-    ld a,(hl)
-    call ra8875_write_data                      ; stream char without re-issuing command
-    inc hl
-    dec bc
+
+    ; segment 1: FB_SCREEN_START to end of physical buffer
+    ld de,(FB_SCREEN_START)
+    ld hl,RA8875_FRAMEBUFFER_END
+    ld a,l
+    sub e
+    ld c,a
+    ld a,h
+    sbc a,d                     ; BC = 0xfcb8 - FB_SCREEN_START
+    ld b,a
+    ld hl,(FB_SCREEN_START)
+    call _redraw_stream
+
+    ; segment 2: physical buffer start to FB_SCREEN_START (zero bytes when no wrap yet)
+    ld hl,(FB_SCREEN_START)
+    ld de,RA8875_FRAMEBUFFER
+    ld a,l
+    sub e
+    ld c,a
+    ld a,h
+    sbc a,d                     ; BC = FB_SCREEN_START - RA8875_FRAMEBUFFER
+    ld b,a
     ld a,b
     or c
-    jr nz,_redraw_loop
+    jr z,_redraw_done
+    ld hl,RA8875_FRAMEBUFFER
+    call _redraw_stream
+_redraw_done:
 
     ; position cursor at start of last row
     ld hl,0
     call ra8875_cursor_x
     ld hl,RA8875_LAST_ROW_Y                     ; 464 = 29 * 16
     call ra8875_cursor_y
-    ld (RA8875_CURSOR_Y_PIX),hl                     ; update RAM cursor Y
+    ld (RA8875_CURSOR_Y_PIX),hl                 ; update RAM cursor Y
     call ra8875_cursor_show
     ; RA8875_CURSOR_Y stays 29, RA8875_CURSOR_X stays 0
     pop hl
@@ -205,12 +221,21 @@ _redraw_loop:
     pop bc
     ret
 
-; framebuffer row offset table: row -> byte offset (row * 100)
-; 30 entries * 2 bytes = 60 bytes
-_fb_row_offsets:
-    dw 0, 100, 200, 300, 400, 500, 600, 700, 800, 900
-    dw 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900
-    dw 2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900
+; stream BC chars from (HL) to RA8875 (MRWC must already be issued)
+_redraw_stream:
+    ld a,b
+    or c
+    ret z                       ; do nothing if BC=0
+_redraw_stream_loop:
+    ld a,(hl)
+    call ra8875_write_data
+    inc hl
+    dec bc
+    ld a,b
+    or c
+    jr nz,_redraw_stream_loop
+    ret
+
 
 ; print a zero-terminated string pointed to by hl to the console
 puts:

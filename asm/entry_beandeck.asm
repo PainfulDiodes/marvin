@@ -70,6 +70,9 @@ _boot:
     xor a
     ld (RA8875_CURSOR_X),a      ; initialise cursor X to 0
     ld (RA8875_CURSOR_Y),a      ; initialise row to 0
+    ld hl,RA8875_FRAMEBUFFER
+    ld (FB_WRITE_PTR),hl        ; write pointer starts at framebuffer base
+    ld (FB_SCREEN_START),hl     ; logical row 0 starts at framebuffer base
     ; fill framebuffer with spaces
     ld hl,RA8875_FRAMEBUFFER
     ld (hl),' '
