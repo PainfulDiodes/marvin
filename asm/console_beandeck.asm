@@ -64,6 +64,8 @@ _putchar_ra8875:
     jr z,_putchar_newline
     call ra8875_putchar         ; write char to display
     ; write B (char) to framebuffer[row][col]
+    ; _fb_row_offsets is composed of 16-bit words, therefore in order to 
+    ; access the desired word we need to double the index (row number)
     ld a,(RA8875_CURSOR_Y)
     add a,a                     ; A = row * 2 (word index into table)
     ld e,a
