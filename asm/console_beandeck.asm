@@ -69,14 +69,14 @@ _putchar_ra8875:
     ; line wrapped: reset column counter and advance Y
     xor a
     ld (RA8875_CURSOR_X),a
-    call _beandeck_advance_line
+    call _advance_line
     jr _putchar_done
 _putchar_newline:
     xor a
     ld (RA8875_CURSOR_X),a      ; reset column counter
     ld hl,0
     call ra8875_cursor_x        ; reset hardware X to 0
-    call _beandeck_advance_line ; advance Y, scroll if needed
+    call _advance_line ; advance Y, scroll if needed
     jr _putchar_done
 _putchar_usb:
     ld a,b
@@ -91,7 +91,7 @@ _putchar_done:
 ; Advance the cursor to the next character row.
 ; Scrolls the display up by one line if the cursor is at the bottom.
 ; Preserves all registers.
-_beandeck_advance_line:
+_advance_line:
     push af
     push bc
     push de
