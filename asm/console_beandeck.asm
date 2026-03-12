@@ -91,7 +91,7 @@ _putchar_ra8875:
     ld a,b
     cp 0x0a                     ; newline?
     jr z,_putchar_newline
-    cp 0x0d                     ; carriage return?
+    cp 0x0d                     ; carriage return? TODO - validate - do we need this?
     jr z,_putchar_newline
     ; character overwrites software cursor at current position; RA8875 auto-advances
     call ra8875_putchar
