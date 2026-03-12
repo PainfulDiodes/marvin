@@ -396,3 +396,27 @@ RA8875_REG_0_VAL equ 0x75
 
 ; default cursor blink rate
 RA8875_CURSOR_BLINK_RATE equ 0x20
+
+; character and display dimensions (800x480, 8x16 internal font)
+RA8875_CHAR_W    equ 8       ; character width in pixels
+RA8875_CHAR_H    equ 16      ; character height in pixels
+RA8875_COLS      equ 100     ; characters per line (800 / 8)
+RA8875_ROWS      equ 30      ; character rows (480 / 16)
+RA8875_SCREEN_H  equ 480     ; display height in pixels
+RA8875_LAST_ROW  equ 464     ; Y pixel of last character row (29 * 16)
+
+; REG[26h] Vertical Scroll Offset [7:0]
+RA8875_VOFS0     equ 0x26
+; REG[27h] Vertical Scroll Offset [8] (bit 0 only)
+RA8875_VOFS1     equ 0x27
+
+; scroll window registers (define the scroll region)
+RA8875_HOFS0     equ 0x38    ; horizontal scroll window start low
+RA8875_HOFS1     equ 0x39    ; horizontal scroll window start high
+RA8875_SCVSTR0   equ 0x3A    ; vertical scroll window start low
+RA8875_SCVSTR1   equ 0x3B    ; vertical scroll window start high
+RA8875_HEND0     equ 0x3C    ; horizontal scroll window end low
+RA8875_HEND1     equ 0x3D    ; horizontal scroll window end high
+RA8875_VEND0     equ 0x3E    ; vertical scroll window end low
+RA8875_VEND1     equ 0x3F    ; vertical scroll window end high
+RA8875_SCROLL_MODE equ 0x52  ; 0x00 = scroll both layers

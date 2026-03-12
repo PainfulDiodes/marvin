@@ -5,8 +5,10 @@ DEFINE _MAIN_INC
 RAMSTART equ 0x8000
 
 ; 8-byte status area
-CONSOLE_STATUS equ 0xf000
-RA8875_CURSOR_Y equ 0xf001  ; 2-byte RA8875 text cursor Y position (pixels)
+CONSOLE_STATUS    equ 0xf000
+RA8875_CURSOR_COL equ 0xf001  ; 1-byte column (0..RA8875_COLS-1)
+RA8875_CURSOR_ROW equ 0xf002  ; 1-byte physical row (0..RA8875_ROWS-1)
+RA8875_SCROLL_TOP equ 0xf003  ; 1-byte physical row at top of display (VOFS = scroll_top * 16)
 ; 8-byte keyscan buffer
 KEY_MATRIX_BUFFER equ 0xf010
 ; command buffer
