@@ -137,6 +137,16 @@ _advance_line:
     push hl
 
     ; last_visible = (scroll_top + RA8875_ROWS - 1) % RA8875_ROWS
+    ; This calculates which physical row is currently at the bottom of the display — 
+    ; the last visible row.
+    ; For example, with 30 rows and scroll_top = 5, the last visible row is physical row 4
+    ; (wrapping around the circular buffer: rows 5, 6, … 29, 0, 1, 2, 3, 4).
+    ; The % ROWS is done with a conditional subtract rather than a true modulo — 
+    ; this works because scroll_top is always in range [0, ROWS-1], 
+    ; so scroll_top + (ROWS-1) can overshoot by at most ROWS-1, 
+    ; meaning a single subtract is sufficient to bring it back in range.
+    ; After this block, A holds the physical row number of the last visible (bottom) line, 
+    ; which is then compared against the current cursor row to decide whether a scroll is needed.
     ld a,(RA8875_SCROLL_TOP)
     add a,RA8875_ROWS-1
     cp RA8875_ROWS
