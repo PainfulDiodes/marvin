@@ -24,6 +24,7 @@
     EXTERN beanboard_console_init ; beanboard_init.asm - console selection
     EXTERN ra8875_initialise    ; ra8875.asm - display init
     EXTERN ra8875_putchar       ; ra8875.asm - write character to display
+    EXTERN ra8875_console_init  ; console_beandeck.asm - console state init
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     INCLUDE "asm/system.inc"
@@ -64,8 +65,6 @@ _stub:
 ;
 _boot:
     call ra8875_initialise
-    ld hl,0
-    ld (RA8875_CURSOR_Y),hl     ; initialise cursor Y to 0
     ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
 _boot_settle:
     nop
@@ -73,6 +72,7 @@ _boot_settle:
     ld a,b
     or c
     jr nz,_boot_settle
+    call ra8875_console_init
     call beanboard_console_init
     jp marvin_coldstart
 ;

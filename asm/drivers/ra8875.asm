@@ -300,6 +300,42 @@ _ra8875_clear_wait:
     pop af
     ret
 
+; Configure the full-screen scroll window and enable scrolling for both layers.
+; Called once during initialisation.
+_ra8875_scroll_window_init:
+    push af
+    push bc
+    ld a,RA8875_HOFS0
+    ld b,0x00
+    call ra8875_write_reg       ; horizontal start low = 0
+    ld a,RA8875_HOFS1
+    ld b,0x00
+    call ra8875_write_reg       ; horizontal start high = 0
+    ld a,RA8875_SCVSTR0
+    ld b,0x00
+    call ra8875_write_reg       ; vertical start low = 0
+    ld a,RA8875_SCVSTR1
+    ld b,0x00
+    call ra8875_write_reg       ; vertical start high = 0
+    ld a,RA8875_HEND0
+    ld b,0x1F
+    call ra8875_write_reg       ; horizontal end low (799 = 0x031F)
+    ld a,RA8875_HEND1
+    ld b,0x03
+    call ra8875_write_reg       ; horizontal end high
+    ld a,RA8875_VEND0
+    ld b,0xDF
+    call ra8875_write_reg       ; vertical end low (479 = 0x01DF)
+    ld a,RA8875_VEND1
+    ld b,0x01
+    call ra8875_write_reg       ; vertical end high
+    ld a,RA8875_SCROLL_MODE
+    ld b,0x00
+    call ra8875_write_reg       ; scroll mode: scroll both layers
+    pop bc
+    pop af
+    ret
+
 ra8875_display_on:
     push af
     push bc
@@ -363,6 +399,7 @@ ra8875_initialise:
     call _ra8875_horizontal_active_window_init
     call _ra8875_vertical_active_window_init
     call ra8875_clear_window
+    call _ra8875_scroll_window_init
 
     call ra8875_display_on
     call ra8875_adafruit_tft_enable
