@@ -19,7 +19,7 @@
     EXTERN lcd_init             ; hd44780.asm - LCD initialisation
     EXTERN lcd_putchar          ; hd44780.asm - LCD character output
     EXTERN key_readchar         ; keymatrix.asm - keyboard read
-    EXTERN beanboard_console_init ; beanboard_init.asm - console selection
+    EXTERN console_select       ; console_select.asm - console selection
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     INCLUDE "asm/system.inc"
@@ -58,6 +58,6 @@ ALIGN 0x0010
 ;
 _boot:
     call lcd_init
-    call beanboard_console_init
+    call console_select
     jp marvin_coldstart
 ;
