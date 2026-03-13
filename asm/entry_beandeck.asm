@@ -21,7 +21,7 @@
     EXTERN putchar_hex          ; hex.asm - print hex byte
     EXTERN hex_byte_val         ; hex.asm - parse hex pair
     EXTERN key_readchar         ; keymatrix.asm - keyboard read
-    EXTERN beanboard_console_init ; beanboard_init.asm - console selection
+    EXTERN console_select       ; console_select.asm - console selection
     EXTERN ra8875_initialise    ; ra8875.asm - display init
     EXTERN ra8875_putchar       ; ra8875.asm - write character to display
     EXTERN ra8875_console_init  ; console_beandeck.asm - console state init
@@ -73,6 +73,6 @@ _boot_settle:
     or c
     jr nz,_boot_settle
     call ra8875_console_init
-    call beanboard_console_init
+    call console_select
     jp marvin_coldstart
 ;

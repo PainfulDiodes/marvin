@@ -19,16 +19,9 @@
 CURSOR_CHAR equ '_'
 
 ; Initialise RA8875 console state.
-; Resets VOFS to 0, hides hardware cursor, zeroes tracking variables,
-; draws the initial software cursor.
+; Hides hardware cursor, zeroes tracking variables, draws initial software cursor.
+; VOFS is reset by ra8875_initialise; call that first.
 ra8875_console_init:
-    ; reset scroll offset to zero
-    ld a,RA8875_VOFS0
-    ld b,0
-    call ra8875_write_reg
-    ld a,RA8875_VOFS1
-    ld b,0
-    call ra8875_write_reg
     ; hide hardware cursor - software cursor used instead
     ld a,RA8875_MWCR0
     call ra8875_read_reg

@@ -332,6 +332,12 @@ _ra8875_scroll_window_init:
     ld a,RA8875_SCROLL_MODE
     ld b,0x00
     call ra8875_write_reg       ; scroll mode: scroll both layers
+    ld a,RA8875_VOFS0
+    ld b,0x00
+    call ra8875_write_reg       ; vertical scroll offset low = 0
+    ld a,RA8875_VOFS1
+    ld b,0x00
+    call ra8875_write_reg       ; vertical scroll offset high = 0
     pop bc
     pop af
     ret
@@ -405,8 +411,6 @@ ra8875_initialise:
     call ra8875_adafruit_tft_enable
     call _ra8875_backlight_init
     call ra8875_text_mode
-    ld a,RA8875_CURSOR_BLINK_RATE
-    call ra8875_cursor_blink
 
     cmp a ; clear error flag
     ret
