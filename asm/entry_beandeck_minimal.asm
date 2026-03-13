@@ -16,7 +16,7 @@
     EXTERN putchar_hex
     EXTERN hex_byte_val
     EXTERN key_readchar
-    EXTERN beanboard_console_init
+    EXTERN console_select
     EXTERN ra8875_initialise    ; ra8875.asm - display init
     EXTERN ra8875_putchar       ; ra8875.asm - write character to display
     EXTERN ra8875_console_init  ; console_beandeck.asm - console state init
@@ -34,7 +34,7 @@ _boot_settle:
     or c
     jr nz,_boot_settle
     call ra8875_console_init
-    call beanboard_console_init
+    call console_select
 
 ; jump table at fixed addresses - must match jumptable.inc
 ALIGN 0x0010
