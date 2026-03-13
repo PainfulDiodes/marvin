@@ -16,14 +16,14 @@
     EXTERN lcd_init
     EXTERN lcd_putchar
     EXTERN key_readchar
-    EXTERN beanboard_console_init
+    EXTERN console_select
 
     PUBLIC START
 
     ORG MARVINORG
     ld sp, STACK
     call lcd_init
-    call beanboard_console_init
+    call console_select
 
 ; jump table at fixed addresses - must match jumptable.inc
 ALIGN 0x0010
