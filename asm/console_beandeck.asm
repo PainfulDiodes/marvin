@@ -270,10 +270,10 @@ _erase_cursor:
 _draw_cursor:
     push af
     push bc
+    call _cursor_xy_position    ; always reposition RA8875 cursor for subsequent writes
     ld a,(RA8875_CURSOR_VISIBLE)
     or a
-    jr z,_draw_cursor_done      ; cursor hidden: skip all SPI writes
-    call _cursor_xy_position
+    jr z,_draw_cursor_done      ; cursor hidden: skip visual rendering
     ; set background to white for solid block cursor
     ld a,RA8875_BGCR0
     ld b,0x1f
