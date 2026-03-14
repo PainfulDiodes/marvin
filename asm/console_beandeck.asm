@@ -16,8 +16,6 @@
     EXTERN ra8875_write_reg
     EXTERN ra8875_read_reg
 
-CURSOR_CHAR equ '_'
-
 ; Initialise RA8875 console state.
 ; Hides hardware cursor, zeroes tracking variables, draws initial software cursor.
 ; VOFS is reset by ra8875_initialise; call that first.
@@ -235,14 +233,37 @@ _cursor_xy_position:
 
 
 ; Draw software cursor at current (RA8875_CURSOR_ROW, RA8875_CURSOR_COL).
-; Positions RA8875 cursor, writes CURSOR_CHAR, then repositions (putchar advances cursor).
+; Solid block: writes space with white background, reversing the normal colours.
+; Positions RA8875 cursor, writes space, then repositions (putchar advances cursor).
 ; Preserves all registers.
 _draw_cursor:
     push af
+    push bc
     call _cursor_xy_position
-    ld a,CURSOR_CHAR
+    ; set background to white for solid block cursor
+    ld a,RA8875_BGCR0
+    ld b,0x1f
+    call ra8875_write_reg
+    ld a,RA8875_BGCR1
+    ld b,0x3f
+    call ra8875_write_reg
+    ld a,RA8875_BGCR2
+    ld b,0x1f
+    call ra8875_write_reg
+    ld a,' '
     call ra8875_putchar
+    ; restore background to black
+    ld a,RA8875_BGCR0
+    ld b,0x00
+    call ra8875_write_reg
+    ld a,RA8875_BGCR1
+    ld b,0x00
+    call ra8875_write_reg
+    ld a,RA8875_BGCR2
+    ld b,0x00
+    call ra8875_write_reg
     call _cursor_xy_position    ; reposition: putchar advanced the RA8875 cursor
+    pop bc
     pop af
     ret
 
