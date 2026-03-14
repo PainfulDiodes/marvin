@@ -32,6 +32,8 @@ ra8875_console_init:
     ld (RA8875_CURSOR_COL),a
     ld (RA8875_CURSOR_ROW),a
     ld (RA8875_SCROLL_TOP),a
+    ld a,1
+    ld (RA8875_CURSOR_VISIBLE),a
     ; draw initial software cursor at (0,0)
     call _draw_cursor
     ret
@@ -80,6 +82,10 @@ putchar:
     jr _putchar_done
 _putchar_ra8875:
     ld a,b
+    cp 0x0f                     ; SI - cursor off?
+    jr z,_putchar_cursor_off
+    cp 0x0e                     ; SO - cursor on?
+    jr z,_putchar_cursor_on
     cp 0x0a                     ; newline?
     jr z,_putchar_newline
     cp 0x0d                     ; carriage return? TODO - validate - do we need this?
@@ -98,6 +104,16 @@ _putchar_line_wrap:
     xor a
     ld (RA8875_CURSOR_COL),a
     call _advance_line
+    jr _putchar_done
+_putchar_cursor_off:
+    xor a
+    ld (RA8875_CURSOR_VISIBLE),a
+    call _erase_cursor
+    jr _putchar_done
+_putchar_cursor_on:
+    ld a,1
+    ld (RA8875_CURSOR_VISIBLE),a
+    call _draw_cursor
     jr _putchar_done
 _putchar_newline:
     ; erase software cursor with a space before moving to next line
@@ -232,6 +248,21 @@ _cursor_xy_position:
     ret
 
 
+; Erase software cursor at current (RA8875_CURSOR_ROW, RA8875_CURSOR_COL).
+; Writes a space with the default black background.
+; Preserves all registers.
+_erase_cursor:
+    push af
+    push bc
+    call _cursor_xy_position
+    ld a,' '
+    call ra8875_putchar
+    call _cursor_xy_position    ; reposition: putchar advanced the RA8875 cursor
+    pop bc
+    pop af
+    ret
+
+
 ; Draw software cursor at current (RA8875_CURSOR_ROW, RA8875_CURSOR_COL).
 ; Solid block: writes space with white background, reversing the normal colours.
 ; Positions RA8875 cursor, writes space, then repositions (putchar advances cursor).
@@ -239,6 +270,9 @@ _cursor_xy_position:
 _draw_cursor:
     push af
     push bc
+    ld a,(RA8875_CURSOR_VISIBLE)
+    or a
+    jr z,_draw_cursor_done      ; cursor hidden: skip all SPI writes
     call _cursor_xy_position
     ; set background to white for solid block cursor
     ld a,RA8875_BGCR0
@@ -263,6 +297,7 @@ _draw_cursor:
     ld b,0x00
     call ra8875_write_reg
     call _cursor_xy_position    ; reposition: putchar advanced the RA8875 cursor
+_draw_cursor_done:
     pop bc
     pop af
     ret
