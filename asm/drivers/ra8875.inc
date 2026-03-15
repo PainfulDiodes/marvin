@@ -302,6 +302,16 @@ RA8875_MWCR0_BLINK equ 0x20
 ; Text Blink Time Setting (Unit: Frame)
 RA8875_BTCR equ 0x44
 
+; REG[60h-62h] Background Color Registers (BGCR0/1/2) - 16BPP: R[4:0], G[5:0], B[4:0]
+RA8875_BGCR0 equ 0x60
+RA8875_BGCR1 equ 0x61
+RA8875_BGCR2 equ 0x62
+
+; REG[63h-65h] Foreground Color Registers (FGCR0/1/2) - 16BPP: R[4:0], G[5:0], B[4:0]
+RA8875_FGCR0 equ 0x63
+RA8875_FGCR1 equ 0x64
+RA8875_FGCR2 equ 0x65
+
 ; REG[88h] PLL Control Register 1 (PLLC1)
 RA8875_PLLC1 equ 0x88 
 RA8875_PLLC1_PLLDIV1 equ 0x00
