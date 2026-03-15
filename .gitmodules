@@ -4,4 +4,5 @@
 	branch = dev
 [submodule "ra8875-repo"]
 	path = ra8875-repo
-	url = https://github.com/PainfulDiodes/ra8875.git
+	url = https://github.com/PainfulDiodes/ra8875-z80.git
+	branch = main
