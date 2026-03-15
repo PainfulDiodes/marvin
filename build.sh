@@ -17,6 +17,7 @@ set -e
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 MARVIN_ASM="$REPO_DIR/asm"
 DRIVER_DIR="$REPO_DIR/asm/drivers"
+RA8875_DIR="$REPO_DIR/ra8875-repo"
 BASIC_SRC="$REPO_DIR/BBCZ80-repo/src"
 SHARED_DIR="$REPO_DIR/targets/shared"
 
@@ -35,18 +36,21 @@ modules_for_target() {
             COMBINED_ENTRY="entry_beanzee"
             MARVIN_MODULES="console_beanzee monitor hex messages"
             DRIVER_MODULES="um245r"
+            RA8875_MODULES=""
             BASIC_MAIN="MAIN"
             ;;
         beanboard)
             COMBINED_ENTRY="entry_beanboard"
             MARVIN_MODULES="console_beanboard console_select monitor hex messages_beanboard"
-            DRIVER_MODULES="um245r hd44780 keymatrix ra8875 ra8875_gpio"
+            DRIVER_MODULES="um245r hd44780 keymatrix"
+            RA8875_MODULES="ra8875 ra8875_gpio"
             BASIC_MAIN="MAIN_SM_DSP"
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
             MARVIN_MODULES="console_beandeck console_select monitor hex messages"
-            DRIVER_MODULES="um245r keymatrix ra8875 ra8875_spi"
+            DRIVER_MODULES="um245r keymatrix"
+            RA8875_MODULES="ra8875 ra8875_spi"
             BASIC_MAIN="MAIN"
             ;;
         *)
@@ -65,15 +69,21 @@ minimal_modules_for_target() {
     case $1 in
         beanzee)
             MINIMAL_ENTRY="entry_beanzee_minimal"
-            MINIMAL_MODULES="console_beanzee drivers/um245r monitor hex messages"
+            MINIMAL_MODULES="console_beanzee drivers/um245r monitor hex"
+            MINIMAL_RA8875_MODULES=""
+            MINIMAL_TAIL="messages"
             ;;
         beanboard)
             MINIMAL_ENTRY="entry_beanboard_minimal"
-            MINIMAL_MODULES="console_beanboard console_select drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix drivers/ra8875 drivers/ra8875_gpio messages_beanboard"
+            MINIMAL_MODULES="console_beanboard console_select drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix"
+            MINIMAL_RA8875_MODULES="ra8875 ra8875_gpio"
+            MINIMAL_TAIL="messages_beanboard"
             ;;
         beandeck)
             MINIMAL_ENTRY="entry_beandeck_minimal"
-            MINIMAL_MODULES="console_beandeck console_select drivers/um245r monitor hex drivers/keymatrix drivers/ra8875 drivers/ra8875_spi messages"
+            MINIMAL_MODULES="console_beandeck console_select drivers/um245r monitor hex drivers/keymatrix"
+            MINIMAL_RA8875_MODULES="ra8875 ra8875_spi"
+            MINIMAL_TAIL="messages"
             ;;
     esac
 }
@@ -106,7 +116,7 @@ build_target() {
     echo "Assembling Marvin modules..."
     for module in $MARVIN_MODULES; do
         echo "  $module.asm"
-        z88dk-z80asm -l -m -DINCLUDE_BASIC -I"$REPO_DIR" -o"$OUTDIR/$module.o" "$MARVIN_ASM/$module.asm"
+        z88dk-z80asm -l -m -DINCLUDE_BASIC -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$module.o" "$MARVIN_ASM/$module.asm"
     done
 
     echo ""
@@ -115,6 +125,16 @@ build_target() {
         echo "  $module.asm"
         z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$module.o" "$DRIVER_DIR/$module.asm"
     done
+
+    if [ -n "$RA8875_MODULES" ]; then
+        echo ""
+        echo "Assembling RA8875 modules..."
+        for module in $RA8875_MODULES; do
+            echo "  $module.asm"
+            z88dk-z80asm -l -m -I"$REPO_DIR" -I"$RA8875_DIR" \
+                -o"$OUTDIR/$module.o" "$RA8875_DIR/asm/drivers/$module.asm"
+        done
+    fi
 
     # ---- BBC BASIC core modules ----
 
@@ -152,6 +172,9 @@ build_target() {
         ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
     done
     for module in $DRIVER_MODULES; do
+        ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
+    done
+    for module in $RA8875_MODULES; do
         ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
     done
     ALL_OBJS="$ALL_OBJS $OUTDIR/$BASIC_MAIN.o"
@@ -216,17 +239,35 @@ build_minimal() {
 
     echo ""
     echo "Assembling modules..."
-    for module in $MINIMAL_MODULES; do
+    for module in $MINIMAL_MODULES $MINIMAL_TAIL; do
         local obj_name=$(basename "$module")
         echo "  $module.asm"
-        z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
+        z88dk-z80asm -l -m -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
     done
+
+    if [ -n "$MINIMAL_RA8875_MODULES" ]; then
+        echo ""
+        echo "Assembling RA8875 modules..."
+        for module in $MINIMAL_RA8875_MODULES; do
+            echo "  $module.asm"
+            z88dk-z80asm -l -m -I"$REPO_DIR" -I"$RA8875_DIR" \
+                -o"$OUTDIR/$module.o" "$RA8875_DIR/asm/drivers/$module.asm"
+        done
+    fi
 
     # ---- Link ----
     # Entry module must be first (contains ORG and jump table)
+    # Link order: entry, MINIMAL_MODULES, RA8875_MODULES, MINIMAL_TAIL
 
     ALL_OBJS="$OUTDIR/$MINIMAL_ENTRY.o"
     for module in $MINIMAL_MODULES; do
+        local obj_name=$(basename "$module")
+        ALL_OBJS="$ALL_OBJS $OUTDIR/$obj_name.o"
+    done
+    for module in $MINIMAL_RA8875_MODULES; do
+        ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
+    done
+    for module in $MINIMAL_TAIL; do
         local obj_name=$(basename "$module")
         ALL_OBJS="$ALL_OBJS $OUTDIR/$obj_name.o"
     done
@@ -255,9 +296,15 @@ build_minimal() {
 
 # ---- Main ----
 
-# Check BBCZ80 submodule is initialised
+# Check submodules are initialised
 if [ ! -f "$REPO_DIR/BBCZ80-repo/build.sh" ]; then
     echo "Error: BBCZ80 submodule not initialised."
+    echo "Run: git submodule update --init"
+    exit 1
+fi
+
+if [ ! -f "$RA8875_DIR/asm/drivers/ra8875.asm" ]; then
+    echo "Error: ra8875 submodule not initialised."
     echo "Run: git submodule update --init"
     exit 1
 fi
