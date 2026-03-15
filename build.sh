@@ -17,7 +17,7 @@ set -e
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 MARVIN_ASM="$REPO_DIR/asm"
 DRIVER_DIR="$REPO_DIR/asm/drivers"
-RA8875_DIR="$REPO_DIR/ra8875-repo"
+RA8875_DIR="$REPO_DIR/ra8875-z80-repo"
 BASIC_SRC="$REPO_DIR/BBCZ80-repo/src"
 SHARED_DIR="$REPO_DIR/targets/shared"
 
