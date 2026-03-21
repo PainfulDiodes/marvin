@@ -6,7 +6,7 @@
 
 Other labels, including jump addresses and data labels are in uppercase
 
-Private labels - those which should not be referenced outside of their file are prepending with an underscore
+Private labels - those which should not be referenced outside of their file are prefixed with an underscore
 
 ## Build / Structural Conventions
 
