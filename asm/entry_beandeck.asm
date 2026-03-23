@@ -24,7 +24,7 @@
     EXTERN console_select       ; console_select.asm - console selection
     EXTERN ra8875_initialise    ; ra8875.asm - display init
     EXTERN ra8875_putchar       ; ra8875.asm - write character to display
-    EXTERN ra8875_console_init  ; console_beandeck.asm - console state init
+    EXTERN ra8875_console_init  ; console.asm (ra8875-z80-repo) - console state init
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     INCLUDE "asm/system.inc"
