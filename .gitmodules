@@ -5,4 +5,4 @@
 [submodule "ra8875-z80-repo"]
 	path = ra8875-z80-repo
 	url = https://github.com/PainfulDiodes/ra8875-z80.git
-	branch = main
+	branch = dev
