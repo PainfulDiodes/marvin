@@ -4,12 +4,8 @@ DEFINE _MAIN_INC
 ; start of user RAM
 RAMSTART equ 0x8000
 
-; 8-byte status area
+; status byte
 CONSOLE_STATUS    equ 0xf000
-RA8875_CURSOR_COL equ 0xf001  ; 1-byte column (0..RA8875_COLS-1)
-RA8875_CURSOR_ROW equ 0xf002  ; 1-byte physical row (0..RA8875_ROWS-1)
-RA8875_SCROLL_TOP     equ 0xf003  ; 1-byte physical row at top of display (VOFS = scroll_top * 16)
-RA8875_CURSOR_VISIBLE equ 0xf004  ; non-zero = cursor visible, zero = cursor hidden
 ; 8-byte keyscan buffer
 KEY_MATRIX_BUFFER equ 0xf010
 ; command buffer
