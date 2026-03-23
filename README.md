@@ -19,6 +19,8 @@ git clone --recurse-submodules https://github.com/PainfulDiodes/Marvin.git
 cd Marvin
 ```
 
+The build script assembles all submodule sources directly — you do not need to build the submodules separately.
+
 Build combined firmware (Marvin + BBC BASIC) for all targets:
 
 ```bash
