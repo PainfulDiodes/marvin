@@ -1,5 +1,6 @@
-    INCLUDE "asm/system.inc"
     INCLUDE "asm/escape.inc"
+
+    EXTERN KEY_MATRIX_BUFFER, KEYSCAN_OUT, KEYSCAN_IN
 
     PUBLIC key_readchar
     PUBLIC modifierkeys

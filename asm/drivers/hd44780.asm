@@ -1,5 +1,6 @@
-    INCLUDE "asm/system.inc"
     INCLUDE "asm/drivers/hd44780.inc"
+
+    EXTERN LCD_CTRL, LCD_DATA
     INCLUDE "asm/escape.inc"
 
     PUBLIC lcd_init

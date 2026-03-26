@@ -1,6 +1,6 @@
-    INCLUDE "asm/system.inc"
-
     PUBLIC console_select
+
+    EXTERN CONSOLE_STATUS, CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
 
     EXTERN modifierkeys
     EXTERN MOD_KEY_SHIFT

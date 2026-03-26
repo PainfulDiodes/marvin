@@ -18,7 +18,7 @@
     EXTERN hex_byte_val         ; hex.asm - parse hex pair
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
-    INCLUDE "asm/system.inc"
+    EXTERN STACK
 ;
 ;
 ; ---- Boot Code ----

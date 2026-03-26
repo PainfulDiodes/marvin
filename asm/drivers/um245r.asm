@@ -1,5 +1,6 @@
-    INCLUDE "asm/system.inc"
     INCLUDE "asm/escape.inc"
+
+    EXTERN UM245R_CTRL, UM245R_DATA
 
     PUBLIC usb_readchar
     PUBLIC usb_putchar

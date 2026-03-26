@@ -3,7 +3,7 @@
 ; Minimal boot + jump table for Marvin without BBC BASIC.
 ; Initialises LCD and console, then boots to the monitor prompt.
 ;
-    INCLUDE "asm/system.inc"
+    EXTERN STACK
 
     EXTERN marvin_coldstart
     EXTERN marvin_warmstart
