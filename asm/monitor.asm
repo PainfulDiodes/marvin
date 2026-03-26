@@ -41,6 +41,10 @@ marvin_warmstart:
 _get_cmd:
     ; get character from console
     call getchar
+    ; backspace? handle before echo
+    cp ESC_B
+    ; yes
+    jr z,_get_cmd_bs
     ; echo the character to console
     call putchar
     ; is CR?
@@ -55,10 +59,6 @@ _get_cmd:
     cp ' '
     ; yes - skip this
     jr z,_get_cmd
-    ; backspace?
-    cp ESC_B
-    ; yes
-    jr z,_get_cmd_bs
     ; escape?
     cp ESC_E
     ; yes
@@ -78,10 +78,13 @@ _get_cmd_bs:
     ld bc,CMD_BUFFER
     or a                    ; clear carry flag
     sbc hl,bc               ; HL - CMD_BUFFER; sets Z if at start
-    jr z,_get_cmd_bs_end
+    jr z,_get_cmd_bs_end    ; at start: don't echo, don't move
     dec hl                  ; move pointer back one position
-_get_cmd_bs_end:
     add hl,bc               ; restore HL
+    call putchar            ; echo backspace only when acting (A still = ESC_B)
+    jr _get_cmd
+_get_cmd_bs_end:
+    add hl,bc               ; restore HL (= CMD_BUFFER)
     jr _get_cmd
     ; do escape
 _get_cmd_esc:
