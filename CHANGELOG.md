@@ -3,6 +3,23 @@
 * Combined firmware builds for all three targets (beanzee, beanboard, beandeck)
 * Per-target ENTRY.asm (boot + jump table + platform functions) and BMOS.asm (BASIC OS interface)
 * Standalone Marvin build scripts retained for monitor-only ROM images
+* BeanDeck target added (BeanBoard + BeanBoardSPI; TFT display, hardware keyboard, no LCD)
+* RA8875 TFT display driver added as git submodule (ra8875-z80)
+  * Driver split into common core (ra8875.asm) and transport layers: ra8875_spi.asm (BeanBoardSPI hardware SPI), ra8875_gpio.asm (BeanBoard GPIO bit-bang)
+  * RA8875 wired as beandeck console with hardware vertical scroll and software cursor
+  * Cursor show/hide via SO (0x0E) / SI (0x0F) control characters
+  * Backspace (0x08 and 0x7F) supported in RA8875 console
+  * Cursor positioning: ra8875_console_cursor_x / ra8875_console_cursor_y
+* Monitor backspace support in input loop
+* Monitor prompt changed from > to $
+* b command to launch BBC BASIC from the monitor prompt; excluded from minimal builds via conditional assembly (IFDEF INCLUDE_BASIC)
+* BBC BASIC error handling fixed: BMOS RESET changed from RST 0 to RET — errors now print and return to BASIC prompt instead of cold-booting
+* All targets produce both combined (Marvin + BBC BASIC) and minimal (monitor-only) builds from a single build.sh
+* Boot defaults to monitor on all targets; shift-RESET selects USB console on BeanBoard and BeanDeck
+* system.inc replaced with system.asm compiled module; constants exported as PUBLIC; SPI_CTRL, SPI_DATA, and RA8875 aliases added
+* BBCZ80 display: shortened BBC BASIC version string to fit 20-character HD44780 LCD on BeanBoard
+* burn32k.sh: -m flag for minimal firmware, -8 flag for 8k EEPROM (AT28C64B)
+* Repo restructured: hardware drivers in asm/drivers/, BBCZ80/ subdirectories, single root build.sh, boot and ENTRY files separated
 
 # 1.2.1a
 * Improve build scripts - build both targets with both assemblers with a single command - heirarchical scripts
