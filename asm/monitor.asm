@@ -55,6 +55,10 @@ _get_cmd:
     cp ' '
     ; yes - skip this
     jr z,_get_cmd
+    ; backspace?
+    cp ESC_B
+    ; yes
+    jr z,_get_cmd_bs
     ; escape?
     cp ESC_E
     ; yes
@@ -68,6 +72,16 @@ _get_cmd:
     ; move pointer to next buffer location - we're not checking for overrun
     inc hl
     ; next character
+    jr _get_cmd
+_get_cmd_bs:
+    ; don't move pointer back if already at start of buffer
+    ld bc,CMD_BUFFER
+    or a                    ; clear carry flag
+    sbc hl,bc               ; HL - CMD_BUFFER; sets Z if at start
+    jr z,_get_cmd_bs_end
+    dec hl                  ; move pointer back one position
+_get_cmd_bs_end:
+    add hl,bc               ; restore HL
     jr _get_cmd
     ; do escape
 _get_cmd_esc:
