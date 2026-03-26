@@ -1,5 +1,6 @@
-    INCLUDE "asm/system.inc"
     INCLUDE "asm/escape.inc"
+
+    EXTERN CMD_BUFFER, RAMSTART
 
     PUBLIC marvin_coldstart
     PUBLIC marvin_warmstart

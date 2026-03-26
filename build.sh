@@ -34,23 +34,23 @@ modules_for_target() {
     case $1 in
         beanzee)
             COMBINED_ENTRY="entry_beanzee"
-            MARVIN_MODULES="console_beanzee monitor hex messages"
+            MARVIN_MODULES="system console_beanzee monitor hex messages"
             DRIVER_MODULES="um245r"
             RA8875_MODULES=""
             BASIC_MAIN="MAIN"
             ;;
         beanboard)
             COMBINED_ENTRY="entry_beanboard"
-            MARVIN_MODULES="console_beanboard console_select monitor hex messages_beanboard"
+            MARVIN_MODULES="system console_beanboard console_select monitor hex messages_beanboard"
             DRIVER_MODULES="um245r hd44780 keymatrix"
-            RA8875_MODULES="asm/ra8875 asm/console targets/beanboard targets/environment"
+            RA8875_MODULES="asm/ra8875 asm/console targets/beanboard"
             BASIC_MAIN="MAIN_SM_DSP"
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
-            MARVIN_MODULES="console_beandeck console_select monitor hex messages"
+            MARVIN_MODULES="system console_beandeck console_select monitor hex messages"
             DRIVER_MODULES="um245r keymatrix"
-            RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi targets/environment"
+            RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
             BASIC_MAIN="MAIN"
             ;;
         *)
@@ -69,20 +69,20 @@ minimal_modules_for_target() {
     case $1 in
         beanzee)
             MINIMAL_ENTRY="entry_beanzee_minimal"
-            MINIMAL_MODULES="console_beanzee drivers/um245r monitor hex"
+            MINIMAL_MODULES="system console_beanzee drivers/um245r monitor hex"
             MINIMAL_RA8875_MODULES=""
             MINIMAL_TAIL="messages"
             ;;
         beanboard)
             MINIMAL_ENTRY="entry_beanboard_minimal"
-            MINIMAL_MODULES="console_beanboard console_select drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix"
-            MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboard targets/environment"
+            MINIMAL_MODULES="system console_beanboard console_select drivers/um245r monitor hex drivers/hd44780 drivers/keymatrix"
+            MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboard"
             MINIMAL_TAIL="messages_beanboard"
             ;;
         beandeck)
             MINIMAL_ENTRY="entry_beandeck_minimal"
-            MINIMAL_MODULES="console_beandeck console_select drivers/um245r monitor hex drivers/keymatrix"
-            MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi targets/environment"
+            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r monitor hex drivers/keymatrix"
+            MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
             MINIMAL_TAIL="messages"
             ;;
     esac

@@ -27,7 +27,7 @@
     EXTERN ra8875_console_init  ; console.asm (ra8875-z80-repo) - console state init
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
-    INCLUDE "asm/system.inc"
+    EXTERN STACK
 ;
 ;
 ; ---- Boot Code ----

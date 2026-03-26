@@ -1,6 +1,6 @@
-    INCLUDE "asm/system.inc"
-
     PUBLIC getchar
+
+    EXTERN CONSOLE_STATUS, CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
     PUBLIC readchar
     PUBLIC putchar
     PUBLIC puts

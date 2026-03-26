@@ -22,7 +22,7 @@
     EXTERN console_select       ; console_select.asm - console selection
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
-    INCLUDE "asm/system.inc"
+    EXTERN STACK
 ;
 ;
 ; ---- Boot Code ----

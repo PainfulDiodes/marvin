@@ -5,7 +5,7 @@
 ;   Reset → keyboard input
 ;   Shift-Reset → USB input
 ;
-    INCLUDE "asm/system.inc"
+    EXTERN STACK
 
     EXTERN marvin_coldstart
     EXTERN marvin_warmstart
