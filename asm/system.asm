@@ -9,16 +9,24 @@
     PUBLIC GPIO_OUT, GPIO_IN
     PUBLIC SPI_CTRL, SPI_DATA
     PUBLIC RA8875_GPIO, RA8875_SPI_CTRL, RA8875_SPI_DATA, RA8875_RAMSTART
+    PUBLIC SYSTEM_RAMSTART
     PUBLIC CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
+
+IFDEF HAS_RA8875
+    EXTERN RA8875_RAMSIZE
+ELSE
+RA8875_RAMSIZE      equ 0
+ENDIF
 
 ; start of user RAM
 RAMSTART            equ 0x8000
 
 ; system RAM
-CONSOLE_STATUS      equ 0xf000  ; console status byte
-KEY_MATRIX_BUFFER   equ 0xf010  ; 8-byte keyscan buffer
-CMD_BUFFER          equ 0xf020  ; command buffer
-; RA8875 console variables occupy 0xe000-0xefff
+SYSTEM_RAMSTART     equ 0xf000
+RA8875_RAMSTART     equ SYSTEM_RAMSTART                     ; RA8875 console variables (RA8875_RAMSIZE bytes)
+CONSOLE_STATUS      equ RA8875_RAMSTART + RA8875_RAMSIZE    ; 1 byte: active console
+KEY_MATRIX_BUFFER   equ CONSOLE_STATUS + 1                  ; 8 bytes: keyscan buffer
+CMD_BUFFER          equ KEY_MATRIX_BUFFER + 8               ; command buffer (grows toward stack)
 
 ; stack starts at top of RAM (CPU decrements SP before PUSH)
 STACK               equ 0xffff
@@ -47,7 +55,6 @@ SPI_DATA            equ 10      ; SPI data register (74HCT299 shift register)
 RA8875_GPIO         equ GPIO_OUT    ; GPIO port for RA8875 bit-bang SPI
 RA8875_SPI_CTRL     equ SPI_CTRL    ; hardware SPI control port
 RA8875_SPI_DATA     equ SPI_DATA    ; hardware SPI data port
-RA8875_RAMSTART     equ 0xe000      ; RA8875 console variables base address
 
 ; console selection
 CONSOLE_STATUS_USB       equ 1

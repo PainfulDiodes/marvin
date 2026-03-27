@@ -112,11 +112,14 @@ build_target() {
 
     # ---- Marvin modules ----
 
+    RA8875_FLAG=""
+    [ -n "$RA8875_MODULES" ] && RA8875_FLAG="-DHAS_RA8875"
+
     echo ""
     echo "Assembling Marvin modules..."
     for module in $MARVIN_MODULES; do
         echo "  $module.asm"
-        z88dk-z80asm -l -m -DINCLUDE_BASIC -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$module.o" "$MARVIN_ASM/$module.asm"
+        z88dk-z80asm -l -m -DINCLUDE_BASIC $RA8875_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$module.o" "$MARVIN_ASM/$module.asm"
     done
 
     echo ""
@@ -238,12 +241,15 @@ build_minimal() {
 
     # ---- Marvin and driver modules ----
 
+    RA8875_FLAG=""
+    [ -n "$MINIMAL_RA8875_MODULES" ] && RA8875_FLAG="-DHAS_RA8875"
+
     echo ""
     echo "Assembling modules..."
     for module in $MINIMAL_MODULES $MINIMAL_TAIL; do
         local obj_name=$(basename "$module")
         echo "  $module.asm"
-        z88dk-z80asm -l -m -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
+        z88dk-z80asm -l -m $RA8875_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
     done
 
     if [ -n "$MINIMAL_RA8875_MODULES" ]; then
