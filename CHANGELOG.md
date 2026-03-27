@@ -15,6 +15,8 @@ RA8875 TFT display driver added as git submodule (ra8875-z80)
 * Cursor show/hide via SO (0x0E) / SI (0x0F) control characters
 * Backspace (0x08 and 0x7F) supported in RA8875 console
 * Cursor positioning: ra8875_console_cursor_x / ra8875_console_cursor_y
+* Foreground colour support via ra8875_set_foreground_colour
+* Console foreground colour set to green on initialisation
 
 Monitor
 
