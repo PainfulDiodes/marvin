@@ -33,6 +33,7 @@ Build
 
 * Standalone Marvin build scripts retained for monitor-only ROM images
 * system.inc replaced with system.asm compiled module; constants exported as PUBLIC; SPI_CTRL, SPI_DATA, and RA8875 aliases added
+* system.asm: system RAM layout cascades from SYSTEM_RAMSTART; RA8875_RAMSTART is an alias; RA8875_RAMSIZE conditionally EXTERNed from ra8875-z80-repo (HAS_RA8875 build flag); beanzee target defines RA8875_RAMSIZE as 0
 * burn32k.sh: -m flag for minimal firmware, -8 flag for 8k EEPROM (AT28C64B)
 * Repo restructured: hardware drivers in asm/drivers/, BBCZ80/ subdirectories, single root build.sh, boot and ENTRY files separated
 
