@@ -118,7 +118,9 @@ _get_cmd_end:
     jr z,_cmd_execute
     IFDEF INCLUDE_BASIC
     cp 'b'
-    jp z,_cmd_basic
+    jp z,_cmd_basic_cold
+    cp 'B'
+    jp z,_cmd_basic_warm
     ENDIF
     ; ':' = load from intel hex format
     cp ':'
@@ -307,39 +309,14 @@ _cmd_load_end:
 
 ; BASIC
 
-; launch BBC BASIC - prompt for warm or cold start
-_cmd_basic:
-    ld hl,BASIC_PROMPT_MSG
-    call puts
-_cmd_basic_key:
-    ; wait for keypress
-    call getchar
-    ; echo
-    call putchar
-    ; cold start?
-    cp 'c'
-    jr z,_cmd_basic_cold
-    ; warm start?
-    cp 'w'
-    jr z,_cmd_basic_warm
-    ; escape?
-    cp ESC_E
-    jr z,_cmd_basic_esc
-    ; ignore other keys
-    jr _cmd_basic_key
+; b: BBC BASIC cold start, B: warm start
 _cmd_basic_cold:
     ld a,ESC_N
-    call putchar
     call putchar
     jp START
 _cmd_basic_warm:
     ld a,ESC_N
     call putchar
-    call putchar
     jp START+3
-_cmd_basic_esc:
-    ld a,ESC_N
-    call putchar
-    jp marvin_warmstart
 
     ENDIF

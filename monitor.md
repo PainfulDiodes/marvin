@@ -179,5 +179,21 @@ Marvin only supports a subset of the Intel HEX specification. For example:
 * The Intel HEX format uses a checksum for validating data integrity – this is ignored by Marvin
 * As the command is interpreted and executed without checksum validation, if a record is truncated, then any complete bytes of data already received will be written to memory
 
+## b / B commands
+
+The `b` command launches BBC BASIC with a cold start — variables and any loaded program are cleared:
+
+    $b
+
+    BBC BASIC (Z80) Version 3.00
+    (C) Copyright R.T.Russell 1987
+    >
+
+The `B` command (uppercase) launches with a warm start, resuming the existing program and variables:
+
+    $B
+
+    >
+
 ## BeanZeeBytes
 Example programs that can be loaded and run on BeanZee can be found in [BeanZeeBytes](https://github.com/PainfulDiodes/BeanZeeBytes).

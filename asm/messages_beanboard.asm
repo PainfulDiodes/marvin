@@ -1,7 +1,6 @@
     PUBLIC WELCOME_MSG
     PUBLIC BAD_CMD_MSG
     PUBLIC CMD_W_NULL_MSG
-    PUBLIC BASIC_PROMPT_MSG
 
 WELCOME_MSG:
                 db "PainfulDiodes\n"
@@ -14,6 +13,3 @@ BAD_CMD_MSG:
 
 CMD_W_NULL_MSG:
                 db "No data\n",0
-
-BASIC_PROMPT_MSG:
-                db "BBC BASIC\nw: warm start\nc: cold start\n",0

@@ -74,10 +74,16 @@ See: [monitor](./monitor.md)
 
 ## BBC BASIC
 
-BBC BASIC Z80 interpreter included as a git submodule - [beanzee-bbc-basic](https://github.com/PainfulDiodes/beanzee-bbc-basic). Monitor commands:
+BBC BASIC Z80 interpreter included as a git submodule - [beanzee-bbc-basic](https://github.com/PainfulDiodes/beanzee-bbc-basic).
 
-- `*MON` - Drop into monitor
-- `BYE` - Return to monitor
+Launch from the monitor prompt:
+
+- `b` - BBC BASIC cold start (clears variables and program)
+- `B` - BBC BASIC warm start (resumes existing program)
+
+Return to the monitor from BASIC:
+
+- `*MON` or `BYE`
 
 ## Links
 
