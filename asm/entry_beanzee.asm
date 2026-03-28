@@ -53,5 +53,12 @@ _stub:
 ; BeanZee (USB only): boot to Marvin monitor
 ;
 _boot:
+    ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
+_boot_powerup:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_powerup
     jp marvin_coldstart
 ;
