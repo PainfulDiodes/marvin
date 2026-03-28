@@ -23,6 +23,7 @@
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     EXTERN STACK
+    EXTERN CAPS_LOCK_STATE
 ;
 ;
 ; ---- Boot Code ----
@@ -64,6 +65,8 @@ _boot_powerup:
     ld a,b
     or c
     jr nz,_boot_powerup
+    xor a
+    ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup
     call lcd_init
     call console_select
     jp marvin_coldstart
