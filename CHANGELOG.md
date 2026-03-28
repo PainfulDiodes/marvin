@@ -23,6 +23,13 @@ Boot
 * Power-up debounce delay (~100ms at 10MHz) added at the very start of `_boot` across all six entry files (three regular, three minimal), before any hardware initialisation
 * Minimal entry files restructured to use `jp _boot` / `_boot:` after the jump table, matching the regular entry file pattern; fixes latent jump table misalignment in `entry_beandeck_minimal.asm`
 
+Keyboard
+
+* Caps lock: lock key toggles `CAPS_LOCK_STATE` (new system RAM byte at 0xF00D); handled in the console layer (beanboard / beandeck)
+* Letters a–z uppercased when caps lock is on; non-letter characters (digits, symbols) unaffected
+* BeanDeck: cursor colour reflects caps lock state — green (off) / white (on); redrawn immediately on toggle via new `ra8875_console_refresh_cursor` in the ra8875-z80 submodule
+* BeanBoard: caps lock state toggled silently; no visual indicator on the LCD
+
 Monitor
 
 * Monitor prompt changed from > to $ (to distinguish it from the BASIC prompt)
