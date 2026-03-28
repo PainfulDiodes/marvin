@@ -34,7 +34,7 @@ Monitor
 
 * Monitor prompt changed from > to $ (to distinguish it from the BASIC prompt)
 * Monitor backspace support in input loop
-* b command to launch BBC BASIC from the monitor prompt; excluded from minimal builds via conditional assembly (IFDEF INCLUDE_BASIC)
+* `b` launches BBC BASIC cold start, `B` launches warm start — no prompt or extra keypress required; excluded from minimal builds via conditional assembly (IFDEF INCLUDE_BASIC)
 
 Targets
 
