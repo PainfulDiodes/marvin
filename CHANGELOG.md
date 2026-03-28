@@ -18,6 +18,11 @@ RA8875 TFT display driver added as git submodule (ra8875-z80)
 * Foreground colour support via ra8875_set_foreground_colour
 * Console foreground colour set to green on initialisation
 
+Boot
+
+* Power-up debounce delay (~100ms at 10MHz) added at the very start of `_boot` across all six entry files (three regular, three minimal), before any hardware initialisation
+* Minimal entry files restructured to use `jp _boot` / `_boot:` after the jump table, matching the regular entry file pattern; fixes latent jump table misalignment in `entry_beandeck_minimal.asm`
+
 Monitor
 
 * Monitor prompt changed from > to $ (to distinguish it from the BASIC prompt)
