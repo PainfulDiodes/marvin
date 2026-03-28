@@ -10,6 +10,8 @@
     EXTERN key_readchar
     EXTERN ra8875_console_putchar
     EXTERN ra8875_console_puts
+    EXTERN ra8875_console_refresh_cursor
+    EXTERN CAPS_LOCK_STATE, QWERTY_CAPS
 
 ; wait for a character and return in A
 getchar:
@@ -31,6 +33,15 @@ readchar:
     jr _readchar_end
 _readchar_keyboard:
     call key_readchar
+    cp QWERTY_CAPS
+    jr nz,_readchar_end
+    ; toggle caps lock state
+    ld a,(CAPS_LOCK_STATE)
+    xor 0x01
+    ld (CAPS_LOCK_STATE),a
+    ; redraw cursor to reflect new state
+    call ra8875_console_refresh_cursor
+    xor a               ; return 0 (consume keypress)
     jr _readchar_end
 _readchar_usb:
     call usb_readchar

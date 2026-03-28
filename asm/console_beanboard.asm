@@ -9,6 +9,7 @@
     EXTERN usb_putchar
     EXTERN key_readchar
     EXTERN lcd_putchar
+    EXTERN CAPS_LOCK_STATE, QWERTY_CAPS
 
 ; wait for a character and return in A
 getchar:
@@ -30,6 +31,13 @@ readchar:
     jr _readchar_end
 _readchar_beanboard:
     call key_readchar
+    cp QWERTY_CAPS
+    jr nz,_readchar_end
+    ; toggle caps lock state
+    ld a,(CAPS_LOCK_STATE)
+    xor 0x01
+    ld (CAPS_LOCK_STATE),a
+    xor a               ; return 0 (consume keypress)
     jr _readchar_end
 _readchar_usb:
     call usb_readchar

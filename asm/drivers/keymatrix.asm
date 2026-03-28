@@ -1,10 +1,11 @@
     INCLUDE "asm/escape.inc"
 
-    EXTERN KEY_MATRIX_BUFFER, KEYSCAN_OUT, KEYSCAN_IN
+    EXTERN KEY_MATRIX_BUFFER, CAPS_LOCK_STATE, KEYSCAN_OUT, KEYSCAN_IN
 
     PUBLIC key_readchar
     PUBLIC modifierkeys
     PUBLIC MOD_KEY_SHIFT
+    PUBLIC QWERTY_CAPS
 
 DEBOUNCE_DELAY  equ 0x4000
 
@@ -35,19 +36,37 @@ key_readchar:
 _keyscanloop:
     call _rowscan
     ; ASCII returned in A, or 0
-    call _colscan 
+    call _colscan
     cp 0
-    jp nz,key_readchar_end
+    jp z,_keyscanloop_next      ; no key this row
+    cp QWERTY_CAPS
+    jp z,key_readchar_end       ; lock key: return 5 for console to handle
+    ; apply caps lock to letters only
+    ld b,a                      ; save char (B = row bit, safe to clobber as we exit loop)
+    ld a,(CAPS_LOCK_STATE)
+    or a
+    jr z,_caps_done             ; caps off: pass through
+    ld a,b
+    cp 'a'
+    jr c,_caps_done             ; below 'a'
+    cp 'z'+1
+    jr nc,_caps_done            ; above 'z': not a lowercase letter, pass through
+    sub 0x20                    ; a-z -> A-Z
+    ld b,a
+_caps_done:
+    ld a,b
+    jp key_readchar_end
+_keyscanloop_next:
     ; move the pointer of previous values to the next row slot
-    inc hl                      
+    inc hl
     ; increment row counter
-    inc c                       
+    inc c
     ; clear the carry flag
-    or a                        
+    or a
     ; shift row bit left - when we've done all 8, it will move to the carry flag
-    rl b                        
+    rl b
     ; loop if not done all rows
-    jr nc,_keyscanloop          
+    jr nc,_keyscanloop
 key_readchar_end:
     ; debounce delay, restore state and return
     call _debounce_delay
