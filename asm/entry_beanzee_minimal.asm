@@ -18,6 +18,7 @@
 
     ORG MARVINORG
     ld sp, STACK
+    jp _boot
 
 ; jump table at fixed addresses - must match jumptable.inc
 ALIGN 0x0010
@@ -38,3 +39,18 @@ _stub:
 ; START stub - no BBC BASIC in minimal build
 START:
     jp marvin_warmstart
+;
+;
+; ---- Boot Selection ----
+;
+; BeanZee (USB only): boot to Marvin monitor
+;
+_boot:
+    ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
+_boot_powerup:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_powerup
+    jp marvin_coldstart

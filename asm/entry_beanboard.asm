@@ -57,6 +57,13 @@ ALIGN 0x0010
 ;   No key → beanboard console: LCD + keyboard
 ;
 _boot:
+    ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
+_boot_powerup:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_powerup
     call lcd_init
     call console_select
     jp marvin_coldstart

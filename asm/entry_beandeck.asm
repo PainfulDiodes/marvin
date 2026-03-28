@@ -64,6 +64,13 @@ _stub:
 ;   No key → keyboard input
 ;
 _boot:
+    ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
+_boot_powerup:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_powerup
     call ra8875_initialise
     ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
 _boot_settle:

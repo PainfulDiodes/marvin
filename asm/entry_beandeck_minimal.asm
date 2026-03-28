@@ -25,16 +25,7 @@
 
     ORG MARVINORG
     ld sp, STACK
-    call ra8875_initialise
-    ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
-_boot_settle:
-    nop
-    dec bc
-    ld a,b
-    or c
-    jr nz,_boot_settle
-    call ra8875_console_init
-    call console_select
+    jp _boot
 
 ; jump table at fixed addresses - must match jumptable.inc
 ALIGN 0x0010
@@ -55,3 +46,30 @@ _stub:
 ; START stub - no BBC BASIC in minimal build
 START:
     jp marvin_warmstart
+;
+;
+; ---- Boot Selection ----
+;
+; BeanDeck: select console input source, then boot to monitor.
+;   Shift held at reset → USB console input
+;   No key → keyboard input
+;
+_boot:
+    ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
+_boot_powerup:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_powerup
+    call ra8875_initialise
+    ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
+_boot_settle:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_settle
+    call ra8875_console_init
+    call console_select
+    jp marvin_coldstart

@@ -22,8 +22,7 @@
 
     ORG MARVINORG
     ld sp, STACK
-    call lcd_init
-    call console_select
+    jp _boot
 
 ; jump table at fixed addresses - must match jumptable.inc
 ALIGN 0x0010
@@ -42,3 +41,22 @@ ALIGN 0x0010
 ; START stub - no BBC BASIC in minimal build
 START:
     jp marvin_warmstart
+;
+;
+; ---- Boot Selection ----
+;
+; BeanBoard: init LCD and select console, then boot to monitor.
+;   Shift held at reset → USB console
+;   No key → beanboard console: LCD + keyboard
+;
+_boot:
+    ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
+_boot_powerup:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_powerup
+    call lcd_init
+    call console_select
+    jp marvin_coldstart
