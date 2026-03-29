@@ -14,11 +14,11 @@
 ;
     EXTERN marvin_coldstart      ; monitor.asm - cold start
     EXTERN marvin_warmstart     ; monitor.asm - warm start
-    EXTERN putchar              ; console - write character
-    EXTERN getchar              ; console - blocking read
-    EXTERN readchar             ; console - non-blocking read
-    EXTERN puts                 ; console - print string
-    EXTERN putchar_hex          ; hex.asm - print hex byte
+    EXTERN con_putchar          ; console - write character
+    EXTERN con_getchar          ; console - blocking read
+    EXTERN con_readchar         ; console - non-blocking read
+    EXTERN con_puts             ; console - print string
+    EXTERN con_putchar_hex      ; hex.asm - print hex byte
     EXTERN hex_byte_val         ; hex.asm - parse hex pair
     EXTERN key_readchar         ; keymatrix.asm - keyboard read
     EXTERN console_select       ; console_select.asm - console selection
@@ -44,11 +44,11 @@
 ALIGN 0x0010
     jp marvin_coldstart  ; 0x0010 - cold start (enter monitor)
     jp marvin_warmstart  ; 0x0013 - warm start (monitor prompt)
-    jp putchar          ; 0x0016 - write character (A = char)
-    jp getchar          ; 0x0019 - wait for character (returns A)
-    jp readchar         ; 0x001C - non-blocking read (returns A, 0 = none)
-    jp puts             ; 0x001F - print string (HL = address, zero-terminated)
-    jp putchar_hex      ; 0x0022 - print A as two hex digits
+    jp con_putchar      ; 0x0016 - write character (A = char)
+    jp con_getchar      ; 0x0019 - wait for character (returns A)
+    jp con_readchar     ; 0x001C - non-blocking read (returns A, 0 = none)
+    jp con_puts         ; 0x001F - print string (HL = address, zero-terminated)
+    jp con_putchar_hex  ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
     jp ra8875_initialise ; 0x0028 - display init
     jp ra8875_putchar   ; 0x002B - display putchar (A = char)

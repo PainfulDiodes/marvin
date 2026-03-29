@@ -5,17 +5,18 @@
     PUBLIC marvin_coldstart
     PUBLIC marvin_warmstart
 
-    EXTERN puts
-    EXTERN putchar
-    EXTERN getchar
+    EXTERN con_puts
+    EXTERN con_putchar
+    EXTERN con_getchar
     EXTERN hex_byte_val
-    EXTERN putchar_hex
+    EXTERN con_putchar_hex
     EXTERN WELCOME_MSG
     EXTERN BAD_CMD_MSG
     EXTERN CMD_W_NULL_MSG
     IFDEF INCLUDE_BASIC
     EXTERN BASIC_PROMPT_MSG
     EXTERN START
+    EXTERN WARM
     ENDIF
 
 ; ****************************************************
@@ -31,23 +32,23 @@ marvin_coldstart:
     ld de,0x0000
 
     ld hl,WELCOME_MSG
-    call puts
+    call con_puts
 
 marvin_warmstart:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER
     ld a,'$'
-    call putchar 
+    call con_putchar 
 
 _get_cmd:
     ; get character from console
-    call getchar
+    call con_getchar
     ; backspace? handle before echo
     cp ESC_B
     ; yes
     jr z,_get_cmd_bs
     ; echo the character to console
-    call putchar
+    call con_putchar
     ; is CR?
     cp ESC_R
     ; yes: skip this
@@ -82,7 +83,7 @@ _get_cmd_bs:
     jr z,_get_cmd_bs_end    ; at start: don't echo, don't move
     dec hl                  ; move pointer back one position
     add hl,bc               ; restore HL
-    call putchar            ; echo backspace only when acting (A still = ESC_B)
+    call con_putchar            ; echo backspace only when acting (A still = ESC_B)
     jr _get_cmd
 _get_cmd_bs_end:
     add hl,bc               ; restore HL (= CMD_BUFFER)
@@ -91,7 +92,7 @@ _get_cmd_bs_end:
 _get_cmd_esc:
     ; new line
     ld a,ESC_N
-    call putchar
+    call con_putchar
     ; back to prompt
     jr marvin_warmstart
 _get_cmd_end:
@@ -127,7 +128,7 @@ _get_cmd_end:
     jr z,_cmd_load
     ; otherwise error
     ld hl,BAD_CMD_MSG
-    call puts
+    call con_puts
     ; loop back to the prompt
     jp marvin_warmstart
 
@@ -155,22 +156,22 @@ _cmd_read_row:
     ld c, 0x10
     ; print DE content: the read address
     ld a,d
-    call putchar_hex
+    call con_putchar_hex
     ld a,e
-    call putchar_hex
+    call con_putchar_hex
     ; separator between address and data
     ld a,':'
-    call putchar
+    call con_putchar
     ld a,' '
-    call putchar
+    call con_putchar
     ; get a byte
 _cmd_read_byte:            
     ld a,(de)
     ; and print it
-    call putchar_hex
+    call con_putchar_hex
     ; add space between bytes
     ld a,' '
-    call putchar
+    call con_putchar
     ; next address
     inc de
     ; reduce byte counter
@@ -180,7 +181,7 @@ _cmd_read_byte:
     jr nz, _cmd_read_byte
     ; otherwise, new line
     ld a,ESC_N
-    call putchar
+    call con_putchar
     ; and back to prompt
     jp marvin_warmstart
 
@@ -221,7 +222,7 @@ _cmd_write_end:
     ; w with no data
 _cmd_write_null:        
     ld hl,CMD_W_NULL_MSG
-    call puts
+    call con_puts
     ; and back to prompt
     jp marvin_warmstart
 
@@ -312,11 +313,11 @@ _cmd_load_end:
 ; b: BBC BASIC cold start, B: warm start
 _cmd_basic_cold:
     ld a,ESC_N
-    call putchar
+    call con_putchar
     jp START
 _cmd_basic_warm:
     ld a,ESC_N
-    call putchar
-    jp START+3
+    call con_putchar
+    jp WARM
 
     ENDIF

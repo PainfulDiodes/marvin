@@ -58,11 +58,11 @@ Fixed ROM addresses at 0x0010 for platform-independent access:
 |---------|---------------------------------------|
 | 0x0010  | Cold start (enter monitor)            |
 | 0x0013  | Warm start (monitor prompt)           |
-| 0x0016  | putchar (A = char)                    |
-| 0x0019  | getchar (blocking, returns A)         |
-| 0x001C  | readchar (non-blocking, returns A)    |
-| 0x001F  | puts (HL = string address)            |
-| 0x0022  | putchar_hex (A as two hex digits)     |
+| 0x0016  | con_putchar (A = char)                |
+| 0x0019  | con_getchar (blocking, returns A)     |
+| 0x001C  | con_readchar (non-blocking, returns A)|
+| 0x001F  | con_puts (HL = string address)        |
+| 0x0022  | con_putchar_hex (A as two hex digits) |
 | 0x0025  | hex_byte_val (parse hex pair from HL) |
 | 0x0028  | lcd_init                              |
 | 0x002B  | lcd_putchar                           |

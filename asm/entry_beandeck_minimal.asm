@@ -9,11 +9,11 @@
 
     EXTERN marvin_coldstart
     EXTERN marvin_warmstart
-    EXTERN putchar
-    EXTERN getchar
-    EXTERN readchar
-    EXTERN puts
-    EXTERN putchar_hex
+    EXTERN con_putchar
+    EXTERN con_getchar
+    EXTERN con_readchar
+    EXTERN con_puts
+    EXTERN con_putchar_hex
     EXTERN hex_byte_val
     EXTERN key_readchar
     EXTERN console_select
@@ -31,11 +31,11 @@
 ALIGN 0x0010
     jp marvin_coldstart  ; 0x0010 - cold start (enter monitor)
     jp marvin_warmstart  ; 0x0013 - warm start (monitor prompt)
-    jp putchar          ; 0x0016 - write character (A = char)
-    jp getchar          ; 0x0019 - wait for character (returns A)
-    jp readchar         ; 0x001C - non-blocking read (returns A, 0 = none)
-    jp puts             ; 0x001F - print string (HL = address, zero-terminated)
-    jp putchar_hex      ; 0x0022 - print A as two hex digits
+    jp con_putchar      ; 0x0016 - write character (A = char)
+    jp con_getchar      ; 0x0019 - wait for character (returns A)
+    jp con_readchar     ; 0x001C - non-blocking read (returns A, 0 = none)
+    jp con_puts         ; 0x001F - print string (HL = address, zero-terminated)
+    jp con_putchar_hex  ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
     jp ra8875_initialise ; 0x0028 - display init
     jp ra8875_putchar   ; 0x002B - display putchar (A = char)

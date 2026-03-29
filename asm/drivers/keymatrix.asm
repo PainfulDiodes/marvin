@@ -3,7 +3,7 @@
     EXTERN KEY_MATRIX_BUFFER, CAPS_LOCK_STATE, KEYSCAN_OUT, KEYSCAN_IN
 
     PUBLIC key_readchar
-    PUBLIC modifierkeys
+    PUBLIC key_modifiers
     PUBLIC MOD_KEY_SHIFT
     PUBLIC QWERTY_CAPS
 
@@ -26,7 +26,7 @@ key_readchar:
     ld c,0x00                    
     ; location of previous values
     ld hl,KEY_MATRIX_BUFFER
-    call modifierkeys
+    call key_modifiers
     ; initialise map pointer
     ld de,QWERTY_KEYMAP_L
     ; shift key down?
@@ -119,7 +119,7 @@ _rowscan:
     ret
 
 ; return bitmap representing modifier keys in A
-modifierkeys:                       
+key_modifiers:
     ld a,0b00010000 ; row 4
     ; output row strobe
     out (KEYSCAN_OUT),a            

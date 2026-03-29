@@ -1,7 +1,7 @@
     PUBLIC hex_byte_val
-    PUBLIC putchar_hex
+    PUBLIC con_putchar_hex
 
-    EXTERN putchar
+    EXTERN con_putchar
 
 ; string subroutines
 
@@ -72,7 +72,7 @@ _hex_val_n:
     ret
 
 ; convert value in A into an ASCII pair and send to console
-putchar_hex:
+con_putchar_hex:
     push af
     push bc
     ; stash in B
@@ -101,10 +101,10 @@ _putchar_hex_dgt:
     ; alpha
     ; for alpha add the base ascii for 'a' but then sub 10 / 0x0a as hex 'a' = 10d
     add a,'a'-0x0a
-    call putchar
+    call con_putchar
     ret
 _putchar_hex_n:
     ; for numeric add the base ascii for '0'
     add a,'0'
-    call putchar
+    call con_putchar
     ret

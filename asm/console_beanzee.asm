@@ -1,25 +1,25 @@
-    PUBLIC getchar
-    PUBLIC readchar
-    PUBLIC putchar
-    PUBLIC puts
+    PUBLIC con_getchar
+    PUBLIC con_readchar
+    PUBLIC con_putchar
+    PUBLIC con_puts
 
     EXTERN usb_readchar
     EXTERN usb_putchar
 
 ; wait for a character and return in A
-getchar:
-    call readchar
+con_getchar:
+    call con_readchar
     cp 0
     ret nz
-    jr getchar
+    jr con_getchar
 
 ; read a character from the console and return in A - return 0 if there is no character
-readchar:
+con_readchar:
     call usb_readchar
     ret
 
 ; sent character in A to the console
-putchar:
+con_putchar:
     push bc
     ld b,a
     call usb_putchar
@@ -28,7 +28,7 @@ putchar:
     ret
 
 ; print a zero-terminated string pointed to by hl to the console
-puts:
+con_puts:
     push hl
 _puts_loop:
     ; get character from string
@@ -38,7 +38,7 @@ _puts_loop:
     ; yes
     jr z, _puts_end
     ; no: send character
-    call putchar
+    call con_putchar
     ; next character position
     inc hl
     ; loop for next character
