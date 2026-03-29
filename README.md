@@ -64,9 +64,11 @@ Fixed ROM addresses at 0x0010 for platform-independent access:
 | 0x001F  | con_puts (HL = string address)        |
 | 0x0022  | con_putchar_hex (A as two hex digits) |
 | 0x0025  | hex_byte_val (parse hex pair from HL) |
-| 0x0028  | lcd_init                              |
-| 0x002B  | lcd_putchar                           |
-| 0x002E  | key_readchar                          |
+| 0x0028  | key_readchar                          |
+| 0x002B  | lcd_init                              |
+| 0x002E  | lcd_putchar                           |
+| 0x0031  | ra8875_initialise                     |
+| 0x0034  | ra8875_putchar                        |
 
 ## Monitor Commands
 

@@ -24,12 +24,12 @@ con_readchar:
     ld hl,CONSOLE_STATUS
     ld a,CONSOLE_STATUS_BEANBOARD
     and (hl)
-    jr nz,_readchar_beanboard
+    jr nz,_readchar_keyboard
     ld a,CONSOLE_STATUS_USB
     and (hl)
     jr nz,_readchar_usb
     jr _readchar_end
-_readchar_beanboard:
+_readchar_keyboard:
     call key_readchar
     cp QWERTY_CAPS
     jr nz,_readchar_end
@@ -47,28 +47,28 @@ _readchar_end:
 
 ; sent character in A to the console
 con_putchar:
-    push hl
     push bc
+    push hl
     ld b,a
     ld hl,CONSOLE_STATUS
     ld a,CONSOLE_STATUS_BEANBOARD
     and (hl)
-    jr nz,_putchar_beanboard
+    jr nz,_putchar_keyboard
     ld a,CONSOLE_STATUS_USB
     and (hl)
     jr nz,_putchar_usb
-    jr _putchar_end
-_putchar_beanboard:
+    jr _putchar_done
+_putchar_keyboard:
     ld a,b
     call lcd_putchar
-    jr _putchar_end
+    jr _putchar_done
 _putchar_usb:
     ld a,b
     call usb_putchar
-_putchar_end:
+_putchar_done:
     ld a,b
-    pop bc
     pop hl
+    pop bc
     ret
 
 ; print a zero-terminated string pointed to by hl to the console

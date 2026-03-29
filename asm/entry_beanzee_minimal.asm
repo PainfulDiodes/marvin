@@ -30,9 +30,11 @@ ALIGN 0x0010
     jp con_puts         ; 0x001F - print string (HL = address, zero-terminated)
     jp con_putchar_hex  ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
-    jp _stub            ; 0x0028 - lcd_init (not available on beanzee)
-    jp _stub            ; 0x002B - lcd_putchar (not available on beanzee)
-    jp _stub            ; 0x002E - key_readchar (not available on beanzee)
+    jp _stub            ; 0x0028 - key_readchar (not available on beanzee)
+    jp _stub            ; 0x002B - lcd_init (not available on beanzee)
+    jp _stub            ; 0x002E - lcd_putchar (not available on beanzee)
+    jp _stub            ; 0x0031 - ra8875_init (not available on beanzee)
+    jp _stub            ; 0x0034 - ra8875_putchar (not available on beanzee)
 _stub:
     ret
 ;
