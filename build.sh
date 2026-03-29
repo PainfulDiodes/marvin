@@ -18,7 +18,7 @@ REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 MARVIN_ASM="$REPO_DIR/asm"
 RA8875_DIR="$REPO_DIR/ra8875-z80-repo"
 BASIC_SRC="$REPO_DIR/BBCZ80-repo/src"
-SHARED_DIR="$REPO_DIR/targets/shared"
+BBCZ80_DIR="$REPO_DIR/asm/BBCZ80"
 
 CODE_ORG="0x0000"
 DATA_ORG="0x8000"
@@ -131,17 +131,17 @@ build_target() {
     done
 
     echo "  BHOOK.asm"
-    z88dk-z80asm -l -m -o"$OUTDIR/BHOOK.o" "$SHARED_DIR/BBCZ80/BHOOK.asm"
+    z88dk-z80asm -l -m -o"$OUTDIR/BHOOK.o" "$BBCZ80_DIR/BHOOK.asm"
 
     echo "  BMOS.asm"
-    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/BMOS.o" "$SHARED_DIR/BBCZ80/BMOS.asm"
+    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/BMOS.o" "$BBCZ80_DIR/BMOS.asm"
 
     # ---- Shared BBC BASIC entry point ----
 
     echo ""
     echo "Assembling BBC BASIC entry point..."
     echo "  ENTRY.asm"
-    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/ENTRY.o" "$SHARED_DIR/BBCZ80/ENTRY.asm"
+    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/ENTRY.o" "$BBCZ80_DIR/ENTRY.asm"
 
     # ---- Link ----
     # Boot module must be first (contains ORG 0x0000 and jump table)
