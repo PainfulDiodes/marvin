@@ -2,13 +2,13 @@
 
     EXTERN CONSOLE_STATUS, CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
 
-    EXTERN modifierkeys
+    EXTERN key_modifiers
     EXTERN MOD_KEY_SHIFT
 
 ; determine which console should be active - Reset=beanboard, shift-Reset=USB
 console_select:
     ; check for modifier keys being held down
-    call modifierkeys
+    call key_modifiers
     ; shift key down?
     and MOD_KEY_SHIFT
     ; yes shift

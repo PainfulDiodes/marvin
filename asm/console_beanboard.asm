@@ -1,9 +1,9 @@
-    PUBLIC getchar
+    PUBLIC con_getchar
 
     EXTERN CONSOLE_STATUS, CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
-    PUBLIC readchar
-    PUBLIC putchar
-    PUBLIC puts
+    PUBLIC con_readchar
+    PUBLIC con_putchar
+    PUBLIC con_puts
 
     EXTERN usb_readchar
     EXTERN usb_putchar
@@ -12,14 +12,14 @@
     EXTERN CAPS_LOCK_STATE, QWERTY_CAPS
 
 ; wait for a character and return in A
-getchar:
-    call readchar
+con_getchar:
+    call con_readchar
     cp 0
     ret nz
-    jr getchar
+    jr con_getchar
 
 ; read a character from the console and return in A - return 0 if there is no character
-readchar:
+con_readchar:
     push hl
     ld hl,CONSOLE_STATUS
     ld a,CONSOLE_STATUS_BEANBOARD
@@ -46,7 +46,7 @@ _readchar_end:
     ret
 
 ; sent character in A to the console
-putchar:
+con_putchar:
     push hl
     push bc
     ld b,a
@@ -72,7 +72,7 @@ _putchar_end:
     ret
 
 ; print a zero-terminated string pointed to by hl to the console
-puts:
+con_puts:
     push hl
 _puts_loop:
     ; get character from string
@@ -82,7 +82,7 @@ _puts_loop:
     ; yes
     jr z, _puts_end
     ; no: send character
-    call putchar
+    call con_putchar
     ; next character position
     inc hl
     ; loop for next character
