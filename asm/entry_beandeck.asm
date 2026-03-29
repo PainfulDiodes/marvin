@@ -28,6 +28,7 @@
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     EXTERN STACK
+    EXTERN CAPS_LOCK_STATE
 ;
 ;
 ; ---- Boot Code ----
@@ -50,9 +51,11 @@ ALIGN 0x0010
     jp con_puts         ; 0x001F - print string (HL = address, zero-terminated)
     jp con_putchar_hex  ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
-    jp ra8875_initialise ; 0x0028 - display init
-    jp ra8875_putchar   ; 0x002B - display putchar (A = char)
-    jp key_readchar     ; 0x002E - read keyboard
+    jp key_readchar     ; 0x0028 - read keyboard
+    jp _stub            ; 0x002B - lcd_init (not available on beandeck)
+    jp _stub            ; 0x002E - lcd_putchar (not available on beandeck)
+    jp ra8875_initialise ; 0x0031 - ra8875 init
+    jp ra8875_putchar   ; 0x0034 - ra8875 putchar
 _stub:
     ret
 ;
@@ -71,6 +74,8 @@ _boot_powerup:
     ld a,b
     or c
     jr nz,_boot_powerup
+    xor a
+    ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup
     call ra8875_initialise
     ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
 _boot_settle:

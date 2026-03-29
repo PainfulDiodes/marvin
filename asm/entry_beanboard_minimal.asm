@@ -17,6 +17,8 @@
     EXTERN lcd_putchar
     EXTERN key_readchar
     EXTERN console_select
+    EXTERN ra8875_initialise    ; ra8875.asm - display init
+    EXTERN ra8875_putchar       ; ra8875.asm - write character to display
 
     PUBLIC START
 
@@ -34,9 +36,11 @@ ALIGN 0x0010
     jp con_puts         ; 0x001F - print string (HL = address, zero-terminated)
     jp con_putchar_hex  ; 0x0022 - print A as two hex digits
     jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
-    jp lcd_init         ; 0x0028 - initialise LCD
-    jp lcd_putchar      ; 0x002B - write character to LCD
-    jp key_readchar     ; 0x002E - read keyboard
+    jp key_readchar     ; 0x0028 - read keyboard
+    jp lcd_init         ; 0x002B - initialise LCD
+    jp lcd_putchar      ; 0x002E - write character to LCD
+    jp ra8875_initialise ; 0x0031 - ra8875 init
+    jp ra8875_putchar   ; 0x0034 - ra8875 putchar
 ;
 ; START stub - no BBC BASIC in minimal build
 START:
