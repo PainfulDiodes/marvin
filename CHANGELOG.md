@@ -42,6 +42,7 @@ Targets
 * Combined firmware builds for all three targets (beanzee, beanboard, beandeck)
 * All targets produce both combined (Marvin + BBC BASIC) and minimal (monitor-only) builds from a single build.sh
 * Boot defaults to monitor on all targets; shift-RESET selects USB console on BeanBoard and BeanDeck
+* Jump table extended: `MARVIN_KEY_READCHAR` reordered before LCD entries; `MARVIN_RA8875_INIT` (0x0031) and `MARVIN_RA8875_PUTCHAR` (0x0034) added; BeanDeck and BeanBoard entry files realigned to match
 
 Build
 
@@ -50,6 +51,9 @@ Build
 * system.asm: system RAM layout cascades from SYSTEM_RAMSTART; RA8875_RAMSTART is an alias; RA8875_RAMSIZE conditionally EXTERNed from ra8875-z80-repo (HAS_RA8875 build flag); beanzee target defines RA8875_RAMSIZE as 0
 * burn32k.sh: -m flag for minimal firmware, -8 flag for 8k EEPROM (AT28C64B)
 * Repo restructured: hardware drivers in asm/drivers/, BBCZ80/ subdirectories, single root build.sh, boot and ENTRY files separated
+* Public labels renamed with module prefix: `getchar`→`con_getchar`, `putchar`→`con_putchar`, `readchar`→`con_readchar`, `puts`→`con_puts`, `putchar_hex`→`con_putchar_hex`, `modifierkeys`→`key_modifiers`
+* `modules_for_target()` unified: combined and minimal module lists merged into one function; driver paths inlined
+* BBCZ80 interface files (ENTRY.asm, BMOS.asm, BHOOK.asm) moved from `targets/shared/BBCZ80/` to `asm/BBCZ80/`
 
 ## 1.2.1a
 
