@@ -1,11 +1,7 @@
-; BHOOK.Z80 - BeanZee Graphics/Sound Stubs
-;
-; All graphics and sound functions return "Sorry" error.
-; Can be expanded as BeanZee gains display capabilities
-; (RA8875 TFT, VGA adapter).
-;
-; cf. HOOK.Z80 (CP/M stubs)
-;
+; BHOOK
+; Graphics/Sound Stubs for BBC BASIC Z80. 
+; See BBCZ80-repo
+
     PUBLIC CLG
     PUBLIC COLOUR
     PUBLIC DRAW

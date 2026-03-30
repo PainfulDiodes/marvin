@@ -1,16 +1,15 @@
-; BMOS.asm - BeanZeeOS Machine Operating System
+; BMOS - Machine Operating System
 ;
-; OS interface for BBC BASIC Z80. Shared across all targets.
+; OS interface for BBC BASIC Z80. 
 ; Delegates I/O to Marvin via the jump table.
+; See BBCZ80-repo
 ;
 ; Line ending handling:
 ;   Marvin's USB driver translates CR→LF in, LF→CR+LF out.
 ;   BMOS compensates: LF→CR on input, swallow CR on output.
 ;   On beanboard/beandeck console: LF→CR is harmless (keyboard
 ;   returns CR directly), CR swallow is safe (LCD uses LF).
-;
-; cf. BBCZ80-repo/targets/beanzee/BMOS.asm (standalone version)
-;
+
     PUBLIC OSINIT
     PUBLIC OSRDCH
     PUBLIC OSWRCH
