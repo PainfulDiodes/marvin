@@ -1,6 +1,8 @@
-# Marvin 2.0 (beta)
+# Marvin 2.0
 
 Firmware for the BeanZee Z80 homebrew family. The build includes Marvin, a simple [monitor program](./monitor.md) and also RT Russell's [BBCZ80](https://github.com/PainfulDiodes/BBCZ80) BASIC interpreter. BBCZ80 calls Marvin's hardware drivers via a jump table at fixed ROM addresses.
+
+BBCZ80 - Currently the integration is a proof or concept - it works, but I have not attempted anything beyond the simplest of BASIC test programs. Graphics functions have not been implemented
 
 ## Hardware Targets
 
