@@ -68,7 +68,7 @@ _boot_powerup:
     xor a
     ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup
     call ra8875_initialise
-    ld bc,0x1000                ; post-init settling delay (~12ms at 10MHz)
+    ld bc,0x8000                ; post-init settling delay (~100ms at 10MHz)
 _boot_settle:
     nop
     dec bc
