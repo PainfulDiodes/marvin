@@ -77,8 +77,13 @@ _boot_powerup:
     jr nz,_boot_powerup
     xor a
     ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup
-    call ra8875_initialise
-    jr nz,_boot_ra8875_failed   ; init failed: force USB console
+    ld b,3                      ; up to 3 init attempts
+_boot_ra8875_init:
+    call ra8875_initialise      ; ra8875_initialise preserves BC
+    jr z,_boot_ra8875_ok        ; success
+    djnz _boot_ra8875_init      ; failed: retry (each attempt re-asserts RESET)
+    jr _boot_ra8875_failed      ; all attempts failed: fall back to USB console
+_boot_ra8875_ok:
     ld bc,0x8000                ; post-init settling delay (~100ms at 10MHz)
 _boot_settle:
     nop
