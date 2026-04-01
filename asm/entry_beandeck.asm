@@ -84,13 +84,6 @@ _boot_ra8875_init:
     djnz _boot_ra8875_init      ; failed: retry (each attempt re-asserts RESET)
     jr _boot_ra8875_failed      ; all attempts failed: fall back to USB console
 _boot_ra8875_ok:
-    ld bc,0x8000                ; post-init settling delay (~100ms at 10MHz)
-_boot_settle:
-    nop
-    dec bc
-    ld a,b
-    or c
-    jr nz,_boot_settle
     call ra8875_console_init
     call console_select
     jp marvin_coldstart
