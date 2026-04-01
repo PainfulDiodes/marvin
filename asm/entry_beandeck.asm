@@ -68,7 +68,7 @@ _stub:
 ;   No key → keyboard input
 ;
 _boot:
-    ld bc,0x8000                ; power-up debounce delay (~100ms at 10MHz)
+    ld bc,0x0D00                ; power-up debounce delay (~12ms at 10MHz)
 _boot_powerup:
     nop
     dec bc
