@@ -5,12 +5,14 @@
     PUBLIC con_putchar
     PUBLIC con_puts
 
+    INCLUDE "asm/ra8875.inc"
+
     EXTERN usb_readchar
     EXTERN usb_putchar
     EXTERN key_readchar
     EXTERN ra8875_console_putchar
     EXTERN ra8875_console_puts
-    EXTERN ra8875_console_refresh_cursor
+    EXTERN ra8875_console_set_cursor_colour
     EXTERN CAPS_LOCK_STATE, QWERTY_CAPS
 
 ; wait for a character and return in A
@@ -39,8 +41,13 @@ _readchar_keyboard:
     ld a,(CAPS_LOCK_STATE)
     xor 0x01
     ld (CAPS_LOCK_STATE),a
-    ; redraw cursor to reflect new state
-    call ra8875_console_refresh_cursor
+    ; set cursor colour to reflect new caps lock state
+    or a                                ; test new value (flags survive the ld above)
+    ld a,RA8875_COL_WHITE
+    jr nz,_readchar_caps_colour         ; caps on: use white
+    ld a,RA8875_COL_GREEN               ; caps off: use green
+_readchar_caps_colour:
+    call ra8875_console_set_cursor_colour
     xor a               ; return 0 (consume keypress)
     jr _readchar_end
 _readchar_usb:

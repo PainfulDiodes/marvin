@@ -29,7 +29,7 @@
     EXTERN ra8875_console_init  ; console.asm - RA8875 console state init
     EXTERN ra8875_console_cursor_x ; console.asm - set cursor column
     EXTERN ra8875_console_cursor_y ; console.asm - set cursor row
-    EXTERN ra8875_console_refresh_cursor ; console.asm - redraw cursor
+    EXTERN ra8875_console_set_cursor_colour ; console.asm - set cursor colour
 
     PUBLIC START
 
@@ -75,7 +75,7 @@ ALIGN 0x0040
     jp ra8875_console_putchar        ; 0x0076 - ra8875 console write character
     jp ra8875_console_cursor_x      ; 0x0079 - set cursor column (A = col)
     jp ra8875_console_cursor_y      ; 0x007C - set cursor row (A = row, logical)
-    jp ra8875_console_refresh_cursor ; 0x007F - redraw cursor at current position
+    jp ra8875_console_set_cursor_colour ; 0x007F - set cursor colour (RA8875_COL_* in A)
     jp hex_byte_val                 ; 0x0082 - parse hex pair from (HL), advance HL
 ;
 ; START stub - no BBC BASIC in minimal build
