@@ -75,8 +75,12 @@ ALIGN 0x0040
     jp _stub             ; 0x006A - ra8875_init (not available on beanzee)
     jp _stub             ; 0x006D - ra8875_putchar (not available on beanzee)
     jp _stub             ; 0x0070 - ra8875_puts (not available on beanzee)
-    jp _stub             ; 0x0073 - ra8875_console_putchar (not available on beanzee)
-    jp hex_byte_val      ; 0x0076 - parse hex pair from (HL), advance HL
+    jp _stub             ; 0x0073 - ra8875_console_init (not available on beanzee)
+    jp _stub             ; 0x0076 - ra8875_console_putchar (not available on beanzee)
+    jp _stub             ; 0x0079 - ra8875_console_cursor_x (not available on beanzee)
+    jp _stub             ; 0x007C - ra8875_console_cursor_y (not available on beanzee)
+    jp _stub             ; 0x007F - ra8875_console_refresh_cursor (not available on beanzee)
+    jp hex_byte_val      ; 0x0082 - parse hex pair from (HL), advance HL
 _stub:
     ret
 ;

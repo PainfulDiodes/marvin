@@ -30,6 +30,10 @@
     EXTERN lcd_puts             ; hd44780.asm - LCD print string
     EXTERN ra8875_puts          ; ra8875.asm - RA8875 print string
     EXTERN ra8875_console_putchar ; console.asm - RA8875 console write character
+    EXTERN ra8875_console_init  ; console.asm - RA8875 console state init
+    EXTERN ra8875_console_cursor_x ; console.asm - set cursor column
+    EXTERN ra8875_console_cursor_y ; console.asm - set cursor row
+    EXTERN ra8875_console_refresh_cursor ; console.asm - redraw cursor
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     EXTERN STACK
@@ -86,8 +90,12 @@ ALIGN 0x0040
     jp ra8875_initialise ; 0x006A - ra8875 init
     jp ra8875_putchar    ; 0x006D - ra8875 putchar
     jp ra8875_puts       ; 0x0070 - ra8875 print string
-    jp ra8875_console_putchar ; 0x0073 - ra8875 console write character
-    jp hex_byte_val      ; 0x0076 - parse hex pair from (HL), advance HL
+    jp ra8875_console_init          ; 0x0073 - ra8875 console state init
+    jp ra8875_console_putchar        ; 0x0076 - ra8875 console write character
+    jp ra8875_console_cursor_x      ; 0x0079 - set cursor column (A = col)
+    jp ra8875_console_cursor_y      ; 0x007C - set cursor row (A = row, logical)
+    jp ra8875_console_refresh_cursor ; 0x007F - redraw cursor at current position
+    jp hex_byte_val                 ; 0x0082 - parse hex pair from (HL), advance HL
 ;
 ;
 ; ---- Boot Selection ----

@@ -40,9 +40,13 @@ MARVIN_KEY_MODIFIERS        EQU 0x0067  ; out: A=modifier bits read modifier key
 MARVIN_RA8875_INIT          EQU 0x006A  ; out: Z=ok NZ=fail    initialise RA8875
 MARVIN_RA8875_PUTCHAR       EQU 0x006D  ; in: A=char           write char to RA8875
 MARVIN_RA8875_PUTS          EQU 0x0070  ; in: HL=str(0-term)   write string to RA8875
-MARVIN_RA8875_CONSOLE_PUTCHAR EQU 0x0073 ; in: A=char          console write (handles LF, scroll)
+MARVIN_RA8875_CONSOLE_INIT             EQU 0x0073 ;            initialise console state
+MARVIN_RA8875_CONSOLE_PUTCHAR          EQU 0x0076 ; in: A=char  console write (handles LF, scroll)
+MARVIN_RA8875_CONSOLE_CURSOR_X         EQU 0x0079 ; in: A=col  set cursor column (0..RA8875_COLS-1)
+MARVIN_RA8875_CONSOLE_CURSOR_Y         EQU 0x007C ; in: A=row  set cursor row (0..RA8875_ROWS-1, logical)
+MARVIN_RA8875_CONSOLE_REFRESH_CURSOR   EQU 0x007F ;            redraw cursor at current position
 
 ; Utility
-MARVIN_HEX_BYTE_VAL         EQU 0x0076  ; in: HL=hex pair  out: A=value, HL advanced by 2
+MARVIN_HEX_BYTE_VAL         EQU 0x0082  ; in: HL=hex pair  out: A=value, HL advanced by 2
 
 ENDIF
