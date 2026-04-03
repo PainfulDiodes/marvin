@@ -44,7 +44,7 @@
     EXTERN con_putchar      ; console - write character
     EXTERN con_getchar      ; console - blocking read
     EXTERN con_readchar     ; console - non-blocking read
-    EXTERN marvin_coldstart ; monitor - cold start
+    EXTERN marvin_warmstart ; monitor - cold start
 ;
 ; Character constants
 ;
@@ -278,7 +278,7 @@ RESET:
 ;BYE - Return to Marvin monitor.
 ;
 BYE:
-    JP marvin_coldstart ; Enter Marvin prompt
+    JP marvin_warmstart ; Enter Marvin prompt
 ;
 ;OSCLI - Process an "operating system" command.
 ;   Inputs: HL addresses command string (after '*')
@@ -309,7 +309,7 @@ _OSCLI_CHECK:
     AND 0DFH
     CP 'N'
     JR NZ,_OSCLI_BAD
-    JP marvin_coldstart ; *MON matched - enter monitor
+    JP marvin_warmstart ; *MON matched - enter monitor
 ;
 _OSCLI_BAD:
     LD A,254
