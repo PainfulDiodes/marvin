@@ -1,12 +1,13 @@
 ; entry_beanzee.asm - Entry Point (BeanZee target, combined firmware)
 ;
-; CPU reset vector, jump table, and boot function for the
+; CPU reset vector, RST vectors, jump table, and boot function for the
 ; combined Marvin + BBC BASIC firmware.
 ;
 ; Provides:
 ;   - CPU boot at 0x0000 (SP init)
-;   - Marvin jump table at 0x0010
-;   - Boot selection (BeanZee: always BASIC)
+;   - RST vectors 0x0008-0x0038, all redirect to 0x0000 (hardware reset)
+;   - Marvin jump table at 0x0040
+;   - Boot selection (BeanZee: always monitor)
 ;
     EXTERN marvin_coldstart      ; monitor.asm - cold start
     EXTERN marvin_warmstart     ; monitor.asm - warm start
@@ -16,6 +17,9 @@
     EXTERN con_puts             ; console - print string
     EXTERN con_putchar_hex      ; hex.asm - print hex byte
     EXTERN hex_byte_val         ; hex.asm - parse hex pair
+    EXTERN usb_putchar          ; um245r.asm - USB write character
+    EXTERN usb_puts             ; um245r.asm - USB print string
+    EXTERN usb_readchar         ; um245r.asm - USB non-blocking read
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     EXTERN STACK
@@ -28,24 +32,51 @@
     jp _boot
 ;
 ;
+; ---- RST Vectors ----
+;
+; All RST instructions redirect to 0x0000 (hardware reset)
+;
+ALIGN 0x0008
+    jp 0x0000     ; RST 08H
+ALIGN 0x0010
+    jp 0x0000     ; RST 10H
+ALIGN 0x0018
+    jp 0x0000     ; RST 18H
+ALIGN 0x0020
+    jp 0x0000     ; RST 20H
+ALIGN 0x0028
+    jp 0x0000     ; RST 28H
+ALIGN 0x0030
+    jp 0x0000     ; RST 30H
+ALIGN 0x0038
+    jp 0x0000     ; RST 38H / IM 1 vector
+;
+;
 ; ---- Jump Table ----
 ;
 ; Fixed ROM addresses - must match jumptable.inc
+; MARVIN_COLDSTART EQU 0x0000 (hardware reset, not a table entry)
 ;
-ALIGN 0x0010
-    jp marvin_coldstart  ; 0x0010 - cold start (enter monitor)
-    jp marvin_warmstart  ; 0x0013 - warm start (monitor prompt)
-    jp con_putchar      ; 0x0016 - write character (A = char)
-    jp con_getchar      ; 0x0019 - wait for character (returns A)
-    jp con_readchar     ; 0x001C - non-blocking read (returns A, 0 = none)
-    jp con_puts         ; 0x001F - print string (HL = address, zero-terminated)
-    jp con_putchar_hex  ; 0x0022 - print A as two hex digits
-    jp hex_byte_val     ; 0x0025 - parse hex pair from (HL), advance HL
-    jp _stub            ; 0x0028 - key_readchar (not available on beanzee)
-    jp _stub            ; 0x002B - lcd_init (not available on beanzee)
-    jp _stub            ; 0x002E - lcd_putchar (not available on beanzee)
-    jp _stub            ; 0x0031 - ra8875_init (not available on beanzee)
-    jp _stub            ; 0x0034 - ra8875_putchar (not available on beanzee)
+ALIGN 0x0040
+    jp marvin_warmstart  ; 0x0040 - warm start (monitor prompt)
+    jp con_putchar       ; 0x0043 - write character (A = char)
+    jp con_putchar_hex   ; 0x0046 - print A as two hex digits
+    jp con_puts          ; 0x0049 - print string (HL = address, zero-terminated)
+    jp con_getchar       ; 0x004C - wait for character (returns A)
+    jp con_readchar      ; 0x004F - non-blocking read (returns A, 0 = none)
+    jp usb_putchar       ; 0x0052 - USB write character (A = char)
+    jp usb_puts          ; 0x0055 - USB print string (HL = address, zero-terminated)
+    jp usb_readchar      ; 0x0058 - USB non-blocking read (returns A, 0 = none)
+    jp _stub             ; 0x005B - lcd_init (not available on beanzee)
+    jp _stub             ; 0x005E - lcd_putchar (not available on beanzee)
+    jp _stub             ; 0x0061 - lcd_puts (not available on beanzee)
+    jp _stub             ; 0x0064 - key_readchar (not available on beanzee)
+    jp _stub             ; 0x0067 - key_modifiers (not available on beanzee)
+    jp _stub             ; 0x006A - ra8875_init (not available on beanzee)
+    jp _stub             ; 0x006D - ra8875_putchar (not available on beanzee)
+    jp _stub             ; 0x0070 - ra8875_puts (not available on beanzee)
+    jp _stub             ; 0x0073 - ra8875_console_putchar (not available on beanzee)
+    jp hex_byte_val      ; 0x0076 - parse hex pair from (HL), advance HL
 _stub:
     ret
 ;

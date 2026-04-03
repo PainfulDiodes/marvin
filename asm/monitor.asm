@@ -1,6 +1,7 @@
     INCLUDE "asm/escape.inc"
 
     EXTERN CMD_BUFFER, RAMSTART
+    EXTERN STACK
 
     PUBLIC marvin_coldstart
     PUBLIC marvin_warmstart
@@ -35,6 +36,7 @@ marvin_coldstart:
     call con_puts
 
 marvin_warmstart:
+    ld sp, STACK
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER
     ld a,'$'
