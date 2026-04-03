@@ -5,6 +5,7 @@
 
     PUBLIC lcd_init
     PUBLIC lcd_putchar
+    PUBLIC lcd_puts
 
 ; initialise LCD
 lcd_init:
