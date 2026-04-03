@@ -1,7 +1,7 @@
-; BMOS - Machine Operating System
+; BMOS - Bean Machine Operating System
 ;
-; OS interface for BBC BASIC Z80. 
-; Delegates I/O to Marvin via the jump table.
+; OS interface for BBC BASIC Z80.
+; Delegates I/O to Marvin drivers via EXTERN linkage.
 ; See BBCZ80-repo
 ;
 ; Line ending handling:
@@ -41,7 +41,10 @@
     EXTERN ACCS         ; DATA.Z80 - string accumulator
     EXTERN USER         ; DATA.Z80 - end of data segment (PAGE)
 ;
-    INCLUDE "asm/jumptable.inc"
+    EXTERN con_putchar      ; console - write character
+    EXTERN con_getchar      ; console - blocking read
+    EXTERN con_readchar     ; console - non-blocking read
+    EXTERN marvin_coldstart ; monitor - cold start
 ;
 ; Character constants
 ;
@@ -84,7 +87,7 @@ OSWRCH:
     PUSH AF
     CP CR
     JR Z,_OSWRCH_DONE   ; Swallow CR (Marvin adds CR before LF)
-    CALL MARVIN_PUTCHAR
+    CALL con_putchar
 _OSWRCH_DONE:
     POP AF
     RET
@@ -113,7 +116,7 @@ OSRDCH:
     POP HL
     RET
 _OSRDCH_CALL:
-    CALL MARVIN_GETCHAR ; Blocking read
+    CALL con_getchar    ; Blocking read
     CP LF               ; Marvin returns LF for Enter
     RET NZ
     LD A,CR             ; Convert to CR for BASIC
@@ -136,7 +139,7 @@ OSKEY:
     RET NZ              ; Return buffered key
     PUSH DE
 _OSKEY_LOOP:
-    CALL MARVIN_READCHAR ; Non-blocking read
+    CALL con_readchar ; Non-blocking read
     OR A
     JR NZ,_OSKEY_GOT
     DEC HL              ; Decrement timeout
@@ -245,7 +248,7 @@ LTRAP:
 ;
 _TEST:
     LD (HL),20          ; Reset trap counter
-    CALL MARVIN_READCHAR ; Non-blocking poll
+    CALL con_readchar ; Non-blocking poll
     OR A
     RET Z               ; No data
     CP LF               ; Marvin returns LF for Enter
@@ -275,7 +278,7 @@ RESET:
 ;BYE - Return to Marvin monitor.
 ;
 BYE:
-    JP MARVIN_COLDSTART ; Enter Marvin prompt
+    JP marvin_coldstart ; Enter Marvin prompt
 ;
 ;OSCLI - Process an "operating system" command.
 ;   Inputs: HL addresses command string (after '*')
@@ -306,7 +309,7 @@ _OSCLI_CHECK:
     AND 0DFH
     CP 'N'
     JR NZ,_OSCLI_BAD
-    JP MARVIN_COLDSTART ; *MON matched - enter monitor
+    JP marvin_coldstart ; *MON matched - enter monitor
 ;
 _OSCLI_BAD:
     LD A,254
