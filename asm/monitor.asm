@@ -59,10 +59,6 @@ _get_cmd:
     cp ESC_T
     ; yes: skip this
     jr z,_get_cmd
-    ; is space?
-    cp ' '
-    ; yes - skip this
-    jr z,_get_cmd
     ; escape?
     cp ESC_E
     ; yes
@@ -105,8 +101,15 @@ _get_cmd_end:
 ; process command from buffer
     ; point to start of buffer
     ld hl,CMD_BUFFER
+_cmd_skip_space:
     ; load character from buffer
     ld a,(hl)
+    ; skip leading spaces
+    cp ' '
+    jr nz,_cmd_check
+    inc hl
+    jr _cmd_skip_space
+_cmd_check:
     ; end of string?
     cp 0
     ; yes - empty line - go back to prompt

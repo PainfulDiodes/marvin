@@ -9,8 +9,15 @@
 hex_byte_val:
     ; preserve BC
     push bc
+_hex_byte_val_skip_space:
     ; load 1st character from memory
     ld a,(hl)
+    ; skip spaces
+    cp ' '
+    jr nz,_hex_byte_val_read
+    inc hl
+    jr _hex_byte_val_skip_space
+_hex_byte_val_read:
     ; end of string?
     cp 0
     ; yes: no value - return zero
