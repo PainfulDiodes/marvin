@@ -45,6 +45,7 @@ MARVIN_RA8875_CONSOLE_PUTCHAR          EQU 0x0076 ; in: A=char  console write (h
 MARVIN_RA8875_CONSOLE_CURSOR_X         EQU 0x0079 ; in: A=col  set cursor column (0..RA8875_COLS-1)
 MARVIN_RA8875_CONSOLE_CURSOR_Y         EQU 0x007C ; in: A=row  set cursor row (0..RA8875_ROWS-1, logical)
 MARVIN_RA8875_CONSOLE_REFRESH_CURSOR   EQU 0x007F ;            redraw cursor at current position
+MARVIN_RA8875_CONSOLE_SET_BG_COLOUR    EQU 0x0085 ; in: A=colour  set console background colour
 
 ; Utility
 MARVIN_HEX_BYTE_VAL         EQU 0x0082  ; in: HL=hex pair  out: A=value, HL advanced by 2

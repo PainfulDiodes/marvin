@@ -30,6 +30,7 @@
     EXTERN ra8875_console_cursor_x ; console.asm - set cursor column
     EXTERN ra8875_console_cursor_y ; console.asm - set cursor row
     EXTERN ra8875_console_set_cursor_colour ; console.asm - set cursor colour
+    EXTERN ra8875_console_set_background_colour ; console.asm - set background colour
 
     PUBLIC START
 
@@ -77,6 +78,7 @@ ALIGN 0x0040
     jp ra8875_console_cursor_y      ; 0x007C - set cursor row (A = row, logical)
     jp ra8875_console_set_cursor_colour ; 0x007F - set cursor colour (RA8875_COL_* in A)
     jp hex_byte_val                 ; 0x0082 - parse hex pair from (HL), advance HL
+    jp ra8875_console_set_background_colour ; 0x0085 - set console background colour (A = colour)
 ;
 ; START stub - no BBC BASIC in minimal build
 START:
