@@ -54,7 +54,6 @@ ALIGN 0x0038
 ; ---- Jump Table ----
 ;
 ; Fixed ROM addresses - must match jumptable.inc
-; MARVIN_COLDSTART EQU 0x0000 (hardware reset, not a table entry)
 ;
 ALIGN 0x0040
     jp marvin_warmstart  ; 0x0040 - warm start (monitor prompt)
