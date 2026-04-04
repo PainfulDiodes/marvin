@@ -10,8 +10,6 @@ DEFINE _JUMPTABLE_INC
 ; Sections with limited availability note the supported targets in parentheses.
 ; Unsupported targets have a stub entry that returns immediately.
 
-MARVIN_COLDSTART            EQU 0x0000  ; jp here to cold start (hardware reset)
-
 ; Monitor
 MARVIN_WARMSTART            EQU 0x0040  ; return to monitor prompt
 

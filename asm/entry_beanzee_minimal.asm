@@ -37,7 +37,6 @@ ALIGN 0x0030
     jp 0x0000     ; RST 30H
 ALIGN 0x0038
     jp 0x0000     ; RST 38H / IM 1 vector
-; MARVIN_COLDSTART EQU 0x0000 (hardware reset, not a table entry)
 ALIGN 0x0040
     jp marvin_warmstart  ; 0x0040 - warm start (monitor prompt)
     jp con_putchar       ; 0x0043 - write character (A = char)
