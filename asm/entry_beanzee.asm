@@ -16,7 +16,6 @@
     EXTERN con_readchar         ; console - non-blocking read
     EXTERN con_puts             ; console - print string
     EXTERN con_putchar_hex      ; hex.asm - print hex byte
-    EXTERN hex_byte_val         ; hex.asm - parse hex pair
     EXTERN usb_putchar          ; um245r.asm - USB write character
     EXTERN usb_puts             ; um245r.asm - USB print string
     EXTERN usb_readchar         ; um245r.asm - USB non-blocking read
@@ -81,7 +80,6 @@ ALIGN 0x0040
     jp _stub             ; 0x007C - ra8875_console_cursor_y (not available on beanzee)
     jp _stub             ; 0x007F - ra8875_console_set_cursor_colour (not available on beanzee)
     jp _stub             ; 0x0082 - ra8875_console_set_background_colour (not available on beanzee)
-    jp hex_byte_val      ; 0x0085 - parse hex pair from (HL), advance HL
 _stub:
     ret
 ;

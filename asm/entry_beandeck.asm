@@ -20,7 +20,6 @@
     EXTERN con_readchar         ; console - non-blocking read
     EXTERN con_puts             ; console - print string
     EXTERN con_putchar_hex      ; hex.asm - print hex byte
-    EXTERN hex_byte_val         ; hex.asm - parse hex pair
     EXTERN key_readchar         ; keymatrix.asm - keyboard read
     EXTERN console_select       ; console_select.asm - console selection
     EXTERN CONSOLE_STATUS, CONSOLE_STATUS_USB ; system.asm - force USB fallback
@@ -99,7 +98,6 @@ ALIGN 0x0040
     jp ra8875_console_cursor_y      ; 0x007C - set cursor row (A = row, logical)
     jp ra8875_console_set_cursor_colour ; 0x007F - set cursor colour (RA8875_COL_* in A)
     jp ra8875_console_set_background_colour ; 0x0082 - set console background colour (A = colour)
-    jp hex_byte_val                 ; 0x0085 - parse hex pair from (HL), advance HL
 _stub:
     ret
 ;

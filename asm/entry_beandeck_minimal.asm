@@ -14,7 +14,6 @@
     EXTERN con_readchar
     EXTERN con_puts
     EXTERN con_putchar_hex
-    EXTERN hex_byte_val
     EXTERN key_readchar
     EXTERN console_select
     EXTERN ra8875_initialise    ; ra8875.asm - display init
@@ -78,7 +77,6 @@ ALIGN 0x0040
     jp ra8875_console_cursor_y      ; 0x007C - set cursor row (A = row, logical)
     jp ra8875_console_set_cursor_colour ; 0x007F - set cursor colour (RA8875_COL_* in A)
     jp ra8875_console_set_background_colour ; 0x0082 - set console background colour (A = colour)
-    jp hex_byte_val                 ; 0x0085 - parse hex pair from (HL), advance HL
 _stub:
     ret
 ;
