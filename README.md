@@ -1,4 +1,4 @@
-# Marvin 2.0
+# Marvin 1.3
 
 Firmware for the BeanZee Z80 homebrew family. The build includes Marvin, a simple [monitor program](./monitor.md) and also RT Russell's [BBCZ80](https://github.com/PainfulDiodes/BBCZ80) BASIC interpreter. BBCZ80 calls Marvin's hardware drivers via a jump table at fixed ROM addresses.
 
@@ -54,23 +54,7 @@ Stack starts at 0xFFFF (working down).
 
 ## Jump Table
 
-Fixed ROM addresses at 0x0010 for platform-independent access:
-
-| Address | Function                              |
-|---------|---------------------------------------|
-| 0x0010  | Cold start (enter monitor)            |
-| 0x0013  | Warm start (monitor prompt)           |
-| 0x0016  | con_putchar (A = char)                |
-| 0x0019  | con_getchar (blocking, returns A)     |
-| 0x001C  | con_readchar (non-blocking, returns A)|
-| 0x001F  | con_puts (HL = string address)        |
-| 0x0022  | con_putchar_hex (A as two hex digits) |
-| 0x0025  | hex_byte_val (parse hex pair from HL) |
-| 0x0028  | key_readchar                          |
-| 0x002B  | lcd_init                              |
-| 0x002E  | lcd_putchar                           |
-| 0x0031  | ra8875_initialise                     |
-| 0x0034  | ra8875_putchar                        |
+Fixed ROM addresses at 0x0010 for target-independent access: [jumptable.inc](./asm/jumptable.inc)
 
 ## Monitor Commands
 
