@@ -47,7 +47,4 @@ MARVIN_RA8875_CONSOLE_CURSOR_Y         EQU 0x007C ; in: A=row  set cursor row (0
 MARVIN_RA8875_CONSOLE_SET_CURSOR_COLOUR EQU 0x007F ; in: A=colour  set cursor colour (RA8875_COL_*)
 MARVIN_RA8875_CONSOLE_SET_BG_COLOUR    EQU 0x0082 ; in: A=colour  set console background colour
 
-; Utility
-MARVIN_HEX_BYTE_VAL         EQU 0x0085  ; in: HL=hex pair  out: A=value, HL advanced by 2
-
 ENDIF
