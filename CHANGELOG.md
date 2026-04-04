@@ -27,7 +27,7 @@ Keyboard
 
 * Caps lock: lock key toggles `CAPS_LOCK_STATE` (new system RAM byte at 0xF00D); handled in the console layer (beanboard / beandeck)
 * Letters a–z uppercased when caps lock is on; non-letter characters (digits, symbols) unaffected
-* BeanDeck: cursor colour reflects caps lock state — green (off) / white (on); redrawn immediately on toggle via new `ra8875_console_refresh_cursor` in the ra8875-z80 submodule
+* BeanDeck: cursor colour reflects caps lock state — green (off) / white (on); redrawn immediately on toggle via `ra8875_console_set_cursor_colour` in the ra8875-z80 submodule
 * BeanBoard: caps lock state toggled silently; no visual indicator on the LCD
 
 Monitor
@@ -35,6 +35,20 @@ Monitor
 * Monitor prompt changed from > to $ (to distinguish it from the BASIC prompt)
 * Monitor backspace support in input loop
 * `b` launches BBC BASIC cold start, `B` launches warm start — no prompt or extra keypress required; excluded from minimal builds via conditional assembly (IFDEF INCLUDE_BASIC)
+* Command buffer backspace fix: spaces in commands now handled in hex parsing rather than skipped on input
+
+BBC BASIC
+
+* Fixed: quitting BASIC returns to Marvin warm start
+* BMOS updated to call Marvin functions by labels rather than via jump table
+
+Jump table
+
+* Jump table relocated to 0x0040 and extended with RA8875 console entries: `MARVIN_RA8875_CONSOLE_INIT` (0x0073), `MARVIN_RA8875_CONSOLE_PUTCHAR` (0x0076), `MARVIN_RA8875_CONSOLE_CURSOR_X` (0x0079), `MARVIN_RA8875_CONSOLE_CURSOR_Y` (0x007C), `MARVIN_RA8875_CONSOLE_REFRESH_CURSOR` (0x007F), `MARVIN_HEX_BYTE_VAL` (0x0082)
+
+BeanDeck
+
+* Fixed intermittent RA8875 initialisation: increased settle time and tuned boot delays in entry files
 
 Targets
 
