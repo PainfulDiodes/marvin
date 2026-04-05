@@ -29,14 +29,14 @@
 ; MAIN PROGRAM LOOP
 
 marvin_coldstart:
-    ; point DE to zero - this is the default address argument for commands
-    ld de,0x0000
-
     ld hl,WELCOME_MSG
     call con_puts
 
 marvin_warmstart:
     ld sp, STACK
+    ; point DE to zero - this is the default address argument for commands
+    ld de,0x0000
+_prompt:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER
     ld a,'$'
@@ -92,7 +92,7 @@ _get_cmd_esc:
     ld a,ESC_N
     call con_putchar
     ; back to prompt
-    jr marvin_warmstart
+    jr _prompt
 _get_cmd_end:
     ; string terminator
     ld a,0                  
@@ -113,7 +113,7 @@ _cmd_check:
     ; end of string?
     cp 0
     ; yes - empty line - go back to prompt
-    jr z,marvin_warmstart
+    jr z,_prompt
     ; advance the buffer pointer
     inc hl
     cp 'r'
@@ -135,7 +135,7 @@ _cmd_check:
     ld hl,BAD_CMD_MSG
     call con_puts
     ; loop back to the prompt
-    jp marvin_warmstart
+    jp _prompt
 
 ; COMMANDS
 
@@ -188,7 +188,7 @@ _cmd_read_byte:
     ld a,ESC_N
     call con_putchar
     ; and back to prompt
-    jp marvin_warmstart
+    jp _prompt
 
 ; WRITE
 
@@ -223,13 +223,13 @@ _cmd_write_data:
     inc de
     jr _cmd_write_data
 _cmd_write_end:
-    jp marvin_warmstart
+    jp _prompt
     ; w with no data
 _cmd_write_null:        
     ld hl,CMD_W_NULL_MSG
     call con_puts
     ; and back to prompt
-    jp marvin_warmstart
+    jp _prompt
 
 ; EXECUTE
 
@@ -309,7 +309,7 @@ _cmd_load_data:
     ; if byte counter not zero then go again
     jr nz,_cmd_load_data
 _cmd_load_end:
-    jp marvin_warmstart
+    jp _prompt
 
     IFDEF INCLUDE_BASIC
 
