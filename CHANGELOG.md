@@ -54,6 +54,7 @@ BeanDeck
 Targets
 
 * BeanDeck target added (BeanBoard + BeanBoardSPI; TFT display, hardware keyboard, no LCD)
+* BeanBoard: RA8875 GPIO bit-bang driver removed — untested on beanboard hardware; can be added back once validated
 * Combined firmware builds for all three targets (beanzee, beanboard, beandeck)
 * All targets produce both combined (Marvin + BBC BASIC) and minimal (monitor-only) builds from a single build.sh
 * Boot defaults to monitor on all targets; shift-RESET selects USB console on BeanBoard and BeanDeck
