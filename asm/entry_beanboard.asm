@@ -20,22 +20,11 @@
     EXTERN lcd_putchar          ; hd44780.asm - LCD character output
     EXTERN key_readchar         ; keymatrix.asm - keyboard read
     EXTERN console_select       ; console_select.asm - console selection
-    EXTERN ra8875_initialise    ; ra8875.asm - display init
-    EXTERN ra8875_putchar       ; ra8875.asm - write character to display
     EXTERN usb_putchar          ; um245r.asm - USB write character
     EXTERN usb_puts             ; um245r.asm - USB print string
     EXTERN usb_readchar         ; um245r.asm - USB non-blocking read
     EXTERN key_modifiers        ; keymatrix.asm - read modifier keys
     EXTERN lcd_puts             ; hd44780.asm - LCD print string
-    EXTERN ra8875_puts          ; ra8875.asm - RA8875 print string
-    EXTERN ra8875_console_putchar ; console.asm - RA8875 console write character
-    EXTERN ra8875_console_init  ; console.asm - RA8875 console state init
-    EXTERN ra8875_console_cursor_x ; console.asm - set cursor column
-    EXTERN ra8875_console_cursor_y ; console.asm - set cursor row
-    EXTERN ra8875_console_set_cursor_colour ; console.asm - set cursor colour
-    EXTERN ra8875_console_set_background_colour ; console.asm - set background colour
-    EXTERN ra8875_console_cursor_hide ; console.asm - hide software cursor
-    EXTERN ra8875_console_cursor_show ; console.asm - show software cursor
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     EXTERN STACK
@@ -88,17 +77,19 @@ ALIGN 0x0040
     jp lcd_puts          ; 0x0061 - LCD print string (HL = address, zero-terminated)
     jp key_readchar      ; 0x0064 - read keyboard
     jp key_modifiers     ; 0x0067 - read modifier keys
-    jp ra8875_initialise ; 0x006A - ra8875 init
-    jp ra8875_putchar    ; 0x006D - ra8875 putchar
-    jp ra8875_puts       ; 0x0070 - ra8875 print string
-    jp ra8875_console_init          ; 0x0073 - ra8875 console state init
-    jp ra8875_console_putchar        ; 0x0076 - ra8875 console write character
-    jp ra8875_console_cursor_x      ; 0x0079 - set cursor column (A = col)
-    jp ra8875_console_cursor_y      ; 0x007C - set cursor row (A = row, logical)
-    jp ra8875_console_set_cursor_colour ; 0x007F - set cursor colour (RA8875_COL_* in A)
-    jp ra8875_console_set_background_colour ; 0x0082 - set console background colour (A = colour)
-    jp ra8875_console_cursor_hide    ; 0x0085 - hide software cursor
-    jp ra8875_console_cursor_show    ; 0x0088 - show software cursor
+    jp _stub             ; 0x006A - ra8875_init (not available on beanboard)
+    jp _stub             ; 0x006D - ra8875_putchar (not available on beanboard)
+    jp _stub             ; 0x0070 - ra8875_puts (not available on beanboard)
+    jp _stub             ; 0x0073 - ra8875_console_init (not available on beanboard)
+    jp _stub             ; 0x0076 - ra8875_console_putchar (not available on beanboard)
+    jp _stub             ; 0x0079 - ra8875_console_cursor_x (not available on beanboard)
+    jp _stub             ; 0x007C - ra8875_console_cursor_y (not available on beanboard)
+    jp _stub             ; 0x007F - ra8875_console_set_cursor_colour (not available on beanboard)
+    jp _stub             ; 0x0082 - ra8875_console_set_background_colour (not available on beanboard)
+    jp _stub             ; 0x0085 - ra8875_console_cursor_hide (not available on beanboard)
+    jp _stub             ; 0x0088 - ra8875_console_cursor_show (not available on beanboard)
+_stub:
+    ret
 ;
 ;
 ; ---- Boot Selection ----

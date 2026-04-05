@@ -45,11 +45,11 @@ modules_for_target() {
         beanboard)
             COMBINED_ENTRY="entry_beanboard"
             MARVIN_MODULES="system console_beanboard console_select drivers/um245r drivers/hd44780 drivers/keymatrix monitor hex messages_beanboard"
-            RA8875_MODULES="asm/ra8875 asm/console targets/beanboard"
+            RA8875_MODULES=""
             BASIC_MAIN="MAIN_SM_DSP"
             MINIMAL_ENTRY="entry_beanboard_minimal"
             MINIMAL_MODULES="system console_beanboard console_select drivers/um245r drivers/hd44780 drivers/keymatrix monitor hex messages_beanboard"
-            MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboard"
+            MINIMAL_RA8875_MODULES=""
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
