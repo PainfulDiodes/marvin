@@ -5,13 +5,16 @@ DEFINE _JUMPTABLE_INC
 ; Each entry is a 3-byte JP instruction
 ; Consumers call these addresses for Marvin I/O services
 ;
-; Must match the jump table in entry_<target>.asm / entry_<target>_minimal.asm
-;
 ; Sections with limited availability note the supported targets in parentheses.
 ; Unsupported targets have a stub entry that returns immediately.
+;
+; Jumps are implemented in entry_<target>.asm / entry_<target>_minimal.asm
 
-; Monitor
+; ENTRY POINTS - JP to these - they will not RETurn
+
 MARVIN_WARMSTART            EQU 0x0040  ; return to monitor prompt
+
+; FUNCTIONS - CALL  these - they will RETurn
 
 ; Console I/O (routes to active console: USB, LCD+kbd, or RA8875+kbd)
 MARVIN_PUTCHAR              EQU 0x0043  ; in: A=char           write char
