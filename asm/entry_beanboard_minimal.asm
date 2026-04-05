@@ -4,6 +4,7 @@
 ; Initialises LCD and console, then boots to the monitor prompt.
 ;
     EXTERN STACK
+    EXTERN CAPS_LOCK_STATE
 
     EXTERN marvin_coldstart
     EXTERN marvin_warmstart
@@ -22,13 +23,21 @@
     EXTERN key_modifiers        ; keymatrix.asm - read modifier keys
     EXTERN lcd_puts             ; hd44780.asm - LCD print string
 
-    PUBLIC START
-
-    ORG MARVINORG
+    PUBLIC START                ; START stub - no BBC BASIC in minimal build
+;
+;
+;
+; ---- Boot Code ----
+;
+    ORG 0x0000
     ld sp, STACK
     jp _boot
-
-; RST vectors and jump table at fixed addresses - must match jumptable.inc
+;
+;
+; ---- RST Vectors ----
+;
+; All RST instructions redirect to 0x0000 (hardware reset)
+;
 ALIGN 0x0008
     jp 0x0000     ; RST 08H
 ALIGN 0x0010
@@ -92,5 +101,14 @@ _boot_powerup:
     or c
     jr nz,_boot_powerup
     call lcd_init
+    ld bc,0x8000                ; post-lcd_init delay (~100ms at 10MHz)
+_boot_lcd_init_delay:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_lcd_init_delay
     call console_select
+    xor a
+    ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup
     jp marvin_coldstart

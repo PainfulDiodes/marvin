@@ -9,6 +9,9 @@
 ;   - Marvin jump table at 0x0040
 ;   - Boot selection (init LCD and console, then start monitor)
 ;
+    EXTERN STACK
+    EXTERN CAPS_LOCK_STATE
+
     EXTERN marvin_coldstart      ; monitor.asm - cold start
     EXTERN marvin_warmstart     ; monitor.asm - warm start
     EXTERN con_putchar          ; console - write character
@@ -25,10 +28,9 @@
     EXTERN usb_readchar         ; um245r.asm - USB non-blocking read
     EXTERN key_modifiers        ; keymatrix.asm - read modifier keys
     EXTERN lcd_puts             ; hd44780.asm - LCD print string
+
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
-    EXTERN STACK
-    EXTERN CAPS_LOCK_STATE
 ;
 ;
 ; ---- Boot Code ----
@@ -56,12 +58,6 @@ ALIGN 0x0030
     jp 0x0000     ; RST 30H
 ALIGN 0x0038
     jp 0x0000     ; RST 38H / IM 1 vector
-;
-;
-; ---- Jump Table ----
-;
-; Fixed ROM addresses - must match jumptable.inc
-;
 ALIGN 0x0040
     jp marvin_warmstart  ; 0x0040 - warm start (monitor prompt)
     jp con_putchar       ; 0x0043 - write character (A = char)
@@ -106,9 +102,15 @@ _boot_powerup:
     ld a,b
     or c
     jr nz,_boot_powerup
+    call lcd_init
+    ld bc,0x8000                ; post-lcd_init delay (~100ms at 10MHz)
+_boot_lcd_init_delay:
+    nop
+    dec bc
+    ld a,b
+    or c
+    jr nz,_boot_lcd_init_delay
+    call console_select
     xor a
     ld (CAPS_LOCK_STATE),a      ; ensure caps off at startup
-    call lcd_init
-    call console_select
     jp marvin_coldstart
-;
