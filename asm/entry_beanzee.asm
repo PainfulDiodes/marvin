@@ -79,6 +79,8 @@ ALIGN 0x0040
     jp _stub             ; 0x007C - ra8875_console_cursor_y (not available on beanzee)
     jp _stub             ; 0x007F - ra8875_console_set_cursor_colour (not available on beanzee)
     jp _stub             ; 0x0082 - ra8875_console_set_background_colour (not available on beanzee)
+    jp _stub             ; 0x0085 - ra8875_console_cursor_hide (not available on beanzee)
+    jp _stub             ; 0x0088 - ra8875_console_cursor_show (not available on beanzee)
 _stub:
     ret
 ;

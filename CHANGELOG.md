@@ -12,7 +12,7 @@ RA8875 TFT display driver added as git submodule (ra8875-z80)
 
 * Driver split into common core (ra8875.asm) and transport layers: ra8875_spi.asm (BeanBoardSPI hardware SPI), ra8875_gpio.asm (BeanBoard GPIO bit-bang)
 * RA8875 wired as beandeck console with hardware vertical scroll and software cursor
-* Cursor show/hide via SO (0x0E) / SI (0x0F) control characters
+* Cursor show/hide via `ra8875_console_cursor_show` / `ra8875_console_cursor_hide` function calls (jumptable entries 0x0085, 0x0088); SO/SI control characters removed from putchar
 * Backspace (0x08 and 0x7F) supported in RA8875 console
 * Cursor positioning: ra8875_console_cursor_x / ra8875_console_cursor_y
 * Foreground colour support via ra8875_set_foreground_colour

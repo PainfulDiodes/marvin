@@ -44,5 +44,7 @@ MARVIN_RA8875_CONSOLE_CURSOR_X         EQU 0x0079 ; in: A=col  set cursor column
 MARVIN_RA8875_CONSOLE_CURSOR_Y         EQU 0x007C ; in: A=row  set cursor row (0..RA8875_ROWS-1, logical)
 MARVIN_RA8875_CONSOLE_SET_CURSOR_COLOUR EQU 0x007F ; in: A=colour  set cursor colour (RA8875_COL_*)
 MARVIN_RA8875_CONSOLE_SET_BG_COLOUR    EQU 0x0082 ; in: A=colour  set console background colour
+MARVIN_RA8875_CONSOLE_CURSOR_HIDE      EQU 0x0085 ; hide software cursor
+MARVIN_RA8875_CONSOLE_CURSOR_SHOW      EQU 0x0088 ; show software cursor
 
 ENDIF
