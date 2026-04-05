@@ -36,6 +36,7 @@ Monitor
 * Monitor backspace support in input loop
 * `b` launches BBC BASIC cold start, `B` launches warm start — no prompt or extra keypress required; excluded from minimal builds via conditional assembly (IFDEF INCLUDE_BASIC)
 * Command buffer backspace fix: spaces in commands now handled in hex parsing rather than skipped on input
+* State fix: registers are preserved after monitor commands, but are reinitialised on warmstart
 
 BBC BASIC
 
