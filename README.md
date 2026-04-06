@@ -1,6 +1,6 @@
 # Marvin 1.3
 
-Firmware for the BeanZee Z80 family incorporating a simple [monitor program](./monitor.md), and extensible via submodules.
+Firmware for the BeanZee Z80 family: a simple [monitor program](./monitor.md), with submodule extensions.
 
 ## Hardware Targets
 
