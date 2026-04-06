@@ -1,6 +1,6 @@
 # Marvin 1.3
 
-Firmware for the BeanZee Z80 homebrew family. The build includes Marvin, a simple [monitor program](./monitor.md) 
+Firmware for the BeanZee Z80 family incorporating a simple [monitor program](./monitor.md), and extensible via submodules.
 
 ## Hardware Targets
 
