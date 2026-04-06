@@ -57,7 +57,7 @@ See: [monitor](./monitor.md)
 
 ## BBC BASIC
 
-RT Russell's Z80 BASIC interpreter cab be launched from the monitor prompt:
+RT Russell's Z80 BASIC interpreter can be launched from the monitor prompt:
 
 - `b` - cold start (clears variables and program)
 - `B` - warm start (retains existing program)
