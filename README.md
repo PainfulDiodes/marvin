@@ -1,14 +1,20 @@
 # Marvin 1.3
 
-Firmware for the BeanZee Z80 homebrew family. The build includes Marvin, a simple [monitor program](./monitor.md) and also RT Russell's [BBCZ80](https://github.com/PainfulDiodes/BBCZ80) BASIC interpreter. BBCZ80 calls Marvin's hardware drivers via a jump table at fixed ROM addresses.
-
-BBCZ80 - Currently the integration is a proof or concept - it works, but I have not attempted anything beyond the simplest of BASIC test programs. Graphics functions have not been implemented
+Firmware for the BeanZee Z80 homebrew family. The build includes Marvin, a simple [monitor program](./monitor.md) 
 
 ## Hardware Targets
 
-- **beanzee** - console over USB serial only (UM245R)
-- **beanboard** - BeanZee + LCD display + keyboard + GPIO
-- **beandeck** - BeanBoard + TFT display / flash cartridge storage via BeanBoardSPI
+- [beanzee](https://github.com/PainfulDiodes/BeanZee) is a small Z80 single board computer which is accessible only via a USB interface and a host computer with a console emulator
+- [beanboard](https://github.com/PainfulDiodes/BeanBoard) adds a small LCD display and self-contained keyboard to BeanZee, providing direct interaction with the computer in addition to USB; there's also a GPIO to facilitate experimentation
+- *beandeck* is a *work-in-progress* and incorporates [BeanBoardSPI](https://github.com/PainfulDiodes/BeanBoardSPI) through which a 7" 800x480 colour TFT and flash storage is added to the beanboard, making a self-contained Z80 computer
+
+## Submodules
+
+The build optionally embeds *RT Russell's [BBCZ80](https://github.com/PainfulDiodes/BBCZ80) BASIC interpreter* in a git submodule.
+
+Marvin provides the glue between BBCZ80 and the hardware - *currently the integration is a work-in-progress - I have not attempted anything beyond the simplest of BASIC test programs*.
+
+A second [ra8875-z80 driver](https://github.com/PainfulDiodes/ra8875-z80) git submodule is added for the beandeck target. This provides low-level interaction with an Adafruit RA8875 TFT controller, configured for an 800x480 TFT display, and a simple console layer for the display supporting a software cursor, wrapping and scrolling.
 
 ## Building
 
@@ -21,28 +27,15 @@ git clone --recurse-submodules https://github.com/PainfulDiodes/Marvin.git
 cd Marvin
 ```
 
-The build script assembles all submodule sources directly — you do not need to build the submodules separately.
-
-Build combined firmware (Marvin + BBC BASIC) for all targets:
+The build script assembles all submodule sources directly — you do not need to build the submodules separately:
 
 ```bash
 ./build.sh
 ```
 
-Build a single target:
-
-```bash
-./build.sh beanzee
-```
-
-Build standalone monitor (no BASIC interpreter):
-
-```bash
-./targets/beanzee/build-standalone.sh
-./targets/beanboard/build-standalone.sh
-```
-
 Output binaries are placed in `targets/<target>/output/`.
+
+For each target there is full "marvin" output which includes the BASIC interpreter, and in addition a "marvin_minimal" output which contains only the monitor program.
 
 ## Memory Map
 
@@ -54,7 +47,9 @@ Stack starts at 0xFFFF (working down).
 
 ## Jump Table
 
-Fixed ROM addresses at 0x0010 for target-independent access: [jumptable.inc](./asm/jumptable.inc)
+There is a jump table providing fixed ROM entry point addresses for target-independent access: [jumptable.inc](./asm/jumptable.inc)
+
+This can be incorporated using z88dk for C and assembly program access to marvin functions.
 
 ## Monitor Commands
 
@@ -62,20 +57,21 @@ See: [monitor](./monitor.md)
 
 ## BBC BASIC
 
-BBC BASIC Z80 interpreter included as a git submodule - [beanzee-bbc-basic](https://github.com/PainfulDiodes/beanzee-bbc-basic).
+RT Russell's Z80 BASIC interpreter cab be launched from the monitor prompt:
 
-Launch from the monitor prompt:
+- `b` - cold start (clears variables and program)
+- `B` - warm start (retains existing program)
 
-- `b` - BBC BASIC cold start (clears variables and program)
-- `B` - BBC BASIC warm start (resumes existing program)
+From BASIC you can return to the monitor with:
 
-Return to the monitor from BASIC:
-
-- `*MON` or `BYE`
+- `*MON`
 
 ## Links
 
-- [BBCZ80](https://github.com/PainfulDiodes/BBCZ80)
-- [BeanZee board](https://github.com/PainfulDiodes/BeanZee)
+- [BeanZee](https://github.com/PainfulDiodes/BeanZee)
+- [BeanBoard](https://github.com/PainfulDiodes/BeanBoard)
+- [BeanBoardSPI](https://github.com/PainfulDiodes/BeanBoardSPI)
 - [BeanZeeBytes example programs](https://github.com/PainfulDiodes/BeanZeeBytes)
 - [Blog](https://painfuldiodes.wordpress.com)
+- [RT Russell BBCZ80](https://github.com/rtrussell/BBCZ80)
+- [BBC BASIC Z80 Manual](https://www.bbcbasic.co.uk/bbcbasic/mancpm)
