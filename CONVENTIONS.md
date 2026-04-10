@@ -10,10 +10,10 @@ Private labels - those which should not be referenced outside of their file are 
 
 ## Build / Structural Conventions
 
-Target-specific files (ENTRY.asm, BMOS.asm) use uppercase names matching BBC BASIC conventions and live in `targets/<target>/`.
+Target-specific files (ENTRY.asm, MOS.asm) use uppercase names matching BBC BASIC conventions and live in `targets/<target>/`.
 
 Marvin core modules use lowercase names with underscores and live in `asm/`.
 
 Standalone entry files for Marvin-only builds use `entry_<target>.asm` in `asm/`.
 
-Shared BBC BASIC modules (BHOOK.asm, BMOS.asm) live in `targets/shared/BBCZ80/`.
+Shared BBC BASIC modules (HOOK.asm, MOS.asm) live in `asm/BBCZ80/`.
