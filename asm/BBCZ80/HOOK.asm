@@ -1,4 +1,4 @@
-; BHOOK
+; HOOK
 ; Graphics/Sound Stubs for BBC BASIC Z80. 
 ; See BBCZ80-repo
 
