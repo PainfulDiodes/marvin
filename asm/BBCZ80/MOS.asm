@@ -1,4 +1,4 @@
-; MOS - Bean Machine Operating System
+; MOS - Machine Operating System
 ;
 ; OS interface for BBC BASIC Z80.
 ; Delegates I/O to Marvin drivers via EXTERN linkage.
