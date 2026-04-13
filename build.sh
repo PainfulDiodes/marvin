@@ -130,11 +130,11 @@ build_target() {
         z88dk-z80asm -l -m $EXTRA_FLAGS -o"$OUTDIR/$module.o" "$BASIC_SRC/$module.asm"
     done
 
-    echo "  BHOOK.asm"
-    z88dk-z80asm -l -m -o"$OUTDIR/BHOOK.o" "$BBCZ80_DIR/BHOOK.asm"
+    echo "  HOOK.asm"
+    z88dk-z80asm -l -m -o"$OUTDIR/HOOK.o" "$BBCZ80_DIR/HOOK.asm"
 
-    echo "  BMOS.asm"
-    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/BMOS.o" "$BBCZ80_DIR/BMOS.asm"
+    echo "  MOS.asm"
+    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/MOS.o" "$BBCZ80_DIR/MOS.asm"
 
     # ---- Shared BBC BASIC entry point ----
 
@@ -157,8 +157,8 @@ build_target() {
     for module in $BASIC_MODULES; do
         ALL_OBJS="$ALL_OBJS $OUTDIR/$module.o"
     done
-    ALL_OBJS="$ALL_OBJS $OUTDIR/BHOOK.o"
-    ALL_OBJS="$ALL_OBJS $OUTDIR/BMOS.o"
+    ALL_OBJS="$ALL_OBJS $OUTDIR/HOOK.o"
+    ALL_OBJS="$ALL_OBJS $OUTDIR/MOS.o"
 
     echo ""
     echo "Linking all modules at $CODE_ORG..."
