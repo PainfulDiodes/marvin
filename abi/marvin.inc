@@ -1,14 +1,14 @@
-IFNDEF _JUMPTABLE_INC
-DEFINE _JUMPTABLE_INC
+IFNDEF _MARVIN_INC
+DEFINE _MARVIN_INC
 
-; Marvin jump table - fixed ROM addresses
+; Marvin trampoline functions (ABI) - fixed ROM addresses
 ; Each entry is a 3-byte JP instruction
 ; Consumers call these addresses for Marvin I/O services
 ;
 ; Sections with limited availability note the supported targets in parentheses.
 ; Unsupported targets have a stub entry that returns immediately.
 ;
-; Jumps are implemented in entry_<target>.asm / entry_<target>_minimal.asm
+; Implemented in entry_<target>.asm / entry_<target>_minimal.asm
 
 ; ENTRY POINTS - JP to these - they will not RETurn
 
@@ -50,4 +50,4 @@ MARVIN_RA8875_CONSOLE_SET_BG_COLOUR    EQU 0x0082 ; in: A=colour  set console ba
 MARVIN_RA8875_CONSOLE_CURSOR_HIDE      EQU 0x0085 ; hide software cursor
 MARVIN_RA8875_CONSOLE_CURSOR_SHOW      EQU 0x0088 ; show software cursor
 
-ENDIF
+ENDIF ; _MARVIN_INC

@@ -1,12 +1,12 @@
 ; entry_beanzee.asm - Entry Point (BeanZee target, combined firmware)
 ;
-; CPU reset vector, RST vectors, jump table, and boot function for the
+; CPU reset vector, RST vectors, trampoline functions (ABI), and boot function for the
 ; combined Marvin + BBC BASIC firmware.
 ;
 ; Provides:
 ;   - CPU boot at 0x0000 (SP init)
 ;   - RST vectors 0x0008-0x0038, all redirect to 0x0000 (hardware reset)
-;   - Marvin jump table at 0x0040
+;   - Marvin trampoline functions (ABI) at 0x0040
 ;   - Boot selection (BeanZee: always monitor)
 ;
     EXTERN marvin_coldstart      ; monitor.asm - cold start
@@ -51,9 +51,9 @@ ALIGN 0x0038
     jp 0x0000     ; RST 38H / IM 1 vector
 ;
 ;
-; ---- Jump Table ----
+; ---- Trampoline Functions (ABI) ----
 ;
-; Fixed ROM addresses - must match jumptable.inc
+; Fixed ROM addresses - must match abi/marvin.inc
 ;
 ALIGN 0x0040
     jp marvin_warmstart  ; 0x0040 - warm start (monitor prompt)

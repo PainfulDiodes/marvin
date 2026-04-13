@@ -4,7 +4,7 @@
 
 BBC BASIC Z80 added as git submodule
 
-* Per-target ENTRY.asm (boot + jump table + platform functions) and MOS.asm (Machine Operating System)
+* Per-target ENTRY.asm (boot + trampoline functions (ABI) + platform functions) and MOS.asm (Machine Operating System)
 * BBC BASIC error handling fixed: MOS RESET changed from RST 0 to RET — errors now print and return to BASIC prompt instead of cold-booting
 * BBCZ80 display: shortened BBC BASIC version string to fit 20-character HD44780 LCD on BeanBoard
 
@@ -12,7 +12,7 @@ RA8875 TFT display driver added as git submodule (ra8875-z80)
 
 * Driver split into common core (ra8875.asm) and transport layers: ra8875_spi.asm (BeanBoardSPI hardware SPI), ra8875_gpio.asm (BeanBoard GPIO bit-bang)
 * RA8875 wired as beandeck console with hardware vertical scroll and software cursor
-* Cursor show/hide via `ra8875_console_cursor_show` / `ra8875_console_cursor_hide` function calls (jumptable entries 0x0085, 0x0088); SO/SI control characters removed from putchar
+* Cursor show/hide via `ra8875_console_cursor_show` / `ra8875_console_cursor_hide` function calls (trampoline function entries 0x0085, 0x0088); SO/SI control characters removed from putchar
 * Backspace (0x08 and 0x7F) supported in RA8875 console
 * Cursor positioning: ra8875_console_cursor_x / ra8875_console_cursor_y
 * Foreground colour support via ra8875_set_foreground_colour
@@ -21,7 +21,7 @@ RA8875 TFT display driver added as git submodule (ra8875-z80)
 Boot
 
 * Power-up debounce delay (~100ms at 10MHz) added at the very start of `_boot` across all six entry files (three regular, three minimal), before any hardware initialisation
-* Minimal entry files restructured to use `jp _boot` / `_boot:` after the jump table, matching the regular entry file pattern; fixes latent jump table misalignment in `entry_beandeck_minimal.asm`
+* Minimal entry files restructured to use `jp _boot` / `_boot:` after the trampoline functions, matching the regular entry file pattern; fixes latent trampoline function misalignment in `entry_beandeck_minimal.asm`
 
 Keyboard
 
@@ -41,11 +41,11 @@ Monitor
 BBC BASIC
 
 * Fixed: quitting BASIC returns to Marvin warm start
-* MOS updated to call Marvin functions by labels rather than via jump table
+* MOS updated to call Marvin functions by labels rather than via trampoline functions
 
-Jump table
+Trampoline functions (ABI)
 
-* Jump table relocated to 0x0040 and extended with RA8875 console entries: `MARVIN_RA8875_CONSOLE_INIT` (0x0073), `MARVIN_RA8875_CONSOLE_PUTCHAR` (0x0076), `MARVIN_RA8875_CONSOLE_CURSOR_X` (0x0079), `MARVIN_RA8875_CONSOLE_CURSOR_Y` (0x007C), `MARVIN_RA8875_CONSOLE_REFRESH_CURSOR` (0x007F), `MARVIN_HEX_BYTE_VAL` (0x0082)
+* Trampoline functions relocated to 0x0040 and extended with RA8875 console entries: `MARVIN_RA8875_CONSOLE_INIT` (0x0073), `MARVIN_RA8875_CONSOLE_PUTCHAR` (0x0076), `MARVIN_RA8875_CONSOLE_CURSOR_X` (0x0079), `MARVIN_RA8875_CONSOLE_CURSOR_Y` (0x007C), `MARVIN_RA8875_CONSOLE_REFRESH_CURSOR` (0x007F), `MARVIN_HEX_BYTE_VAL` (0x0082)
 
 BeanDeck
 
@@ -58,7 +58,7 @@ Targets
 * Combined firmware builds for all three targets (beanzee, beanboard, beandeck)
 * All targets produce both combined (Marvin + BBC BASIC) and minimal (monitor-only) builds from a single build.sh
 * Boot defaults to monitor on all targets; shift-RESET selects USB console on BeanBoard and BeanDeck
-* Jump table extended: `MARVIN_KEY_READCHAR` reordered before LCD entries; `MARVIN_RA8875_INIT` (0x0031) and `MARVIN_RA8875_PUTCHAR` (0x0034) added; BeanDeck and BeanBoard entry files realigned to match
+* Trampoline functions extended: `MARVIN_KEY_READCHAR` reordered before LCD entries; `MARVIN_RA8875_INIT` (0x0031) and `MARVIN_RA8875_PUTCHAR` (0x0034) added; BeanDeck and BeanBoard entry files realigned to match
 
 Build
 
