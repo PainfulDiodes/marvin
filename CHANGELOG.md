@@ -4,8 +4,8 @@
 
 BBC BASIC Z80 added as git submodule
 
-* Per-target ENTRY.asm (boot + jump table + platform functions) and BMOS.asm (BASIC OS interface)
-* BBC BASIC error handling fixed: BMOS RESET changed from RST 0 to RET — errors now print and return to BASIC prompt instead of cold-booting
+* Per-target ENTRY.asm (boot + jump table + platform functions) and MOS.asm (Machine Operating System)
+* BBC BASIC error handling fixed: MOS RESET changed from RST 0 to RET — errors now print and return to BASIC prompt instead of cold-booting
 * BBCZ80 display: shortened BBC BASIC version string to fit 20-character HD44780 LCD on BeanBoard
 
 RA8875 TFT display driver added as git submodule (ra8875-z80)
@@ -41,7 +41,7 @@ Monitor
 BBC BASIC
 
 * Fixed: quitting BASIC returns to Marvin warm start
-* BMOS updated to call Marvin functions by labels rather than via jump table
+* MOS updated to call Marvin functions by labels rather than via jump table
 
 Jump table
 
@@ -69,7 +69,7 @@ Build
 * Repo restructured: hardware drivers in asm/drivers/, BBCZ80/ subdirectories, single root build.sh, boot and ENTRY files separated
 * Public labels renamed with module prefix: `getchar`→`con_getchar`, `putchar`→`con_putchar`, `readchar`→`con_readchar`, `puts`→`con_puts`, `putchar_hex`→`con_putchar_hex`, `modifierkeys`→`key_modifiers`
 * `modules_for_target()` unified: combined and minimal module lists merged into one function; driver paths inlined
-* BBCZ80 interface files (ENTRY.asm, BMOS.asm, BHOOK.asm) moved from `targets/shared/BBCZ80/` to `asm/BBCZ80/`
+* BBCZ80 interface files (ENTRY.asm, MOS.asm, HOOK.asm) moved from `targets/shared/BBCZ80/` to `asm/BBCZ80/`
 
 ## 1.2.1a
 
