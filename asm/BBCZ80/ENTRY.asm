@@ -12,7 +12,7 @@
     PUBLIC PUTIME
     PUBLIC GETIME
 ;
-    EXTERN OSWRCH               ; BMOS.asm - character output
+    EXTERN OSWRCH               ; MOS.asm - character output
 ;
 ;
 ; ---- Platform Functions ----

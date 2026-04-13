@@ -1,4 +1,4 @@
-; BMOS - Bean Machine Operating System
+; MOS - Machine Operating System
 ;
 ; OS interface for BBC BASIC Z80.
 ; Delegates I/O to Marvin drivers via EXTERN linkage.
@@ -6,7 +6,7 @@
 ;
 ; Line ending handling:
 ;   Marvin's USB driver translates CR→LF in, LF→CR+LF out.
-;   BMOS compensates: LF→CR on input, swallow CR on output.
+;   MOS compensates: LF→CR on input, swallow CR on output.
 ;   On beanboard/beandeck console: LF→CR is harmless (keyboard
 ;   returns CR directly), CR swallow is safe (LCD uses LF).
 
