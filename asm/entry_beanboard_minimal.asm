@@ -1,6 +1,6 @@
 ; entry_beanboard_minimal.asm - Minimal Marvin Entry Point (BeanBoard target)
 ;
-; Minimal boot + jump table for Marvin without BBC BASIC.
+; Minimal boot + trampoline functions (ABI) for Marvin without BBC BASIC.
 ; Initialises LCD and console, then boots to the monitor prompt.
 ;
     EXTERN STACK

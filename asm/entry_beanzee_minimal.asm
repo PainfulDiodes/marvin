@@ -1,6 +1,6 @@
 ; entry_beanzee_minimal.asm - Minimal Marvin Entry Point (BeanZee target)
 ;
-; Minimal boot + jump table for Marvin without BBC BASIC.
+; Minimal boot + trampoline functions (ABI) for Marvin without BBC BASIC.
 ; Boots directly to the monitor prompt.
 ;
     EXTERN STACK
@@ -22,7 +22,7 @@
     ld sp, STACK
     jp _boot
 
-; RST vectors and jump table at fixed addresses - must match jumptable.inc
+; RST vectors and trampoline functions (ABI) at fixed addresses - must match abi/marvin.inc
 ALIGN 0x0008
     jp 0x0000     ; RST 08H
 ALIGN 0x0010
