@@ -45,11 +45,24 @@ For each target there is full "marvin" output which includes the BASIC interpret
 
 Stack starts at 0xFFFF (working down).
 
-## Jump Table
+## Trampoline Functions (ABI)
 
-There is a jump table providing fixed ROM entry point addresses for target-independent access: [jumptable.inc](./asm/jumptable.inc)
+Fixed ROM entry point addresses for target-independent access from Z80 assembly and C programs: [abi/marvin.inc](./abi/marvin.inc)
 
-This can be incorporated using z88dk for C and assembly program access to marvin functions.
+Each entry is a `JP` trampoline at a fixed address. Entries not supported on a given target are stubs that return immediately without hanging.
+
+**Usage (z88dk assembly):**
+
+```asm
+INCLUDE "marvin.inc"
+
+    LD HL, message
+    CALL MARVIN_PUTS    ; write string to active console
+
+message: DEFM "Hello!\n", 0
+```
+
+The same binary runs on all three Marvin targets (beanzee, beanboard, beandeck).
 
 ## Monitor Commands
 

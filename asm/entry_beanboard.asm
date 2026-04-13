@@ -1,12 +1,12 @@
 ; entry_beanboard.asm - Entry Point (BeanBoard target, combined firmware)
 ;
-; CPU reset vector, RST vectors, jump table, and boot function for the
+; CPU reset vector, RST vectors, trampoline functions (ABI), and boot function for the
 ; combined Marvin + BBC BASIC firmware.
 ;
 ; Provides:
 ;   - CPU boot at 0x0000 (SP init)
 ;   - RST vectors 0x0008-0x0038, all redirect to 0x0000 (hardware reset)
-;   - Marvin jump table at 0x0040
+;   - Marvin trampoline functions (ABI) at 0x0040
 ;   - Boot selection (init LCD and console, then start monitor)
 ;
     EXTERN STACK
