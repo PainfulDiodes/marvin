@@ -45,9 +45,10 @@ _prompt:
 _get_cmd:
     ; get character from console
     call con_getchar
-    ; backspace? handle before echo
+    ; backspace? handle before echo (0x08 BS or 0x7F DEL - Mac keyboard sends DEL)
     cp ESC_B
-    ; yes
+    jr z,_get_cmd_bs
+    cp 0x7f
     jr z,_get_cmd_bs
     ; echo the character to console
     call con_putchar
@@ -81,7 +82,7 @@ _get_cmd_bs:
     jr z,_get_cmd_bs_end    ; at start: don't echo, don't move
     dec hl                  ; move pointer back one position
     add hl,bc               ; restore HL
-    call con_putchar            ; echo backspace only when acting (A still = ESC_B)
+    call con_putchar            ; echo backspace only when acting (A = ESC_B or DEL)
     jr _get_cmd
 _get_cmd_bs_end:
     add hl,bc               ; restore HL (= CMD_BUFFER)
