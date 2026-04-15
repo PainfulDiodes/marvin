@@ -184,12 +184,12 @@ QWERTY_CURS_RIGHT equ 4
 QWERTY_CAPS equ 5
 
 QWERTY_KEYMAP_L:
-    db ESC_E,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,ESC_B,'7','8','9'
-    db ESC_T,'a','s','d','f','g','h','j','k','l',';',QUOTE,ESC_N,'4','5','6'
-    db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',SLASH,QWERTY_CURS_UP,'1','2','3'
-    db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',ESC_N
+    db CHAR_ESC,'q','w','e','r','t','y','u','i','o','p',QWERTY_CAPS,CHAR_BS,'7','8','9'
+    db CHAR_TAB,'a','s','d','f','g','h','j','k','l',';',CHAR_QUOTE,CHAR_LF,'4','5','6'
+    db QWERTY_SHIFT,'z','x','c','v','b','n','m',',','.','/',CHAR_SLASH,QWERTY_CURS_UP,'1','2','3'
+    db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','[',']',' ','`','-','=',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,'0',CHAR_LF
 QWERTY_KEYMAP_U:
-    db ESC_E,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,ESC_B,'&','*','('
-    db ESC_T,'A','S','D','F','G','H','J','K','L',':','"',ESC_N,'$','%','^'
-    db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',SLASH,QWERTY_CURS_UP,'!','@','#'
-    db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',ESC_N
+    db CHAR_ESC,'Q','W','E','R','T','Y','U','I','O','P',QWERTY_CAPS,CHAR_BS,'&','*','('
+    db CHAR_TAB,'A','S','D','F','G','H','J','K','L',':','"',CHAR_LF,'$','%','^'
+    db QWERTY_SHIFT,'Z','X','C','V','B','N','M','<','>','?',CHAR_SLASH,QWERTY_CURS_UP,'!','@','#'
+    db QWERTY_FN,QWERTY_CTRL,QWERTY_ALT,QWERTY_CMD,' ','{','}',' ','~','_','+',QWERTY_CURS_LEFT,QWERTY_CURS_DOWN,QWERTY_CURS_RIGHT,')',CHAR_LF

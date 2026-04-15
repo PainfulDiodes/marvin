@@ -70,12 +70,12 @@ lcd_putchar:
     push af
     push hl
     ; backspace?
-    cp ESC_B
+    cp CHAR_BS
     jr z,_lcd_putchar_backspace
     cp CHAR_DEL                         ; DEL (backspace key on most terminals)
     jr z,_lcd_putchar_backspace
     ; newline char?
-    cp ESC_N
+    cp CHAR_LF
     jp nz,_lcd_putchar_printable
     ; newline - fill out the line until EOL
 _lcd_putchar_pad:
