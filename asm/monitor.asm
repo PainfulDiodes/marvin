@@ -45,27 +45,27 @@ _prompt:
 _get_cmd:
     ; get character from console
     call con_getchar
-    ; backspace? handle before echo (ESC_B or CHAR_DEL - Mac keyboard sends DEL)
-    cp ESC_B
+    ; backspace? handle before echo (CHAR_BS or CHAR_DEL - Mac keyboard sends DEL)
+    cp CHAR_BS
     jr z,_get_cmd_bs
     cp CHAR_DEL
     jr z,_get_cmd_bs
     ; echo the character to console
     call con_putchar
     ; is CR?
-    cp ESC_R
+    cp CHAR_CR
     ; yes: skip this
     jr z,_get_cmd
     ; is tab?
-    cp ESC_T
+    cp CHAR_TAB
     ; yes: skip this
     jr z,_get_cmd
     ; escape?
-    cp ESC_E
+    cp CHAR_ESC
     ; yes
     jr z, _get_cmd_esc
     ; end of line?
-    cp ESC_N
+    cp CHAR_LF
     ; yes
     jr z, _get_cmd_end       
     ; no: add character to the buffer
@@ -82,11 +82,11 @@ _get_cmd_bs:
     jr z,_get_cmd_bs_end    ; at start: don't echo, don't move
     dec hl                  ; move pointer back one position
     add hl,bc               ; restore HL
-    ld a,ESC_B              ; BS: move cursor back
+    ld a,CHAR_BS              ; BS: move cursor back
     call con_putchar
     ld a,' '                ; space: erase character
     call con_putchar
-    ld a,ESC_B              ; BS: reposition cursor
+    ld a,CHAR_BS              ; BS: reposition cursor
     call con_putchar
     jr _get_cmd
 _get_cmd_bs_end:
@@ -95,7 +95,7 @@ _get_cmd_bs_end:
     ; do escape
 _get_cmd_esc:
     ; new line
-    ld a,ESC_N
+    ld a,CHAR_LF
     call con_putchar
     ; back to prompt
     jr _prompt
@@ -191,7 +191,7 @@ _cmd_read_byte:
     ; repeat if the counter is not 0
     jr nz, _cmd_read_byte
     ; otherwise, new line
-    ld a,ESC_N
+    ld a,CHAR_LF
     call con_putchar
     ; and back to prompt
     jp _prompt
@@ -323,11 +323,11 @@ _cmd_load_end:
 
 ; b: BBC BASIC cold start, B: warm start
 _cmd_basic_cold:
-    ld a,ESC_N
+    ld a,CHAR_LF
     call con_putchar
     jp START
 _cmd_basic_warm:
-    ld a,ESC_N
+    ld a,CHAR_LF
     call con_putchar
     jp WARM
 
