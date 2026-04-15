@@ -82,7 +82,12 @@ _get_cmd_bs:
     jr z,_get_cmd_bs_end    ; at start: don't echo, don't move
     dec hl                  ; move pointer back one position
     add hl,bc               ; restore HL
-    call con_putchar            ; echo backspace only when acting (A = ESC_B or DEL)
+    ld a,ESC_B              ; BS: move cursor back
+    call con_putchar
+    ld a,' '                ; space: erase character
+    call con_putchar
+    ld a,ESC_B              ; BS: reposition cursor
+    call con_putchar
     jr _get_cmd
 _get_cmd_bs_end:
     add hl,bc               ; restore HL (= CMD_BUFFER)
