@@ -45,10 +45,10 @@ _prompt:
 _get_cmd:
     ; get character from console
     call con_getchar
-    ; backspace? handle before echo (0x08 BS or 0x7F DEL - Mac keyboard sends DEL)
+    ; backspace? handle before echo (ESC_B or CHAR_DEL - Mac keyboard sends DEL)
     cp ESC_B
     jr z,_get_cmd_bs
-    cp 0x7f
+    cp CHAR_DEL
     jr z,_get_cmd_bs
     ; echo the character to console
     call con_putchar
