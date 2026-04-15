@@ -72,7 +72,7 @@ lcd_putchar:
     ; backspace?
     cp ESC_B
     jr z,_lcd_putchar_backspace
-    cp 0x7f                             ; DEL (backspace key on most terminals)
+    cp CHAR_DEL                         ; DEL (backspace key on most terminals)
     jr z,_lcd_putchar_backspace
     ; newline char?
     cp ESC_N
