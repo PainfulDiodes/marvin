@@ -1,5 +1,5 @@
-IFNDEF _ESCAPESTRING_INC
-DEFINE _ESCAPESTRING_INC
+IFNDEF _CHARS_INC
+DEFINE _CHARS_INC
 
 ; escape character constants for assembler compatibility
 ; sjasmplus requires double quotes around escape sequences: "\n" and would not interpret '\n' but truncate
