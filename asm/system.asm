@@ -2,7 +2,7 @@
 ; All labels are PUBLIC so they can be referenced via EXTERN from other modules.
 
     PUBLIC RAMSTART
-    PUBLIC CONSOLE_STATUS, KEY_MATRIX_BUFFER, CAPS_LOCK_STATE, CMD_BUFFER, STACK
+    PUBLIC CONSOLE_STATUS, LCD_RAMSTART, KEY_MATRIX_BUFFER, CAPS_LOCK_STATE, CMD_BUFFER, STACK
     PUBLIC UM245R_CTRL, UM245R_DATA
     PUBLIC KEYSCAN_OUT, KEYSCAN_IN
     PUBLIC LCD_CTRL, LCD_DATA
@@ -18,6 +18,12 @@ ELSE
 RA8875_RAMSIZE      equ 0
 ENDIF
 
+IFDEF HAS_LCD
+    EXTERN LCD_RAMSIZE
+ELSE
+LCD_RAMSIZE         equ 0
+ENDIF
+
 ; start of user RAM
 RAMSTART            equ 0x8000
 
@@ -25,7 +31,8 @@ RAMSTART            equ 0x8000
 SYSTEM_RAMSTART     equ 0xf000
 RA8875_RAMSTART     equ SYSTEM_RAMSTART                     ; RA8875 console variables (RA8875_RAMSIZE bytes)
 CONSOLE_STATUS      equ RA8875_RAMSTART + RA8875_RAMSIZE    ; 1 byte: active console
-KEY_MATRIX_BUFFER   equ CONSOLE_STATUS + 1                  ; 8 bytes: keyscan buffer
+LCD_RAMSTART        equ CONSOLE_STATUS + 1                  ; LCD console variables (LCD_RAMSIZE bytes)
+KEY_MATRIX_BUFFER   equ LCD_RAMSTART + LCD_RAMSIZE          ; 8 bytes: keyscan buffer
 CAPS_LOCK_STATE     equ KEY_MATRIX_BUFFER + 8               ; 1 byte: caps lock state (0=off, 1=on)
 CMD_BUFFER          equ CAPS_LOCK_STATE + 1                 ; command buffer (grows toward stack)
 

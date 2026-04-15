@@ -1,11 +1,17 @@
     INCLUDE "asm/drivers/hd44780.inc"
 
     EXTERN LCD_CTRL, LCD_DATA
+    EXTERN LCD_RAMSTART
     INCLUDE "asm/escape.inc"
 
     PUBLIC lcd_init
     PUBLIC lcd_putchar
     PUBLIC lcd_puts
+    PUBLIC LCD_RAMSIZE
+
+    ; RAM variables
+    LCD_CURSOR_COL  equ LCD_RAMSTART + 0    ; 1 byte: column (0..LCD_LINE_LEN-1)
+    LCD_RAMSIZE     equ 1
 
 ; initialise LCD
 lcd_init:
@@ -20,6 +26,9 @@ lcd_init:
 	call lcd_putcmd
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
 	call lcd_putcmd
+; initialise column tracking
+    xor a
+    ld (LCD_CURSOR_COL),a
 
 ; restore registers
     pop af
@@ -58,6 +67,13 @@ lcd_getchar:
 
 ; transmit character in A to the LCD data port
 lcd_putchar:
+    push af
+    push hl
+    ; backspace?
+    cp ESC_B
+    jr z,_lcd_putchar_backspace
+    cp 0x7f                             ; DEL (backspace key on most terminals)
+    jr z,_lcd_putchar_backspace
     ; newline char?
     cp ESC_N
     jp nz,_lcd_putchar_printable
@@ -65,23 +81,50 @@ lcd_putchar:
 _lcd_putchar_pad:
     ld a,' '
     call _lcd_putdata
-    cp LCD_EOL_3                
+    cp LCD_EOL_3
     jp z,_lcd_putchar_eol3
     ; loop until EOL
-    jr _lcd_putchar_pad 
+    jr _lcd_putchar_pad
 _lcd_putchar_printable:
     call _lcd_putdata
+    ; track column position (inc (hl) does not affect A)
+    ld hl,LCD_CURSOR_COL
+    inc (hl)
     ; check for overflow - DDRAM address returned in A
-    cp LCD_EOL_3                
+    cp LCD_EOL_3
     jp z,_lcd_putchar_eol3
     jp _lcd_putchar_end
 _lcd_putchar_eol3:
     ; line feed
     call lcd_scroll
-    ; carriage return
+    ; carriage return to start of line 3
     ld a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
-	call lcd_putcmd
+    call lcd_putcmd
+    ; reset column tracking
+    xor a
+    ld (LCD_CURSOR_COL),a
+    jp _lcd_putchar_end
+_lcd_putchar_backspace:
+    ; if at start of line, nothing to do
+    ld a,(LCD_CURSOR_COL)
+    or a
+    jr z,_lcd_putchar_end
+    ; move back one column
+    dec a
+    ld (LCD_CURSOR_COL),a
+    ; position cursor at new column on line 3
+    add a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+    call lcd_putcmd
+    ; erase character (write space; hardware auto-advances cursor)
+    ld a,' '
+    call _lcd_putdata
+    ; reposition cursor back to erased position
+    ld a,(LCD_CURSOR_COL)
+    add a,LCD_SET_DDRAM_ADDR+LCD_LINE_3_ADDR
+    call lcd_putcmd
 _lcd_putchar_end:
+    pop hl
+    pop af
     ret
 
 ; transmit character in A to the LCD data port, 
