@@ -37,28 +37,34 @@ modules_for_target() {
             COMBINED_ENTRY="entry_beanzee"
             MARVIN_MODULES="system console_beanzee drivers/um245r monitor hex messages"
             RA8875_MODULES=""
+            LCD_MODULES=""
             BASIC_MAIN="MAIN"
             MINIMAL_ENTRY="entry_beanzee_minimal"
             MINIMAL_MODULES="system console_beanzee drivers/um245r monitor hex messages"
             MINIMAL_RA8875_MODULES=""
+            MINIMAL_LCD_MODULES=""
             ;;
         beanboard)
             COMBINED_ENTRY="entry_beanboard"
             MARVIN_MODULES="system console_beanboard console_select drivers/um245r drivers/hd44780 drivers/keymatrix monitor hex messages_beanboard"
             RA8875_MODULES=""
+            LCD_MODULES="1"
             BASIC_MAIN="MAIN_SM_DSP"
             MINIMAL_ENTRY="entry_beanboard_minimal"
             MINIMAL_MODULES="system console_beanboard console_select drivers/um245r drivers/hd44780 drivers/keymatrix monitor hex messages_beanboard"
             MINIMAL_RA8875_MODULES=""
+            MINIMAL_LCD_MODULES="1"
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
             MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix monitor hex messages"
             RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
+            LCD_MODULES=""
             BASIC_MAIN="MAIN"
             MINIMAL_ENTRY="entry_beandeck_minimal"
             MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix monitor hex messages"
             MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
+            MINIMAL_LCD_MODULES=""
             ;;
         *)
             echo "Error: unknown target '$1'"
@@ -94,13 +100,15 @@ build_target() {
 
     RA8875_FLAG=""
     [ -n "$RA8875_MODULES" ] && RA8875_FLAG="-DHAS_RA8875"
+    LCD_FLAG=""
+    [ -n "$LCD_MODULES" ] && LCD_FLAG="-DHAS_LCD"
 
     echo ""
     echo "Assembling Marvin modules..."
     for module in $MARVIN_MODULES; do
         local obj_name=$(basename "$module")
         echo "  $module.asm"
-        z88dk-z80asm -l -m -DINCLUDE_BASIC $RA8875_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" \
+        z88dk-z80asm -l -m -DINCLUDE_BASIC $RA8875_FLAG $LCD_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" \
             -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
     done
 
@@ -215,13 +223,15 @@ build_minimal() {
 
     RA8875_FLAG=""
     [ -n "$MINIMAL_RA8875_MODULES" ] && RA8875_FLAG="-DHAS_RA8875"
+    LCD_FLAG=""
+    [ -n "$MINIMAL_LCD_MODULES" ] && LCD_FLAG="-DHAS_LCD"
 
     echo ""
     echo "Assembling modules..."
     for module in $MINIMAL_MODULES; do
         local obj_name=$(basename "$module")
         echo "  $module.asm"
-        z88dk-z80asm -l -m $RA8875_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
+        z88dk-z80asm -l -m $RA8875_FLAG $LCD_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
     done
 
     if [ -n "$MINIMAL_RA8875_MODULES" ]; then
