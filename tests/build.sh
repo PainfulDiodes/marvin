@@ -13,7 +13,7 @@ mkdir -p output
 for target in beanzee beanboard beandeck; do
     echo "Building $target..."
     z88dk-z80asm -l -b -m -DORGDEF=$org $target.asm -Ooutput
-    hexdump -C output/$target/$target.bin > output/$target.hex
+    hexdump -C output/$target.bin > output/$target.hex
     z88dk-appmake +hex --org $org -b output/$target.bin -o output/$target.ihx
 done
 echo "Done."
