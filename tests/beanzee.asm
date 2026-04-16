@@ -6,6 +6,7 @@
 ;
 ; beanzee has no LCD, keyboard, or RA8875 - those entries are stubs.
 ; Active console (PUTCHAR/PUTS/GETCHAR/READCHAR) routes to USB on beanzee.
+; Stub entries (9-24) are called silently: no USB output, no keypress required.
 
     INCLUDE "../abi/marvin.inc"
     ORG ORGDEF
@@ -146,221 +147,109 @@ _t08:
     call _usb_waitkey
 
 ; ============================================================
-; [9/25] MARVIN_KEY_READCHAR (stub on beanzee)
+; [9/25] MARVIN_KEY_READCHAR (stub on beanzee - called silently)
 ; ============================================================
 _t09:
-    ld hl, msg_t09
-    call MARVIN_USB_PUTS
-    call MARVIN_KEY_READCHAR
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_KEY_READCHAR       ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [10/25] MARVIN_KEY_MODIFIERS (stub on beanzee)
+; [10/25] MARVIN_KEY_MODIFIERS (stub on beanzee - called silently)
 ; ============================================================
 _t10:
-    ld hl, msg_t10
-    call MARVIN_USB_PUTS
-    call MARVIN_KEY_MODIFIERS
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_KEY_MODIFIERS      ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [11/25] MARVIN_LCD_INIT (stub on beanzee)
+; [11/25] MARVIN_LCD_INIT (stub on beanzee - called silently)
 ; ============================================================
 _t11:
-    ld hl, msg_t11
-    call MARVIN_USB_PUTS
-    call MARVIN_LCD_INIT
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_LCD_INIT           ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [12/25] MARVIN_LCD_PUTCHAR (stub on beanzee)
+; [12/25] MARVIN_LCD_PUTCHAR (stub on beanzee - called silently)
 ; ============================================================
 _t12:
-    ld hl, msg_t12
-    call MARVIN_USB_PUTS
     ld a, 'L'
-    call MARVIN_LCD_PUTCHAR
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_LCD_PUTCHAR        ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [13/25] MARVIN_LCD_PUTS (stub on beanzee)
+; [13/25] MARVIN_LCD_PUTS (stub on beanzee - called silently)
 ; ============================================================
 _t13:
-    ld hl, msg_t13
-    call MARVIN_USB_PUTS
     ld hl, msg_stub_payload
-    call MARVIN_LCD_PUTS
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_LCD_PUTS           ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [14/25] MARVIN_RA8875_INIT (stub on beanzee)
+; [14/25] MARVIN_RA8875_INIT (stub on beanzee - called silently)
 ; ============================================================
 _t14:
-    ld hl, msg_t14
-    call MARVIN_USB_PUTS
-    call MARVIN_RA8875_INIT
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_INIT        ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [15/25] MARVIN_RA8875_PUTCHAR (stub on beanzee)
+; [15/25] MARVIN_RA8875_PUTCHAR (stub on beanzee - called silently)
 ; ============================================================
 _t15:
-    ld hl, msg_t15
-    call MARVIN_USB_PUTS
     ld a, 'R'
-    call MARVIN_RA8875_PUTCHAR
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_PUTCHAR     ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [16/25] MARVIN_RA8875_PUTS (stub on beanzee)
+; [16/25] MARVIN_RA8875_PUTS (stub on beanzee - called silently)
 ; ============================================================
 _t16:
-    ld hl, msg_t16
-    call MARVIN_USB_PUTS
     ld hl, msg_stub_payload
-    call MARVIN_RA8875_PUTS
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_PUTS        ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [17/25] MARVIN_RA8875_CONSOLE_INIT (stub on beanzee)
+; [17/25] MARVIN_RA8875_CONSOLE_INIT (stub on beanzee - called silently)
 ; ============================================================
 _t17:
-    ld hl, msg_t17
-    call MARVIN_USB_PUTS
-    call MARVIN_RA8875_CONSOLE_INIT
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_CONSOLE_INIT ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [18/25] MARVIN_RA8875_CONSOLE_PUTCHAR (stub on beanzee)
+; [18/25] MARVIN_RA8875_CONSOLE_PUTCHAR (stub on beanzee - called silently)
 ; ============================================================
 _t18:
-    ld hl, msg_t18
-    call MARVIN_USB_PUTS
     ld a, 'C'
-    call MARVIN_RA8875_CONSOLE_PUTCHAR
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_CONSOLE_PUTCHAR ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [19/25] MARVIN_RA8875_CONSOLE_CURSOR_HIDE (stub on beanzee)
+; [19/25] MARVIN_RA8875_CONSOLE_CURSOR_HIDE (stub on beanzee - called silently)
 ; ============================================================
 _t19:
-    ld hl, msg_t19
-    call MARVIN_USB_PUTS
-    call MARVIN_RA8875_CONSOLE_CURSOR_HIDE
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_CONSOLE_CURSOR_HIDE ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [20/25] MARVIN_RA8875_CONSOLE_CURSOR_SHOW (stub on beanzee)
+; [20/25] MARVIN_RA8875_CONSOLE_CURSOR_SHOW (stub on beanzee - called silently)
 ; ============================================================
 _t20:
-    ld hl, msg_t20
-    call MARVIN_USB_PUTS
-    call MARVIN_RA8875_CONSOLE_CURSOR_SHOW
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_CONSOLE_CURSOR_SHOW ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [21/25] MARVIN_RA8875_CONSOLE_CURSOR_X (stub on beanzee)
+; [21/25] MARVIN_RA8875_CONSOLE_CURSOR_X (stub on beanzee - called silently)
 ; ============================================================
 _t21:
-    ld hl, msg_t21
-    call MARVIN_USB_PUTS
     ld a, 5
-    call MARVIN_RA8875_CONSOLE_CURSOR_X
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_CONSOLE_CURSOR_X ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [22/25] MARVIN_RA8875_CONSOLE_CURSOR_Y (stub on beanzee)
+; [22/25] MARVIN_RA8875_CONSOLE_CURSOR_Y (stub on beanzee - called silently)
 ; ============================================================
 _t22:
-    ld hl, msg_t22
-    call MARVIN_USB_PUTS
     ld a, 2
-    call MARVIN_RA8875_CONSOLE_CURSOR_Y
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_CONSOLE_CURSOR_Y ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [23/25] MARVIN_RA8875_CONSOLE_SET_CURSOR_COLOUR (stub on beanzee)
+; [23/25] MARVIN_RA8875_CONSOLE_SET_CURSOR_COLOUR (stub on beanzee - called silently)
 ; ============================================================
 _t23:
-    ld hl, msg_t23
-    call MARVIN_USB_PUTS
     ld a, 0x04
-    call MARVIN_RA8875_CONSOLE_SET_CURSOR_COLOUR
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_CONSOLE_SET_CURSOR_COLOUR ; stub on beanzee - returns immediately
 
 ; ============================================================
-; [24/25] MARVIN_RA8875_CONSOLE_SET_BG_COLOUR (stub on beanzee)
+; [24/25] MARVIN_RA8875_CONSOLE_SET_BG_COLOUR (stub on beanzee - called silently)
 ; ============================================================
 _t24:
-    ld hl, msg_t24
-    call MARVIN_USB_PUTS
     ld a, 0x00
-    call MARVIN_RA8875_CONSOLE_SET_BG_COLOUR
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_RA8875_CONSOLE_SET_BG_COLOUR ; stub on beanzee - returns immediately
 
 ; ============================================================
 ; [25/25] MARVIN_WARMSTART
@@ -378,7 +267,7 @@ _t25:
 msg_header:
     db "\n=== MARVIN ABI TEST: BEANZEE ===\n"
     db "25 trampoline entries | USB navigation throughout.\n"
-    db "LCD/keyboard/RA8875 entries are stubs on beanzee.\n\n", 0
+    db "LCD/keyboard/RA8875 stubs (9-24) called silently.\n\n", 0
 
 msg_anykey:
     db "  [press any USB key]\n", 0
@@ -397,9 +286,6 @@ msg_expect_00_nc:
 
 msg_expect_be:
     db "  USB should show: BE\n", 0
-
-msg_stub_returned:
-    db "  Returned. (stub on beanzee - no action expected)\n", 0
 
 msg_stub_payload:
     db "test string", 0
@@ -439,70 +325,6 @@ msg_t07:
 msg_t08:
     db "\n[8/25] MARVIN_READCHAR (non-blocking, active console)\n"
     db "  Calling with no input pending...\n", 0
-
-msg_t09:
-    db "\n[9/25] MARVIN_KEY_READCHAR\n"
-    db "  Stub on beanzee - calling...\n", 0
-
-msg_t10:
-    db "\n[10/25] MARVIN_KEY_MODIFIERS\n"
-    db "  Stub on beanzee - calling...\n", 0
-
-msg_t11:
-    db "\n[11/25] MARVIN_LCD_INIT\n"
-    db "  Stub on beanzee - calling...\n", 0
-
-msg_t12:
-    db "\n[12/25] MARVIN_LCD_PUTCHAR\n"
-    db "  Stub on beanzee - calling with 'L'...\n", 0
-
-msg_t13:
-    db "\n[13/25] MARVIN_LCD_PUTS\n"
-    db "  Stub on beanzee - calling with string...\n", 0
-
-msg_t14:
-    db "\n[14/25] MARVIN_RA8875_INIT\n"
-    db "  Stub on beanzee - calling...\n", 0
-
-msg_t15:
-    db "\n[15/25] MARVIN_RA8875_PUTCHAR\n"
-    db "  Stub on beanzee - calling with 'R'...\n", 0
-
-msg_t16:
-    db "\n[16/25] MARVIN_RA8875_PUTS\n"
-    db "  Stub on beanzee - calling with string...\n", 0
-
-msg_t17:
-    db "\n[17/25] MARVIN_RA8875_CONSOLE_INIT\n"
-    db "  Stub on beanzee - calling...\n", 0
-
-msg_t18:
-    db "\n[18/25] MARVIN_RA8875_CONSOLE_PUTCHAR\n"
-    db "  Stub on beanzee - calling with 'C'...\n", 0
-
-msg_t19:
-    db "\n[19/25] MARVIN_RA8875_CONSOLE_CURSOR_HIDE\n"
-    db "  Stub on beanzee - calling...\n", 0
-
-msg_t20:
-    db "\n[20/25] MARVIN_RA8875_CONSOLE_CURSOR_SHOW\n"
-    db "  Stub on beanzee - calling...\n", 0
-
-msg_t21:
-    db "\n[21/25] MARVIN_RA8875_CONSOLE_CURSOR_X\n"
-    db "  Stub on beanzee - calling with col=5...\n", 0
-
-msg_t22:
-    db "\n[22/25] MARVIN_RA8875_CONSOLE_CURSOR_Y\n"
-    db "  Stub on beanzee - calling with row=2...\n", 0
-
-msg_t23:
-    db "\n[23/25] MARVIN_RA8875_CONSOLE_SET_CURSOR_COLOUR\n"
-    db "  Stub on beanzee - calling with colour=04...\n", 0
-
-msg_t24:
-    db "\n[24/25] MARVIN_RA8875_CONSOLE_SET_BG_COLOUR\n"
-    db "  Stub on beanzee - calling with colour=00...\n", 0
 
 msg_t25:
     db "\n[25/25] MARVIN_WARMSTART\n"
