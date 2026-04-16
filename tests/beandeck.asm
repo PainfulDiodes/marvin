@@ -7,6 +7,7 @@
 ; beandeck has matrix keyboard and RA8875 TFT display but no LCD - LCD entries are stubs.
 ; Active console (PUTCHAR/PUTS/GETCHAR/READCHAR) routes to RA8875+keyboard by default,
 ; or USB if booted with Shift held.
+; Stub entries (11-13) are called silently: no USB output, no keypress required.
 
     INCLUDE "../abi/marvin.inc"
     ORG ORGDEF
@@ -185,45 +186,24 @@ _t10:
     call _usb_waitkey
 
 ; ============================================================
-; [11/25] MARVIN_LCD_INIT (stub on beandeck)
+; [11/25] MARVIN_LCD_INIT (stub on beandeck - called silently)
 ; ============================================================
 _t11:
-    ld hl, msg_t11
-    call MARVIN_USB_PUTS
-    call MARVIN_LCD_INIT
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_LCD_INIT           ; stub on beandeck - returns immediately
 
 ; ============================================================
-; [12/25] MARVIN_LCD_PUTCHAR (stub on beandeck)
+; [12/25] MARVIN_LCD_PUTCHAR (stub on beandeck - called silently)
 ; ============================================================
 _t12:
-    ld hl, msg_t12
-    call MARVIN_USB_PUTS
     ld a, 'L'
-    call MARVIN_LCD_PUTCHAR
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_LCD_PUTCHAR        ; stub on beandeck - returns immediately
 
 ; ============================================================
-; [13/25] MARVIN_LCD_PUTS (stub on beandeck)
+; [13/25] MARVIN_LCD_PUTS (stub on beandeck - called silently)
 ; ============================================================
 _t13:
-    ld hl, msg_t13
-    call MARVIN_USB_PUTS
     ld hl, msg_stub_payload
-    call MARVIN_LCD_PUTS
-    ld hl, msg_stub_returned
-    call MARVIN_USB_PUTS
-    ld hl, msg_anykey
-    call MARVIN_USB_PUTS
-    call _usb_waitkey
+    call MARVIN_LCD_PUTS           ; stub on beandeck - returns immediately
 
 ; ============================================================
 ; [14/25] MARVIN_RA8875_INIT (beandeck)
@@ -398,7 +378,7 @@ msg_header:
     db "\n=== MARVIN ABI TEST: BEANDECK ===\n"
     db "25 trampoline entries | USB navigation throughout.\n"
     db "Keyboard and RA8875 entries are real on beandeck.\n"
-    db "LCD entries are stubs on beandeck.\n\n", 0
+    db "LCD stubs (11-13) called silently.\n\n", 0
 
 msg_anykey:
     db "  [press any USB key]\n", 0
@@ -420,9 +400,6 @@ msg_expect_00_nc:
 
 msg_expect_be:
     db "  Active console should show: BE\n", 0
-
-msg_stub_returned:
-    db "  Returned. (stub on beandeck - no action expected)\n", 0
 
 msg_stub_payload:
     db "test string", 0
@@ -486,18 +463,6 @@ msg_t10:
 
 msg_t10_note:
     db " (01 = Shift held)\n", 0
-
-msg_t11:
-    db "\n[11/25] MARVIN_LCD_INIT\n"
-    db "  Stub on beandeck - calling...\n", 0
-
-msg_t12:
-    db "\n[12/25] MARVIN_LCD_PUTCHAR\n"
-    db "  Stub on beandeck - calling with 'L'...\n", 0
-
-msg_t13:
-    db "\n[13/25] MARVIN_LCD_PUTS\n"
-    db "  Stub on beandeck - calling with string...\n", 0
 
 msg_t14:
     db "\n[14/25] MARVIN_RA8875_INIT\n"
