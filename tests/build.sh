@@ -8,11 +8,12 @@
 
 org=${1:-0x8000}
 
+mkdir -p output
+
 for target in beanzee beanboard beandeck; do
     echo "Building $target..."
-    mkdir -p output/$target
-    z88dk-z80asm -l -b -m -DORGDEF=$org $target.asm -Ooutput/$target
-    hexdump -C output/$target/$target.bin > output/$target/$target.hex
-    z88dk-appmake +hex --org $org -b output/$target/$target.bin -o output/$target/$target.ihx
+    z88dk-z80asm -l -b -m -DORGDEF=$org $target.asm -Ooutput
+    hexdump -C output/$target/$target.bin > output/$target.hex
+    z88dk-appmake +hex --org $org -b output/$target.bin -o output/$target.ihx
 done
 echo "Done."
