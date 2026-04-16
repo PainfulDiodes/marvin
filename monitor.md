@@ -10,7 +10,7 @@ See the main [readme](./README.md)
 
 ## Marvin and BeanZee
 
-The BeanZee board has 32k RAM and 32k ROM. Marvin (and other potential firmware) is loaded into the ROM. The top 4k of the RAM is reserved for system use (stack, buffers etc), but the remainder of the RAM is available for user programs.  
+The BeanZee board has 32k RAM and 8k / 32k ROM. Marvin (and other potential firmware) is loaded into the ROM. The top 4k of the RAM is reserved for system use (stack, buffers etc), but the remainder of the RAM is available for user programs.  
 
 BeanZee has an FTDI UM245R USB interface for communication with a host computer using a terminal emulator.
 
@@ -59,7 +59,7 @@ When sending responses back to the console, Marvin will terminate lines with \r\
 
 This behaviour has been found to work with VT100/ANSI terminal emulation, e.g. GNU screen.
 
-For simplicity, backspace for correcting a command is also not currently supported. However, hitting the escape key (\e) is recognised and it will cause everything on the current line to be ignored, and move to a new line and new prompt.
+Backspace for correcting a command is supported - back to the start of the current line. Hitting the escape key (\e) will cause everything on the current line to be ignored, and move to a new line and new prompt.
 
 Whitespace on a command is ignored. This allows for very compact commands, or for commands to be spaced out to make them easier to read.
 
@@ -115,7 +115,7 @@ The e(x)ecute command causes the CPU to jump to and continue executing from a gi
     https://github.com/PainfulDiodes
     >
 
-Doing an e(x)ecute Without an address will execute from the bottom of user RAM (RAMSTART).
+Doing an e(x)ecute Without an address will execute from the bottom of user RAM (0x8000).
 
 ## w command
 

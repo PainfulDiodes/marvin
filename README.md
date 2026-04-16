@@ -23,8 +23,7 @@ Requires [z88dk](https://github.com/z88dk/z88dk) (z88dk-z80asm).
 Clone repo with submodules:
 
 ```bash
-git clone --recurse-submodules https://github.com/PainfulDiodes/Marvin.git
-cd Marvin
+git clone --recurse-submodules https://github.com/PainfulDiodes/marvin.git
 ```
 
 The build script assembles all submodule sources directly — you do not need to build the submodules separately:
@@ -61,8 +60,6 @@ INCLUDE "marvin.inc"
 
 message: DEFM "Hello!\n", 0
 ```
-
-The same binary runs on all three Marvin targets (beanzee, beanboard, beandeck).
 
 ## Monitor Commands
 
