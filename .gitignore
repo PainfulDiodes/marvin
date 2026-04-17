@@ -3,7 +3,8 @@ bin
 hex
 lst
 *.bin
-*.hex
 *.lst
 *.o
 *.sym
+*.lis
+*.map
