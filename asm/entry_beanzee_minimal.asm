@@ -63,6 +63,11 @@ ALIGN 0x0040
     jp _stub             ; 0x0082 - ra8875_console_set_background_colour (not available on beanzee)
     jp _stub             ; 0x0085 - ra8875_console_cursor_hide (not available on beanzee)
     jp _stub             ; 0x0088 - ra8875_console_cursor_show (not available on beanzee)
+    jp _stub             ; 0x008B - flash_read (not available on beanzee)
+    jp _stub             ; 0x008E - flash_page_program (not available on beanzee)
+    jp _stub             ; 0x0091 - flash_sector_erase (not available on beanzee)
+    jp _stub             ; 0x0094 - flash_select_slot (not available on beanzee)
+    jp _stub             ; 0x0097 - flash_read_jedec_id (not available on beanzee)
 _stub:
     ret
 ;

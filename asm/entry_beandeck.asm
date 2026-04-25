@@ -38,6 +38,11 @@
     EXTERN ra8875_console_set_background_colour ; console.asm - set background colour
     EXTERN ra8875_console_cursor_hide ; console.asm - hide software cursor
     EXTERN ra8875_console_cursor_show ; console.asm - show software cursor
+    EXTERN flash_read           ; w25q.asm - read bytes from flash into RAM
+    EXTERN flash_page_program   ; w25q.asm - write page to flash
+    EXTERN flash_sector_erase   ; w25q.asm - erase 4KB sector
+    EXTERN flash_select_slot    ; w25q.asm - select active cartridge slot
+    EXTERN flash_read_jedec_id  ; w25q.asm - read JEDEC ID from current slot
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     EXTERN STACK
@@ -101,6 +106,11 @@ ALIGN 0x0040
     jp ra8875_console_set_background_colour ; 0x0082 - set console background colour (A = colour)
     jp ra8875_console_cursor_hide    ; 0x0085 - hide software cursor
     jp ra8875_console_cursor_show    ; 0x0088 - show software cursor
+    jp flash_read                    ; 0x008B - flash read (A=addr[23:16], HL=addr[15:0], DE=dest, BC=len)
+    jp flash_page_program            ; 0x008E - flash page program (HL=addr, DE=src, BC=len)
+    jp flash_sector_erase            ; 0x0091 - flash sector erase (H=addr[23:16], L=addr[15:8])
+    jp flash_select_slot             ; 0x0094 - select flash slot (A=slot 1-6)
+    jp flash_read_jedec_id           ; 0x0097 - read JEDEC ID (out: A=mfr B=type C=cap)
 _stub:
     ret
 ;

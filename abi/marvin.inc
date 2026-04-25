@@ -50,4 +50,11 @@ MARVIN_RA8875_CONSOLE_SET_BG_COLOUR    EQU 0x0082 ; in: A=colour  set console ba
 MARVIN_RA8875_CONSOLE_CURSOR_HIDE      EQU 0x0085 ; hide software cursor
 MARVIN_RA8875_CONSOLE_CURSOR_SHOW      EQU 0x0088 ; show software cursor
 
+; Flash cartridge  (beandeck)
+MARVIN_FLASH_READ         EQU 0x008B  ; in: A=addr[23:16] HL=addr[15:0] DE=dest BC=len  read from flash
+MARVIN_FLASH_PAGE_PROGRAM EQU 0x008E  ; in: HL=addr[23:8] DE=src BC=len   Z=ok NZ=timeout  write page
+MARVIN_FLASH_SECTOR_ERASE EQU 0x0091  ; in: H=addr[23:16] L=addr[15:8]   Z=ok NZ=timeout  erase 4KB sector
+MARVIN_FLASH_SELECT_SLOT  EQU 0x0094  ; in: A=slot (1-6)  caches JEDEC ID to w25q_id_mfr/type/cap
+MARVIN_FLASH_READ_JEDEC_ID EQU 0x0097 ; out: A=mfr B=type C=cap           read JEDEC ID from current slot
+
 ENDIF ; _MARVIN_INC
