@@ -11,6 +11,7 @@
     PUBLIC RA8875_GPIO, RA8875_SPI_CTRL, RA8875_SPI_DATA, RA8875_RAMSTART
     PUBLIC SYSTEM_RAMSTART
     PUBLIC CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
+    PUBLIC W25Q_RAMSTART, w25q_cs, w25q_id_mfr, w25q_id_type, w25q_id_cap
 
 IFDEF HAS_RA8875
     EXTERN RA8875_RAMSIZE
@@ -24,6 +25,8 @@ ELSE
 LCD_RAMSIZE         equ 0
 ENDIF
 
+W25Q_RAMSIZE        equ 4   ; 4 bytes: w25q_cs + 3-byte JEDEC ID cache
+
 ; start of user RAM
 RAMSTART            equ 0x8000
 
@@ -32,7 +35,12 @@ SYSTEM_RAMSTART     equ 0xf000
 RA8875_RAMSTART     equ SYSTEM_RAMSTART                     ; RA8875 console variables (RA8875_RAMSIZE bytes)
 CONSOLE_STATUS      equ RA8875_RAMSTART + RA8875_RAMSIZE    ; 1 byte: active console
 LCD_RAMSTART        equ CONSOLE_STATUS + 1                  ; LCD console variables (LCD_RAMSIZE bytes)
-KEY_MATRIX_BUFFER   equ LCD_RAMSTART + LCD_RAMSIZE          ; 8 bytes: keyscan buffer
+W25Q_RAMSTART       equ LCD_RAMSTART + LCD_RAMSIZE          ; W25Q driver variables (W25Q_RAMSIZE bytes)
+w25q_cs             equ W25Q_RAMSTART                       ; 1 byte: active CS byte for flash_cs_assert
+w25q_id_mfr         equ W25Q_RAMSTART + 1                   ; 1 byte: JEDEC manufacturer ID (cached by flash_select_slot)
+w25q_id_type        equ W25Q_RAMSTART + 2                   ; 1 byte: JEDEC memory type
+w25q_id_cap         equ W25Q_RAMSTART + 3                   ; 1 byte: JEDEC capacity code (see W25Q_CAP_* in w25q.inc)
+KEY_MATRIX_BUFFER   equ W25Q_RAMSTART + W25Q_RAMSIZE        ; 8 bytes: keyscan buffer
 CAPS_LOCK_STATE     equ KEY_MATRIX_BUFFER + 8               ; 1 byte: caps lock state (0=off, 1=on)
 CMD_BUFFER          equ CAPS_LOCK_STATE + 1                 ; command buffer (grows toward stack)
 
