@@ -1,16 +1,8 @@
 ; w25q.inc - W25Q series NOR flash constants for BeanBoardSPI hardware SPI
 ;
-; CS values are for the 74HCT373 active-low SPI control register (SPI_CTRL port).
+; SPI CS values (SPI_CS_IDLE, SPI_CS_SLOT0-6) are in system.asm.
+; W25Q flash cartridge slots occupy SPI_CS_SLOT1-6.
 ; Port addresses (SPI_CTRL, SPI_DATA) are in system.asm.
-
-; Active-low CS values: bit (slot+1) low, all other bits high
-W25Q_CS_SLOT1   EQU 0xFB    ; slot 1: bit 2 low
-W25Q_CS_SLOT2   EQU 0xF7    ; slot 2: bit 3 low
-W25Q_CS_SLOT3   EQU 0xEF    ; slot 3: bit 4 low
-W25Q_CS_SLOT4   EQU 0xDF    ; slot 4: bit 5 low
-W25Q_CS_SLOT5   EQU 0xBF    ; slot 5: bit 6 low
-W25Q_CS_SLOT6   EQU 0x7F    ; slot 6: bit 7 low
-W25Q_CS_IDLE    EQU 0xFF    ; all CS deasserted, RESET released
 
 ; Command bytes
 W25Q_CMD_JEDEC_ID   EQU 0x9F    ; Read JEDEC ID
@@ -31,7 +23,7 @@ W25Q_POLL_TIMEOUT   EQU 0xFFFF
 ; JEDEC manufacturer IDs
 W25Q_MFR_WINBOND    EQU 0xEF    ; Winbond NOR flash
 
-; Capacity codes (JEDEC third byte, returned by flash_read_jedec_id and cached in w25q_id_cap)
+; Capacity codes (JEDEC third byte, returned by flash_read_jedec_id and cached in W25Q_ID_CAP)
 ; Capacity byte = log2(bits); e.g. 0x15 = log2(16Mbit) + constant
 W25Q_CAP_8MBIT      EQU 0x14    ; W25Q80   - 1 MByte
 W25Q_CAP_16MBIT     EQU 0x15    ; W25Q16   - 2 MByte
