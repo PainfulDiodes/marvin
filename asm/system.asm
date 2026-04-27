@@ -8,10 +8,11 @@
     PUBLIC LCD_CTRL, LCD_DATA
     PUBLIC GPIO_OUT, GPIO_IN
     PUBLIC SPI_CTRL, SPI_DATA
+    PUBLIC SPI_CS_IDLE, SPI_CS_RESET, SPI_CS_SLOT0, SPI_CS_SLOT1, SPI_CS_SLOT2, SPI_CS_SLOT3, SPI_CS_SLOT4, SPI_CS_SLOT5, SPI_CS_SLOT6
     PUBLIC RA8875_GPIO, RA8875_SPI_CTRL, RA8875_SPI_DATA, RA8875_RAMSTART
     PUBLIC SYSTEM_RAMSTART
     PUBLIC CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
-    PUBLIC W25Q_RAMSTART, w25q_cs, w25q_id_mfr, w25q_id_type, w25q_id_cap
+    PUBLIC W25Q_RAMSTART, W25Q_CS, W25Q_ID_MFR, W25Q_ID_TYPE, W25Q_ID_CAP
 
 IFDEF HAS_RA8875
     EXTERN RA8875_RAMSIZE
@@ -25,7 +26,7 @@ ELSE
 LCD_RAMSIZE         equ 0
 ENDIF
 
-W25Q_RAMSIZE        equ 4   ; 4 bytes: w25q_cs + 3-byte JEDEC ID cache
+W25Q_RAMSIZE        equ 4   ; 4 bytes: W25Q_CS + 3-byte JEDEC ID cache
 
 ; start of user RAM
 RAMSTART            equ 0x8000
@@ -36,10 +37,10 @@ RA8875_RAMSTART     equ SYSTEM_RAMSTART                     ; RA8875 console var
 CONSOLE_STATUS      equ RA8875_RAMSTART + RA8875_RAMSIZE    ; 1 byte: active console
 LCD_RAMSTART        equ CONSOLE_STATUS + 1                  ; LCD console variables (LCD_RAMSIZE bytes)
 W25Q_RAMSTART       equ LCD_RAMSTART + LCD_RAMSIZE          ; W25Q driver variables (W25Q_RAMSIZE bytes)
-w25q_cs             equ W25Q_RAMSTART                       ; 1 byte: active CS byte for flash_cs_assert
-w25q_id_mfr         equ W25Q_RAMSTART + 1                   ; 1 byte: JEDEC manufacturer ID (cached by flash_select_slot)
-w25q_id_type        equ W25Q_RAMSTART + 2                   ; 1 byte: JEDEC memory type
-w25q_id_cap         equ W25Q_RAMSTART + 3                   ; 1 byte: JEDEC capacity code (see W25Q_CAP_* in w25q.inc)
+W25Q_CS             equ W25Q_RAMSTART                       ; 1 byte: active CS byte for flash_cs_assert
+W25Q_ID_MFR         equ W25Q_RAMSTART + 1                   ; 1 byte: JEDEC manufacturer ID (cached by flash_select_slot)
+W25Q_ID_TYPE        equ W25Q_RAMSTART + 2                   ; 1 byte: JEDEC memory type
+W25Q_ID_CAP         equ W25Q_RAMSTART + 3                   ; 1 byte: JEDEC capacity code (see W25Q_CAP_* in w25q.inc)
 KEY_MATRIX_BUFFER   equ W25Q_RAMSTART + W25Q_RAMSIZE        ; 8 bytes: keyscan buffer
 CAPS_LOCK_STATE     equ KEY_MATRIX_BUFFER + 8               ; 1 byte: caps lock state (0=off, 1=on)
 CMD_BUFFER          equ CAPS_LOCK_STATE + 1                 ; command buffer (grows toward stack)
@@ -67,7 +68,20 @@ GPIO_IN             equ 7       ; either 6 or 7 will work
 SPI_CTRL            equ 8       ; SPI control register (74HCT373 latch)
 SPI_DATA            equ 10      ; SPI data register (74HCT299 shift register)
 
-; RA8875 driver labels (aliases used by ra8875-z80-repo transport modules)
+; SPI control register bit assignments
+; Bit 0: RESET active low, Bits 1-7: SPI slot 0-6 CS active low
+SPI_CS_IDLE         equ 0xFF    ; all CS deasserted, RESET released
+SPI_CS_RESET        equ 0xFE    ; bit 0 low: RESET asserted
+SPI_CS_SLOT0        equ 0xFD    ; bit 1 low: slot 0
+SPI_CS_SLOT1        equ 0xFB    ; bit 2 low: slot 1
+SPI_CS_SLOT2        equ 0xF7    ; bit 3 low: slot 2
+SPI_CS_SLOT3        equ 0xEF    ; bit 4 low: slot 3
+SPI_CS_SLOT4        equ 0xDF    ; bit 5 low: slot 4
+SPI_CS_SLOT5        equ 0xBF    ; bit 6 low: slot 5
+SPI_CS_SLOT6        equ 0x7F    ; bit 7 low: slot 6
+
+; RA8875 submodule aliases — ra8875-z80-repo EXTERNs these labels
+; Keep them even if unused in marvin
 RA8875_GPIO         equ GPIO_OUT    ; GPIO port for RA8875 bit-bang SPI
 RA8875_SPI_CTRL     equ SPI_CTRL    ; hardware SPI control port
 RA8875_SPI_DATA     equ SPI_DATA    ; hardware SPI data port
@@ -75,3 +89,5 @@ RA8875_SPI_DATA     equ SPI_DATA    ; hardware SPI data port
 ; console selection
 CONSOLE_STATUS_USB       equ 1
 CONSOLE_STATUS_BEANBOARD equ 2
+
+; TODO consider making the SPI / GPIO entries conditionally added at build time

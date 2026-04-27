@@ -8,11 +8,11 @@
 
     INCLUDE "asm/drivers/w25q.inc"
 
-    EXTERN SPI_CTRL, SPI_DATA   ; system.asm - BeanBoardSPI port addresses
-    EXTERN w25q_cs              ; system.asm - active CS byte (set by flash_select_slot)
-    EXTERN w25q_id_mfr          ; system.asm - cached JEDEC manufacturer ID
-    EXTERN w25q_id_type         ; system.asm - cached JEDEC memory type
-    EXTERN w25q_id_cap          ; system.asm - cached JEDEC capacity code
+    EXTERN SPI_CTRL, SPI_DATA, SPI_CS_IDLE  ; system.asm - BeanBoardSPI port addresses
+    EXTERN W25Q_CS              ; system.asm - active CS byte (set by flash_select_slot)
+    EXTERN W25Q_ID_MFR          ; system.asm - cached JEDEC manufacturer ID
+    EXTERN W25Q_ID_TYPE         ; system.asm - cached JEDEC memory type
+    EXTERN W25Q_ID_CAP          ; system.asm - cached JEDEC capacity code
 
     PUBLIC flash_read
     PUBLIC flash_read_jedec_id
@@ -24,7 +24,7 @@
 ; destroys: nothing
 flash_cs_assert:
     push af
-    ld a, (w25q_cs)
+    ld a, (W25Q_CS)
     out (SPI_CTRL), a
     pop af
     ret
@@ -33,7 +33,7 @@ flash_cs_assert:
 ; destroys: nothing
 flash_cs_deassert:
     push af
-    ld a, W25Q_CS_IDLE
+    ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     pop af
     ret
@@ -56,7 +56,7 @@ flash_spi_byte:
 flash_read_jedec_id:
     push de
     push hl
-    ld a, (w25q_cs)
+    ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_JEDEC_ID
     call flash_spi_byte         ; received byte discarded
@@ -69,7 +69,7 @@ flash_read_jedec_id:
     ld a, 0x00
     call flash_spi_byte
     ld l, a                     ; capacity in L
-    ld a, W25Q_CS_IDLE
+    ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     ld c, l                     ; C = capacity
     ld b, e                     ; B = memory type
@@ -82,11 +82,11 @@ flash_read_jedec_id:
 ; destroys: nothing
 flash_write_enable:
     push af
-    ld a, (w25q_cs)
+    ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_WREN
     call flash_spi_byte
-    ld a, W25Q_CS_IDLE
+    ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     pop af
     ret
@@ -97,14 +97,14 @@ flash_write_enable:
 flash_poll_busy:
     ld de, W25Q_POLL_TIMEOUT
 _fpb_loop:
-    ld a, (w25q_cs)
+    ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_RDSR
     call flash_spi_byte
     ld a, 0x00
     call flash_spi_byte         ; A = status register byte
     ld b, a                     ; save in B before deassert clobbers A
-    ld a, W25Q_CS_IDLE
+    ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     bit W25Q_BUSY_BIT, b        ; Z=1 if BUSY bit is 0 (not busy)
     jr z, _fpb_done
@@ -126,7 +126,7 @@ _fpb_done:
 ; destroys: AF, AF', BC, DE, HL
 flash_read:
     ex af, af'                  ; A' = addr[23:16]; save before CS assert clobbers A
-    ld a, (w25q_cs)
+    ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_READ
     call flash_spi_byte
@@ -145,7 +145,7 @@ _fr_loop:
     ld a, b
     or c
     jr nz, _fr_loop
-    ld a, W25Q_CS_IDLE
+    ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     ret
 
@@ -155,7 +155,7 @@ _fr_loop:
 ; destroys: AF, BC, DE, HL
 flash_sector_erase:
     call flash_write_enable
-    ld a, (w25q_cs)
+    ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_SE
     call flash_spi_byte
@@ -165,7 +165,7 @@ flash_sector_erase:
     call flash_spi_byte         ; addr[15:8]
     ld a, 0x00
     call flash_spi_byte         ; addr[7:0] = 0
-    ld a, W25Q_CS_IDLE
+    ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     jp flash_poll_busy          ; tail call: Z=ok NZ=timeout
 
@@ -177,7 +177,7 @@ flash_sector_erase:
 ; destroys: AF, BC, DE, HL
 flash_page_program:
     call flash_write_enable
-    ld a, (w25q_cs)
+    ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_PP
     call flash_spi_byte
@@ -195,13 +195,13 @@ _fpp_loop:
     ld a, b
     or c
     jr nz, _fpp_loop
-    ld a, W25Q_CS_IDLE
+    ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     jp flash_poll_busy          ; tail call: Z=ok NZ=timeout
 
 ; flash_select_slot: select active cartridge slot and cache its JEDEC ID
 ; in:  A = slot number (1-6)
-; out: —  (JEDEC ID cached in w25q_id_mfr, w25q_id_type, w25q_id_cap)
+; out: —  (JEDEC ID cached in W25Q_ID_MFR, W25Q_ID_TYPE, W25Q_ID_CAP)
 ; destroys: AF
 ; note: must be called before first flash operation; default slot is undefined at power-on
 flash_select_slot:
@@ -213,12 +213,12 @@ _fss_loop:
     rlca
     djnz _fss_loop              ; A = 1 << (slot+1): the active-low CS bit for this slot
     cpl                         ; invert: 0xFF with CS bit cleared
-    ld (w25q_cs), a
-    call flash_read_jedec_id    ; A=mfr, B=type, C=cap (uses w25q_cs just set)
-    ld (w25q_id_mfr), a
+    ld (W25Q_CS), a
+    call flash_read_jedec_id    ; A=mfr, B=type, C=cap (uses W25Q_CS just set)
+    ld (W25Q_ID_MFR), a
     ld a, b
-    ld (w25q_id_type), a
+    ld (W25Q_ID_TYPE), a
     ld a, c
-    ld (w25q_id_cap), a
+    ld (W25Q_ID_CAP), a
     pop bc
     ret
