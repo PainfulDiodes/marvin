@@ -24,9 +24,9 @@ W25Q_CMD_RDSR       EQU 0x05    ; Read Status Register 1
 W25Q_BUSY_BIT       EQU 0       ; bit 0: BUSY (1 = operation in progress)
 
 ; Polling timeout (loop iterations)
-; At 5MHz Z80 with ~134 T-states/iteration (~27 µs): 0x8000 ≈ 0.88s
+; At 10MHz Z80 with ~134 T-states/iteration (~13 µs): 0xFFFF ≈ 0.88s
 ; Covers W25Q16/W25Q128 worst-case 400ms sector erase.
-W25Q_POLL_TIMEOUT   EQU 0x8000
+W25Q_POLL_TIMEOUT   EQU 0xFFFF
 
 ; JEDEC manufacturer IDs
 W25Q_MFR_WINBOND    EQU 0xEF    ; Winbond NOR flash

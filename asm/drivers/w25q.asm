@@ -49,7 +49,7 @@ flash_cs_deassert:
 ; destroys: AF
 flash_spi_byte:
     out (SPI_DATA), a
-    nop                     ; wait for serialisation (CLK/2 = 2.5 MHz)
+    nop                     ; wait for serialisation (CLK/2 = 5 MHz)
     nop
     nop
     in a, (SPI_DATA)
