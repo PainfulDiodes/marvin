@@ -14,13 +14,8 @@
     EXTERN w25q_id_type         ; system.asm - cached JEDEC memory type
     EXTERN w25q_id_cap          ; system.asm - cached JEDEC capacity code
 
-    PUBLIC flash_cs_assert
-    PUBLIC flash_cs_deassert
-    PUBLIC flash_spi_byte
-    PUBLIC flash_read_jedec_id
-    PUBLIC flash_write_enable
-    PUBLIC flash_poll_busy
     PUBLIC flash_read
+    PUBLIC flash_read_jedec_id
     PUBLIC flash_sector_erase
     PUBLIC flash_page_program
     PUBLIC flash_select_slot
