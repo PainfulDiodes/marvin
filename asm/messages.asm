@@ -3,7 +3,7 @@
     PUBLIC CMD_W_NULL_MSG
 
 WELCOME_MSG:
-                db "MARVIN v1.3\n"
+                db "MARVIN 2026-04-28\n"
                 db "A simple Z80 homebrew monitor program\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n",0
