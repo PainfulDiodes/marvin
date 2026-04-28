@@ -20,28 +20,12 @@
     PUBLIC flash_page_program
     PUBLIC flash_select_slot
 
-; flash_cs_assert: assert active flash slot CS (set via flash_select_slot)
-; destroys: nothing
-flash_cs_assert:
-    push af
-    ld a, (W25Q_CS)
-    out (SPI_CTRL), a
-    pop af
-    ret
 
-; flash_cs_deassert: deassert CS, return SPI bus to idle state
-; destroys: nothing
-flash_cs_deassert:
-    push af
-    ld a, SPI_CS_IDLE
-    out (SPI_CTRL), a
-    pop af
-    ret
-
-; flash_spi_byte: full-duplex SPI byte transfer via BeanBoardSPI shift register
+; flash_spi_byte: full-duplex SPI byte transfer via BeanBoardSPI interface
 ; in:  A = byte to transmit
 ; out: A = byte received
 ; destroys: AF
+; TODO: move to central BeanBoardSPI source
 flash_spi_byte:
     out (SPI_DATA), a
     nop                     ; wait for serialisation (CLK/2 = 5 MHz)
@@ -56,7 +40,7 @@ flash_spi_byte:
 flash_read_jedec_id:
     push de
     push hl
-    ld a, (W25Q_CS)
+    ld a, (W25Q_CS)             ; RAM var selected status for current slot
     out (SPI_CTRL), a
     ld a, W25Q_CMD_JEDEC_ID
     call flash_spi_byte         ; received byte discarded
