@@ -30,4 +30,4 @@ W25Q_CAP_16MBIT     EQU 0x15    ; W25Q16   - 2 MByte
 W25Q_CAP_32MBIT     EQU 0x16    ; W25Q32   - 4 MByte
 W25Q_CAP_64MBIT     EQU 0x17    ; W25Q64   - 8 MByte
 W25Q_CAP_128MBIT    EQU 0x18    ; W25Q128  - 16 MByte
-W25Q_CAP_256MBIT    EQU 0x19    ; W25Q256  - 32 MByte
+; W25Q_CAP_256MBIT EQU 0x19  ; W25Q256 - 32 MByte - not supported: requires 4-byte addressing above 16MB
