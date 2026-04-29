@@ -32,6 +32,7 @@ BASIC_MODULES="EXEC EVAL ASMB MATH DATA"
 # Non-RA8875 module paths are relative to $MARVIN_ASM; drivers use drivers/ prefix.
 
 modules_for_target() {
+    INCLUDE_BDFS=""
     case $1 in
         beanzee)
             COMBINED_ENTRY="entry_beanzee"
@@ -57,14 +58,15 @@ modules_for_target() {
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
-            MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q monitor hex messages"
+            MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q bdfs monitor hex messages"
             RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
             LCD_MODULES=""
             BASIC_MAIN="MAIN"
             MINIMAL_ENTRY="entry_beandeck_minimal"
-            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q monitor hex messages"
+            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q bdfs monitor hex messages"
             MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
             MINIMAL_LCD_MODULES=""
+            INCLUDE_BDFS=1
             ;;
         *)
             echo "Error: unknown target '$1'"
@@ -102,13 +104,15 @@ build_target() {
     [ -n "$RA8875_MODULES" ] && RA8875_FLAG="-DHAS_RA8875"
     LCD_FLAG=""
     [ -n "$LCD_MODULES" ] && LCD_FLAG="-DHAS_LCD"
+    BDFS_FLAG=""
+    [ -n "$INCLUDE_BDFS" ] && BDFS_FLAG="-DINCLUDE_BDFS"
 
     echo ""
     echo "Assembling Marvin modules..."
     for module in $MARVIN_MODULES; do
         local obj_name=$(basename "$module")
         echo "  $module.asm"
-        z88dk-z80asm -l -m -DINCLUDE_BASIC $RA8875_FLAG $LCD_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" \
+        z88dk-z80asm -l -m -DINCLUDE_BASIC $RA8875_FLAG $LCD_FLAG $BDFS_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" \
             -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
     done
 
@@ -225,13 +229,15 @@ build_minimal() {
     [ -n "$MINIMAL_RA8875_MODULES" ] && RA8875_FLAG="-DHAS_RA8875"
     LCD_FLAG=""
     [ -n "$MINIMAL_LCD_MODULES" ] && LCD_FLAG="-DHAS_LCD"
+    BDFS_FLAG=""
+    [ -n "$INCLUDE_BDFS" ] && BDFS_FLAG="-DINCLUDE_BDFS"
 
     echo ""
     echo "Assembling modules..."
     for module in $MINIMAL_MODULES; do
         local obj_name=$(basename "$module")
         echo "  $module.asm"
-        z88dk-z80asm -l -m $RA8875_FLAG $LCD_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
+        z88dk-z80asm -l -m $RA8875_FLAG $LCD_FLAG $BDFS_FLAG -I"$REPO_DIR" -I"$RA8875_DIR" -o"$OUTDIR/$obj_name.o" "$MARVIN_ASM/$module.asm"
     done
 
     if [ -n "$MINIMAL_RA8875_MODULES" ]; then
