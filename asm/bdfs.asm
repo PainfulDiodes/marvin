@@ -19,40 +19,36 @@
 
 ; ---- helpers ---------------------------------------------------------------
 
-; _bdfs_print_padded: print at most B chars from (HL), stopping at first space
+; _bdfs_print_trimmed: print at most B chars from (HL), stopping at first space (trims padding)
 ; in:  HL = source, B = max chars
-; destroys: AF, BC, HL
-_bdfs_print_padded:
-_bpp_loop:
+; destroys: AF, B, HL
+_bdfs_print_trimmed:
+_bpt_loop:
     ld a, b
     or a
     ret z
     ld a, (hl)
     cp ' '
     ret z
-    push hl
-    push bc
     call con_putchar
-    pop bc
-    pop hl
     inc hl
     dec b
-    jr _bpp_loop
+    jr _bpt_loop
 
 ; _bdfs_print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
 ; destroys: AF, BC, HL
 _bdfs_print_entry_name:
-    ld hl, BDFS_ENT_BUF + BDFS_ENT_NAME
+    ld hl, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
     ld b, BDFS_NAME_LEN
-    call _bdfs_print_padded
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_EXT)
+    call _bdfs_print_trimmed
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET)
     cp ' '
     ret z
     ld a, '.'
     call con_putchar
-    ld hl, BDFS_ENT_BUF + BDFS_ENT_EXT
+    ld hl, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
     ld b, BDFS_EXT_LEN
-    call _bdfs_print_padded
+    call _bdfs_print_trimmed
     ret
 
 ; ---- bdfs_format -----------------------------------------------------------
@@ -119,16 +115,16 @@ _bdfs_fmt_fill_vol:
     ld bc, BDFS_HDR_SIZE
     call flash_read
 
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC)
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
     jr nz, _bdfs_format_magic_fail
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC + 1)
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
     jr nz, _bdfs_format_magic_fail
 
     ld hl, _bdfs_msg_fmt_ok
     call con_puts
-    ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME
+    ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
     call con_puts
     ld a, CHAR_LF
     call con_putchar
@@ -164,14 +160,14 @@ bdfs_dir:
     ld bc, BDFS_HDR_SIZE
     call flash_read
 
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC)
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
     jr nz, _bdfs_dir_not_formatted
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC + 1)
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
     jr nz, _bdfs_dir_not_formatted
 
-    ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME
+    ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
     call con_puts
     ld a, CHAR_LF
     call con_putchar
@@ -188,7 +184,7 @@ _bdfs_dir_scan:
     ld bc, BDFS_ENT_SIZE
     call flash_read
 
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME)
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
     cp BDFS_ENT_EMPTY
     jr z, _bdfs_dir_done
 
@@ -197,7 +193,7 @@ _bdfs_dir_scan:
     add hl, bc
     ld (BDFS_SCAN_ADDR), hl
 
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS)
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
     jr nz, _bdfs_dir_deleted
 
