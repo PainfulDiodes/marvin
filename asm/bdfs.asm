@@ -84,13 +84,14 @@ _bdfs_print_entry_name:
 ; ---- bdfs_format -----------------------------------------------------------
 
 ; bdfs_format: erase sector 0 of the current drive and write a BDFS directory header
-; in:  — (drive must be selected via bdfs_set_drive)
+; in:  HL = volume name string (null-terminated, max BDFS_VOL_NAME_LEN-1 chars), or 0 for default
 ; out: —
 ; destroys: AF, BC, DE, HL
 bdfs_format:
     call _bdfs_check_drive
     jp z, _bdfs_no_drive
 
+    ld (BDFS_SCAN_ADDR), hl         ; stash name ptr (BDFS_SCAN_ADDR reused as temp)
     sub 'A'
     inc a                           ; slot 1-6
     call flash_select_slot
@@ -113,27 +114,61 @@ bdfs_format:
     inc hl
     ld (hl), BDFS_MAGIC_1
     inc hl
-    ; vol_name: "BDFSx" (5 chars) + 7 null bytes = 12 bytes total
-    ld (hl), 'B'
+    ex de, hl                       ; DE = vol_name field ptr
+    ld hl, (BDFS_SCAN_ADDR)         ; HL = name pointer or 0
+    ld a, h
+    or l
+    jr z, _bdfs_fmt_default_name
+    ; custom name: copy up to BDFS_VOL_NAME_LEN chars, ensure null-terminated
+    ld b, BDFS_VOL_NAME_LEN
+_bdfs_fmt_copy_name:
+    ld a, (hl)
+    or a
+    jr z, _bdfs_fmt_null_fill       ; end of source: null-fill remaining
+    ld (de), a
     inc hl
-    ld (hl), 'D'
-    inc hl
-    ld (hl), 'F'
-    inc hl
-    ld (hl), 'S'
-    inc hl
+    inc de
+    djnz _bdfs_fmt_copy_name
+    ; wrote full BDFS_VOL_NAME_LEN chars: overwrite last with null terminator
+    dec de
+    xor a
+    ld (de), a
+    inc de
+    jr _bdfs_fmt_reserved
+_bdfs_fmt_null_fill:
+    xor a
+_bdfs_fmt_null_loop:
+    ld (de), a
+    inc de
+    djnz _bdfs_fmt_null_loop
+    jr _bdfs_fmt_reserved
+_bdfs_fmt_default_name:
+    ld a, 'B'
+    ld (de), a
+    inc de
+    ld a, 'D'
+    ld (de), a
+    inc de
+    ld a, 'F'
+    ld (de), a
+    inc de
+    ld a, 'S'
+    ld (de), a
+    inc de
     ld a, (BDFS_DRIVE)
-    ld (hl), a
-    inc hl
-    ld b, 7
-_bdfs_fmt_fill_vol:
-    ld (hl), 0
-    inc hl
-    djnz _bdfs_fmt_fill_vol
-    ; reserved: 2 bytes of 0
-    ld (hl), 0
-    inc hl
-    ld (hl), 0
+    ld (de), a
+    inc de
+    ld b, BDFS_VOL_NAME_LEN - 5     ; 7 null bytes
+_bdfs_fmt_fill_default:
+    xor a
+    ld (de), a
+    inc de
+    djnz _bdfs_fmt_fill_default
+_bdfs_fmt_reserved:
+    xor a
+    ld (de), a
+    inc de
+    ld (de), a
 
     ld hl, 0x0000                   ; addr[23:8]
     ld de, BDFS_HDR_BUF
