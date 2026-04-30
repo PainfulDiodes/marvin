@@ -360,9 +360,11 @@ _cmd_format:
     ld hl, _msg_fmt_confirm_post
     call con_puts                   ; "? y/n "
     call con_getchar
+    ld b, a                         ; save response before echo clobbers A
     call con_putchar                ; echo
     ld a, CHAR_LF
     call con_putchar
+    ld a, b
     cp 'y'
     jp nz, _prompt
 _cmd_format_run:
