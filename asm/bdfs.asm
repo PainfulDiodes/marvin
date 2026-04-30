@@ -1,13 +1,15 @@
 ; bdfs.asm - BeanDeck File System monitor command implementations
 ;
-; Provides bdfs_format and bdfs_dir for the 'f' and 'd' monitor commands.
-; Both functions take A = slot number (1-6) and use RAM variables from system.asm.
+; Drive selection: bdfs_set_drive / bdfs_get_drive map letters 'A'-'F' to slots 1-6.
+; bdfs_format and bdfs_dir operate on the currently selected drive (BDFS_DRIVE must be set).
 
     INCLUDE "asm/chars.inc"
     INCLUDE "asm/bdfs.inc"
 
     PUBLIC bdfs_format
     PUBLIC bdfs_dir
+    PUBLIC bdfs_set_drive
+    PUBLIC bdfs_get_drive
 
     EXTERN con_puts
     EXTERN con_putchar
@@ -15,9 +17,37 @@
     EXTERN flash_sector_erase
     EXTERN flash_page_program
     EXTERN flash_read
-    EXTERN BDFS_HDR_BUF, BDFS_ENT_BUF, BDFS_SCAN_ADDR, BDFS_ACTIVE_COUNT, BDFS_SLOT_NUM
+    EXTERN BDFS_HDR_BUF, BDFS_ENT_BUF, BDFS_SCAN_ADDR, BDFS_ACTIVE_COUNT, BDFS_DRIVE
+
+; ---- bdfs_set_drive / bdfs_get_drive ---------------------------------------
+
+; bdfs_set_drive: select active drive by letter and assert the corresponding flash slot
+; in:  A = drive letter ('A'-'F')
+; out: —
+; destroys: AF
+bdfs_set_drive:
+    ld (BDFS_DRIVE), a
+    sub 'A'
+    inc a                           ; convert 'A'-'F' to slot 1-6
+    jp flash_select_slot            ; tail call
+
+; bdfs_get_drive: return the current drive letter
+; in:  —
+; out: A = drive letter ('A'-'F'), or 0 if no drive has been selected
+; destroys: AF
+bdfs_get_drive:
+    ld a, (BDFS_DRIVE)
+    ret
 
 ; ---- helpers ---------------------------------------------------------------
+
+; _bdfs_check_drive: load BDFS_DRIVE and set Z if no drive is selected
+; out: A = drive letter (NZ), or 0 (Z) if no drive selected
+; destroys: AF
+_bdfs_check_drive:
+    ld a, (BDFS_DRIVE)
+    or a
+    ret
 
 ; _bdfs_print_trimmed: print at most B chars from (HL), stopping at first space (trims padding)
 ; in:  HL = source, B = max chars
@@ -53,18 +83,21 @@ _bdfs_print_entry_name:
 
 ; ---- bdfs_format -----------------------------------------------------------
 
-; bdfs_format: erase sector 0 of slot and write a BDFS directory header
-; in:  A = slot number (1-6)
+; bdfs_format: erase sector 0 of the current drive and write a BDFS directory header
+; in:  — (drive must be selected via bdfs_set_drive)
 ; out: —
 ; destroys: AF, BC, DE, HL
 bdfs_format:
-    ld (BDFS_SLOT_NUM), a
-    call flash_select_slot          ; in: A=slot; preserves BC
+    call _bdfs_check_drive
+    jp z, _bdfs_no_drive
+
+    sub 'A'
+    inc a                           ; slot 1-6
+    call flash_select_slot
 
     ld hl, _bdfs_msg_fmt_pre
     call con_puts
-    ld a, (BDFS_SLOT_NUM)
-    add a, '0'
+    ld a, (BDFS_DRIVE)
     call con_putchar
     ld a, CHAR_LF
     call con_putchar
@@ -80,17 +113,16 @@ bdfs_format:
     inc hl
     ld (hl), BDFS_MAGIC_1
     inc hl
-    ; vol_name: "SLOTn" (5 chars) + 7 null bytes = 12 bytes total
+    ; vol_name: "BDFSx" (5 chars) + 7 null bytes = 12 bytes total
+    ld (hl), 'B'
+    inc hl
+    ld (hl), 'D'
+    inc hl
+    ld (hl), 'F'
+    inc hl
     ld (hl), 'S'
     inc hl
-    ld (hl), 'L'
-    inc hl
-    ld (hl), 'O'
-    inc hl
-    ld (hl), 'T'
-    inc hl
-    ld a, (BDFS_SLOT_NUM)
-    add a, '0'
+    ld a, (BDFS_DRIVE)
     ld (hl), a
     inc hl
     ld b, 7
@@ -147,11 +179,16 @@ _bdfs_format_write_fail:
 
 ; ---- bdfs_dir --------------------------------------------------------------
 
-; bdfs_dir: read and display the BDFS directory for a slot
-; in:  A = slot number (1-6)
+; bdfs_dir: read and display the BDFS directory for the current drive
+; in:  — (drive must be selected via bdfs_set_drive)
 ; out: —
 ; destroys: AF, BC, DE, HL
 bdfs_dir:
+    call _bdfs_check_drive
+    jp z, _bdfs_no_drive
+
+    sub 'A'
+    inc a                           ; slot 1-6
     call flash_select_slot
 
     xor a                           ; addr[23:16] = 0x00
@@ -228,9 +265,15 @@ _bdfs_dir_not_formatted:
     call con_puts
     ret
 
+; ---- shared error handlers -------------------------------------------------
+
+_bdfs_no_drive:
+    ld hl, _bdfs_msg_no_drive
+    jp con_puts                     ; tail call
+
 ; ---- strings ---------------------------------------------------------------
 
-_bdfs_msg_fmt_pre:          db "Formatting slot ", 0
+_bdfs_msg_fmt_pre:          db "Formatting drive ", 0
 _bdfs_msg_fmt_ok:           db "FORMAT OK ", 0
 _bdfs_msg_fmt_magic_fail:   db "FORMAT FAIL (bad magic)", CHAR_LF, 0
 _bdfs_msg_fmt_erase_fail:   db "FORMAT FAIL (erase timeout)", CHAR_LF, 0
@@ -239,3 +282,4 @@ _bdfs_msg_indent:           db "  ", 0
 _bdfs_msg_deleted:          db "  (deleted) ", 0
 _bdfs_msg_files:            db " file(s)", CHAR_LF, 0
 _bdfs_msg_not_formatted:    db "NOT FORMATTED", CHAR_LF, 0
+_bdfs_msg_no_drive:         db "NO DRIVE SELECTED", CHAR_LF, 0

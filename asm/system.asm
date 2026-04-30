@@ -13,7 +13,7 @@
     PUBLIC SYSTEM_RAMSTART
     PUBLIC CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
     PUBLIC W25Q_RAMSTART, W25Q_CS, W25Q_ID_MFR, W25Q_ID_TYPE, W25Q_ID_CAP
-    PUBLIC BDFS_RAMSTART, BDFS_HDR_BUF, BDFS_ENT_BUF, BDFS_SCAN_ADDR, BDFS_ACTIVE_COUNT, BDFS_SLOT_NUM
+    PUBLIC BDFS_RAMSTART, BDFS_HDR_BUF, BDFS_ENT_BUF, BDFS_SCAN_ADDR, BDFS_ACTIVE_COUNT, BDFS_DRIVE
 
 IFDEF HAS_RA8875
     EXTERN RA8875_RAMSIZE
@@ -50,8 +50,8 @@ BDFS_HDR_BUF        equ BDFS_RAMSTART + 0                   ; 16 bytes: director
 BDFS_ENT_BUF        equ BDFS_RAMSTART + 16                  ; 17 bytes: entry scan buffer
 BDFS_SCAN_ADDR      equ BDFS_RAMSTART + 33                  ; 2 bytes: flash scan address (LE)
 BDFS_ACTIVE_COUNT   equ BDFS_RAMSTART + 35                  ; 1 byte: active entry count
-BDFS_SLOT_NUM       equ BDFS_RAMSTART + 36                  ; 1 byte: slot saved during format
-KEY_MATRIX_BUFFER   equ BDFS_SLOT_NUM + 1                   ; 8 bytes: keyscan buffer
+BDFS_DRIVE          equ BDFS_RAMSTART + 36                  ; 1 byte: active drive letter ('A'-'F', 0=none)
+KEY_MATRIX_BUFFER   equ BDFS_DRIVE + 1                      ; 8 bytes: keyscan buffer
 CAPS_LOCK_STATE     equ KEY_MATRIX_BUFFER + 8               ; 1 byte: caps lock state (0=off, 1=on)
 CMD_BUFFER          equ CAPS_LOCK_STATE + 1                 ; command buffer (grows toward stack)
 

@@ -22,6 +22,8 @@
     IFDEF INCLUDE_BDFS
     EXTERN bdfs_format
     EXTERN bdfs_dir
+    EXTERN bdfs_set_drive
+    EXTERN bdfs_get_drive
     ENDIF
 
 ; ****************************************************
@@ -146,7 +148,20 @@ _cmd_check:
     jp z,_cmd_format
     cp 'd'
     jp z,_cmd_dir
+    ; drive select: A:-F: sets the active drive
+    cp 'A'
+    jr c, _cmd_bad
+    cp 'G'
+    jr nc, _cmd_bad
+    ld b, a                 ; save drive letter
+    ld a, (hl)
+    cp ':'
+    jr nz, _cmd_bad
+    ld a, b
+    call bdfs_set_drive
+    jp _prompt
     ENDIF
+_cmd_bad:
     ; otherwise error
     ld hl,BAD_CMD_MSG
     call con_puts
@@ -330,54 +345,36 @@ _cmd_load_end:
     IFDEF INCLUDE_BDFS
 
 ; FORMAT
-; f 1 = format slot 1 (1-6); missing or invalid argument is an error
+; f = format current drive (select with A:-F: first); prompts for confirmation
 _cmd_format:
-    ld a, (hl)
-_cmd_format_skip:
-    cp ' '
-    jr nz, _cmd_format_parse
-    inc hl
-    ld a, (hl)
-    jr _cmd_format_skip
-_cmd_format_parse:
-    sub '0'
-    jr c, _cmd_format_err        ; below '0' (includes null terminator)
+    call bdfs_get_drive
     or a
-    jr z, _cmd_format_err        ; was '0': invalid
-    cp 7
-    jr nc, _cmd_format_err       ; 7 or above: invalid
-    jr _cmd_format_run
-_cmd_format_err:
-    ld hl, BAD_CMD_MSG
-    call con_puts
-    jp _prompt
+    jr z, _cmd_format_run           ; no drive: skip confirm, let bdfs_format print error
+    ld b, a                         ; save drive letter
+    ld hl, _msg_fmt_confirm_pre
+    call con_puts                   ; "Format BDFS"
+    ld a, b
+    call con_putchar                ; drive letter
+    ld hl, _msg_fmt_confirm_post
+    call con_puts                   ; "? y/n "
+    call con_getchar
+    call con_putchar                ; echo
+    ld a, CHAR_LF
+    call con_putchar
+    cp 'y'
+    jp nz, _prompt
 _cmd_format_run:
     call bdfs_format
     jp _prompt
 
 ; DIR
-; d 1 = list slot 1 directory (1-6); missing or invalid defaults to slot 1
+; d = list directory of current drive (select with A:-F: first)
 _cmd_dir:
-    ld a, (hl)
-_cmd_dir_skip:
-    cp ' '
-    jr nz, _cmd_dir_parse
-    inc hl
-    ld a, (hl)
-    jr _cmd_dir_skip
-_cmd_dir_parse:
-    sub '0'
-    jr c, _cmd_dir_s1
-    or a
-    jr z, _cmd_dir_s1
-    cp 7
-    jr nc, _cmd_dir_s1
-    jr _cmd_dir_run
-_cmd_dir_s1:
-    ld a, 1
-_cmd_dir_run:
     call bdfs_dir
     jp _prompt
+
+_msg_fmt_confirm_pre:   db "Format BDFS", 0
+_msg_fmt_confirm_post:  db "? y/n ", 0
 
     ENDIF
 
