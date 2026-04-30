@@ -57,7 +57,7 @@ _prompt:
     call con_putchar            ; drive letter
 _prompt_no_drive:
     ENDIF
-    ld a,'$'
+    ld a,'>'
     call con_putchar
 
 _get_cmd:
