@@ -24,6 +24,7 @@
     EXTERN bdfs_dir
     EXTERN bdfs_set_drive
     EXTERN bdfs_get_drive
+    EXTERN BDFS_DRIVE
     ENDIF
 
 ; ****************************************************
@@ -40,13 +41,24 @@ marvin_coldstart:
 
 marvin_warmstart:
     ld sp, STACK
+    IFDEF INCLUDE_BDFS
+    xor a
+    ld (BDFS_DRIVE), a
+    ENDIF
     ; point DE to zero - this is the default address argument for commands
     ld de,0x0000
 _prompt:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER
+    IFDEF INCLUDE_BDFS
+    ld a, (BDFS_DRIVE)
+    or a
+    jr z, _prompt_no_drive
+    call con_putchar            ; drive letter
+_prompt_no_drive:
+    ENDIF
     ld a,'$'
-    call con_putchar 
+    call con_putchar
 
 _get_cmd:
     ; get character from console
@@ -133,7 +145,7 @@ _cmd_check:
     cp 'w'
     jr z,_cmd_write
     cp 'x'
-    jr z,_cmd_execute
+    jp z,_cmd_execute
     IFDEF INCLUDE_BASIC
     cp 'b'
     jp z,_cmd_basic_cold
