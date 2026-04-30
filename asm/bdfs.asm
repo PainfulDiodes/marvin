@@ -274,12 +274,12 @@ _bdfs_no_drive:
 ; ---- strings ---------------------------------------------------------------
 
 _bdfs_msg_fmt_pre:          db "Formatting drive ", 0
-_bdfs_msg_fmt_ok:           db "FORMAT OK ", 0
-_bdfs_msg_fmt_magic_fail:   db "FORMAT FAIL (bad magic)", CHAR_LF, 0
-_bdfs_msg_fmt_erase_fail:   db "FORMAT FAIL (erase timeout)", CHAR_LF, 0
-_bdfs_msg_fmt_write_fail:   db "FORMAT FAIL (write timeout)", CHAR_LF, 0
+_bdfs_msg_fmt_ok:           db "Format ok ", 0
+_bdfs_msg_fmt_magic_fail:   db "Format fail (bad magic)", CHAR_LF, 0
+_bdfs_msg_fmt_erase_fail:   db "Format fail (erase timeout)", CHAR_LF, 0
+_bdfs_msg_fmt_write_fail:   db "Format fail (write timeout)", CHAR_LF, 0
 _bdfs_msg_indent:           db "  ", 0
 _bdfs_msg_deleted:          db "  (deleted) ", 0
 _bdfs_msg_files:            db " file(s)", CHAR_LF, 0
-_bdfs_msg_not_formatted:    db "NOT FORMATTED", CHAR_LF, 0
-_bdfs_msg_no_drive:         db "NO DRIVE SELECTED", CHAR_LF, 0
+_bdfs_msg_not_formatted:    db "Not formatted", CHAR_LF, 0
+_bdfs_msg_no_drive:         db "No drive selected", CHAR_LF, 0

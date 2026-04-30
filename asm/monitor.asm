@@ -160,18 +160,8 @@ _cmd_check:
     jp z,_cmd_format
     cp 'd'
     jp z,_cmd_dir
-    ; drive select: A:-F: sets the active drive
-    cp 'A'
-    jr c, _cmd_bad
-    cp 'G'
-    jr nc, _cmd_bad
-    ld b, a                 ; save drive letter
-    ld a, (hl)
-    cp ':'
-    jr nz, _cmd_bad
-    ld a, b
-    call bdfs_set_drive
-    jp _prompt
+    cp '@'
+    jp z,_cmd_drive
     ENDIF
 _cmd_bad:
     ; otherwise error
@@ -357,7 +347,7 @@ _cmd_load_end:
     IFDEF INCLUDE_BDFS
 
 ; FORMAT
-; f = format current drive (select with A:-F: first); prompts for confirmation
+; f = format current drive (select with @A-@F first); prompts for confirmation
 _cmd_format:
     call bdfs_get_drive
     or a
@@ -380,12 +370,23 @@ _cmd_format_run:
     jp _prompt
 
 ; DIR
-; d = list directory of current drive (select with A:-F: first)
+; d = list directory of current drive (select with @A-@F first)
 _cmd_dir:
     call bdfs_dir
     jp _prompt
 
-_msg_fmt_confirm_pre:   db "Format BDFS", 0
+; DRIVE SELECT
+; @A-@F = select drive A-F
+_cmd_drive:
+    ld a, (hl)
+    cp 'A'
+    jp c, _cmd_bad
+    cp 'G'
+    jp nc, _cmd_bad
+    call bdfs_set_drive
+    jp _prompt
+
+_msg_fmt_confirm_pre:   db "Format ", 0
 _msg_fmt_confirm_post:  db "? y/n ", 0
 
     ENDIF
