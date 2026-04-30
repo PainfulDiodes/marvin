@@ -38,13 +38,13 @@
 marvin_coldstart:
     ld hl,WELCOME_MSG
     call con_puts
+    IFDEF INCLUDE_BDFS
+    ld a, 'A'
+    ld (BDFS_DRIVE), a
+    ENDIF
 
 marvin_warmstart:
     ld sp, STACK
-    IFDEF INCLUDE_BDFS
-    xor a
-    ld (BDFS_DRIVE), a
-    ENDIF
     ; point DE to zero - this is the default address argument for commands
     ld de,0x0000
 _prompt:
@@ -347,14 +347,27 @@ _cmd_load_end:
     IFDEF INCLUDE_BDFS
 
 ; FORMAT
-; f = format current drive (select with @A-@F first); prompts for confirmation
+; f [name] = format current drive (select with @A-@F first); prompts for confirmation
 _cmd_format:
+    ; skip spaces, find optional volume name argument
+_cmd_format_skip_sp:
+    ld a, (hl)
+    cp ' '
+    jr nz, _cmd_format_got_arg
+    inc hl
+    jr _cmd_format_skip_sp
+_cmd_format_got_arg:
+    push hl                         ; save name pointer
+
     call bdfs_get_drive
     or a
-    jr z, _cmd_format_run           ; no drive: skip confirm, let bdfs_format print error
+    jr nz, _cmd_format_confirm
+    pop hl                          ; discard name ptr
+    jp _cmd_bad
+_cmd_format_confirm:
     ld b, a                         ; save drive letter
     ld hl, _msg_fmt_confirm_pre
-    call con_puts                   ; "Format BDFS"
+    call con_puts                   ; "Format "
     ld a, b
     call con_putchar                ; drive letter
     ld hl, _msg_fmt_confirm_post
@@ -366,7 +379,16 @@ _cmd_format:
     call con_putchar
     ld a, b
     cp 'y'
-    jp nz, _prompt
+    jr z, _cmd_format_confirmed
+    pop hl                          ; discard name ptr: user declined
+    jp _prompt
+_cmd_format_confirmed:
+    pop hl                          ; restore name pointer
+
+    ld a, (hl)
+    or a
+    jr nz, _cmd_format_run
+    ld hl, 0                        ; no name arg: use default
 _cmd_format_run:
     call bdfs_format
     jp _prompt
