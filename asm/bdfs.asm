@@ -17,7 +17,7 @@
     EXTERN flash_sector_erase
     EXTERN flash_page_program
     EXTERN flash_read
-    EXTERN BDFS_HDR_BUF, BDFS_ENT_BUF, BDFS_SCAN_ADDR, BDFS_ACTIVE_COUNT, BDFS_DRIVE
+    EXTERN BDFS_HDR_BUF, BDFS_ENT_BUF, BDFS_TMP, BDFS_ACTIVE_COUNT, BDFS_DRIVE
 
 ; ---- bdfs_set_drive / bdfs_get_drive ---------------------------------------
 
@@ -112,7 +112,7 @@ bdfs_format:
     push de
     push hl
 
-    ld (BDFS_SCAN_ADDR), hl         ; stash name ptr (BDFS_SCAN_ADDR reused as temp)
+    ld (BDFS_TMP), hl         ; stash name ptr across erase
     sub 'A'
     inc a                           ; slot 1-6
     call flash_select_slot
@@ -136,7 +136,7 @@ bdfs_format:
     ld (hl), BDFS_MAGIC_1
     inc hl
     ex de, hl                       ; DE = vol_name field ptr
-    ld hl, (BDFS_SCAN_ADDR)         ; HL = name pointer or 0
+    ld hl, (BDFS_TMP)         ; HL = name pointer or 0
     ld a, h
     or l
     jr z, _bdfs_fmt_default_name
@@ -270,11 +270,11 @@ bdfs_dir:
     xor a
     ld (BDFS_ACTIVE_COUNT), a
     ld hl, BDFS_HDR_SIZE
-    ld (BDFS_SCAN_ADDR), hl
+    ld (BDFS_TMP), hl
 
 _bdfs_dir_scan:
     xor a                           ; addr[23:16] = 0x00
-    ld hl, (BDFS_SCAN_ADDR)         ; addr[15:0]
+    ld hl, (BDFS_TMP)         ; addr[15:0]
     ld de, BDFS_ENT_BUF
     ld bc, BDFS_ENT_SIZE
     call flash_read
@@ -283,10 +283,10 @@ _bdfs_dir_scan:
     cp BDFS_ENT_EMPTY
     jr z, _bdfs_dir_done
 
-    ld hl, (BDFS_SCAN_ADDR)
+    ld hl, (BDFS_TMP)
     ld bc, BDFS_ENT_SIZE
     add hl, bc
-    ld (BDFS_SCAN_ADDR), hl
+    ld (BDFS_TMP), hl
 
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
