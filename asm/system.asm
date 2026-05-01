@@ -12,8 +12,8 @@
     PUBLIC RA8875_GPIO, RA8875_SPI_CTRL, RA8875_SPI_DATA, RA8875_RAMSTART
     PUBLIC SYSTEM_RAMSTART
     PUBLIC CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
-    PUBLIC W25Q_RAMSTART, W25Q_CS, W25Q_ID_MFR, W25Q_ID_TYPE, W25Q_ID_CAP
-    PUBLIC BDFS_RAMSTART, BDFS_HDR_BUF, BDFS_ENT_BUF, BDFS_TMP, BDFS_ACTIVE_COUNT, BDFS_DRIVE
+    PUBLIC W25Q_RAMSTART
+    PUBLIC BDFS_RAMSTART
 
 IFDEF HAS_RA8875
     EXTERN RA8875_RAMSIZE
@@ -30,7 +30,13 @@ ELSE
 LCD_RAMSIZE         equ 0
 ENDIF
 
-W25Q_RAMSIZE        equ 4   ; 4 bytes: W25Q_CS + 3-byte JEDEC ID cache
+IFDEF INCLUDE_BDFS
+    EXTERN W25Q_RAMSIZE
+    EXTERN BDFS_RAMSIZE
+ELSE
+W25Q_RAMSIZE        equ 0
+BDFS_RAMSIZE        equ 0
+ENDIF
 
 ; start of user RAM
 RAMSTART            equ 0x8000
@@ -40,18 +46,9 @@ SYSTEM_RAMSTART     equ 0xf000
 RA8875_RAMSTART     equ SYSTEM_RAMSTART                     ; RA8875 console variables (RA8875_RAMSIZE bytes)
 CONSOLE_STATUS      equ RA8875_RAMSTART + RA8875_RAMSIZE    ; 1 byte: active console
 LCD_RAMSTART        equ CONSOLE_STATUS + 1                  ; LCD console variables (LCD_RAMSIZE bytes)
-W25Q_RAMSTART       equ LCD_RAMSTART + LCD_RAMSIZE          ; W25Q driver variables (W25Q_RAMSIZE bytes)
-W25Q_CS             equ W25Q_RAMSTART                       ; 1 byte: active CS byte for flash_cs_assert
-W25Q_ID_MFR         equ W25Q_RAMSTART + 1                   ; 1 byte: JEDEC manufacturer ID (cached by flash_select_slot)
-W25Q_ID_TYPE        equ W25Q_RAMSTART + 2                   ; 1 byte: JEDEC memory type
-W25Q_ID_CAP         equ W25Q_RAMSTART + 3                   ; 1 byte: JEDEC capacity code (see W25Q_CAP_* in w25q.inc)
-BDFS_RAMSTART       equ W25Q_RAMSTART + W25Q_RAMSIZE        ; BDFS variables
-BDFS_HDR_BUF        equ BDFS_RAMSTART + 0                   ; 16 bytes: directory header r/w buffer (bdfs.asm internal)
-BDFS_ENT_BUF        equ BDFS_RAMSTART + 16                  ; 17 bytes: entry scan buffer (bdfs.asm internal)
-BDFS_TMP            equ BDFS_RAMSTART + 33                  ; 2 bytes: scratch register (bdfs.asm internal)
-BDFS_ACTIVE_COUNT   equ BDFS_RAMSTART + 35                  ; 1 byte: active entry count (bdfs.asm internal)
-BDFS_DRIVE          equ BDFS_RAMSTART + 36                  ; 1 byte: active drive letter ('A'-'F', 0=none)
-KEY_MATRIX_BUFFER   equ BDFS_DRIVE + 1                      ; 8 bytes: keyscan buffer
+W25Q_RAMSTART       equ LCD_RAMSTART + LCD_RAMSIZE          ; W25Q driver variables (W25Q_RAMSIZE bytes, layout in w25q.asm)
+BDFS_RAMSTART       equ W25Q_RAMSTART + W25Q_RAMSIZE        ; BDFS variables (BDFS_RAMSIZE bytes, layout in bdfs.asm)
+KEY_MATRIX_BUFFER   equ BDFS_RAMSTART + BDFS_RAMSIZE        ; 8 bytes: keyscan buffer
 CAPS_LOCK_STATE     equ KEY_MATRIX_BUFFER + 8               ; 1 byte: caps lock state (0=off, 1=on)
 CMD_BUFFER          equ CAPS_LOCK_STATE + 1                 ; command buffer (grows toward stack)
 
