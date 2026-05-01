@@ -14,6 +14,7 @@
     EXTERN WELCOME_MSG
     EXTERN BAD_CMD_MSG
     EXTERN CMD_W_NULL_MSG
+    EXTERN HELP_MSG
     IFDEF INCLUDE_BASIC
     EXTERN BASIC_PROMPT_MSG
     EXTERN START
@@ -25,6 +26,7 @@
     EXTERN bdfs_set_drive
     EXTERN bdfs_get_drive
     EXTERN BDFS_DRIVE
+    EXTERN BDFS_HELP_MSG
     ENDIF
 
 ; ****************************************************
@@ -163,6 +165,8 @@ _cmd_check:
     cp '@'
     jp z,_cmd_drive
     ENDIF
+    cp '?'
+    jp z,_cmd_help
 _cmd_bad:
     ; otherwise error
     ld hl,BAD_CMD_MSG
@@ -400,9 +404,10 @@ _cmd_dir:
     jp _prompt
 
 ; DRIVE SELECT
-; @A-@F = select drive A-F
+; @A-@F or @a-@f = select drive A-F
 _cmd_drive:
     ld a, (hl)
+    and 0dfh                        ; fold lowercase to uppercase
     cp 'A'
     jp c, _cmd_bad
     cp 'G'
@@ -430,3 +435,15 @@ _cmd_basic_warm:
     jp WARM
 
     ENDIF
+
+; HELP
+
+; ? = show command summary
+_cmd_help:
+    ld hl, HELP_MSG
+    call con_puts
+    IFDEF INCLUDE_BDFS
+    ld hl, BDFS_HELP_MSG
+    call con_puts
+    ENDIF
+    jp _prompt
