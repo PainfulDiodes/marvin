@@ -50,36 +50,51 @@ _bdfs_check_drive:
     or a
     ret
 
-; _bdfs_print_trimmed: print at most B chars from (HL), stopping at first space (trims padding)
+; _bdfs_con_print_trimmed: print at most B chars from (HL), stopping at first space (trims padding)
 ; in:  HL = source, B = max chars
-; destroys: AF, B, HL
-_bdfs_print_trimmed:
-_bpt_loop:
+; destroys: —
+_bdfs_con_print_trimmed:
+    push af
+    push hl
+    push bc
+_bcpt_loop:
     ld a, b
     or a
-    ret z
+    jr z, _bpt_done
     ld a, (hl)
     cp ' '
-    ret z
+    jr z, _bpt_done
     call con_putchar
     inc hl
     dec b
-    jr _bpt_loop
+    jr _bcpt_loop
+_bpt_done:
+    pop bc
+    pop hl
+    pop af
+    ret
 
-; _bdfs_print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
-; destroys: AF, BC, HL
-_bdfs_print_entry_name:
+; _bdfs_con_print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
+; destroys: —
+_bdfs_con_print_entry_name:
+    push af
+    push bc
+    push hl
     ld hl, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
     ld b, BDFS_NAME_LEN
-    call _bdfs_print_trimmed
+    call _bdfs_con_print_trimmed
     ld a, (BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET)
-    cp ' '
-    ret z
+    cp ' ' ; ext field is space-padded: leading space means no extension
+    jr z, _bcpen_done
     ld a, '.'
     call con_putchar
     ld hl, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
     ld b, BDFS_EXT_LEN
-    call _bdfs_print_trimmed
+    call _bdfs_con_print_trimmed
+_bcpen_done:
+    pop hl
+    pop bc
+    pop af
     ret
 
 ; ---- bdfs_format -----------------------------------------------------------
@@ -87,10 +102,15 @@ _bdfs_print_entry_name:
 ; bdfs_format: erase sector 0 of the current drive and write a BDFS directory header
 ; in:  HL = volume name string (null-terminated, max BDFS_VOL_NAME_LEN-1 chars), or 0 for default
 ; out: —
-; destroys: AF, BC, DE, HL
+; destroys: —
 bdfs_format:
     call _bdfs_check_drive
-    jp z, _bdfs_no_drive
+    jp z, _bdfs_no_drive            ; tail call: common error handler
+
+    push af
+    push bc
+    push de
+    push hl
 
     ld (BDFS_SCAN_ADDR), hl         ; stash name ptr (BDFS_SCAN_ADDR reused as temp)
     sub 'A'
@@ -144,18 +164,9 @@ _bdfs_fmt_null_loop:
     djnz _bdfs_fmt_null_loop
     jr _bdfs_fmt_reserved
 _bdfs_fmt_default_name:
-    ld a, 'B'
-    ld (de), a
-    inc de
-    ld a, 'D'
-    ld (de), a
-    inc de
-    ld a, 'F'
-    ld (de), a
-    inc de
-    ld a, 'S'
-    ld (de), a
-    inc de
+    ld hl, _bdfs_default_prefix
+    ld bc, _bdfs_default_prefix_len
+    ldir                            ; copy "BDFS", DE now points past it
     ld a, (BDFS_DRIVE)
     ld (de), a
     inc de
@@ -196,21 +207,27 @@ _bdfs_fmt_reserved:
     call con_puts
     ld a, CHAR_LF
     call con_putchar
-    ret
+    jr _bdfs_format_exit
 
 _bdfs_format_magic_fail:
     ld hl, _bdfs_msg_fmt_magic_fail
     call con_puts
-    ret
+    jr _bdfs_format_exit
 
 _bdfs_format_erase_fail:
     ld hl, _bdfs_msg_fmt_erase_fail
     call con_puts
-    ret
+    jr _bdfs_format_exit
 
 _bdfs_format_write_fail:
     ld hl, _bdfs_msg_fmt_write_fail
     call con_puts
+
+_bdfs_format_exit:
+    pop hl
+    pop de
+    pop bc
+    pop af
     ret
 
 ; ---- bdfs_dir --------------------------------------------------------------
@@ -218,10 +235,15 @@ _bdfs_format_write_fail:
 ; bdfs_dir: read and display the BDFS directory for the current drive
 ; in:  — (drive must be selected via bdfs_set_drive)
 ; out: —
-; destroys: AF, BC, DE, HL
+; destroys: —
 bdfs_dir:
     call _bdfs_check_drive
-    jp z, _bdfs_no_drive
+    jp z, _bdfs_no_drive            ; tail call: common error handler
+
+    push af
+    push bc
+    push de
+    push hl
 
     sub 'A'
     inc a                           ; slot 1-6
@@ -275,7 +297,7 @@ _bdfs_dir_scan:
     ld (BDFS_ACTIVE_COUNT), a
     ld hl, _bdfs_msg_indent
     call con_puts
-    call _bdfs_print_entry_name
+    call _bdfs_con_print_entry_name
     ld a, CHAR_LF
     call con_putchar
     jr _bdfs_dir_scan
@@ -283,7 +305,7 @@ _bdfs_dir_scan:
 _bdfs_dir_deleted:
     ld hl, _bdfs_msg_deleted
     call con_puts
-    call _bdfs_print_entry_name
+    call _bdfs_con_print_entry_name
     ld a, CHAR_LF
     call con_putchar
     jr _bdfs_dir_scan
@@ -294,11 +316,19 @@ _bdfs_dir_done:
     call con_putchar
     ld hl, _bdfs_msg_files
     call con_puts
+    pop hl
+    pop de
+    pop bc
+    pop af
     ret
 
 _bdfs_dir_not_formatted:
     ld hl, _bdfs_msg_not_formatted
     call con_puts
+    pop hl
+    pop de
+    pop bc
+    pop af
     ret
 
 ; ---- shared error handlers -------------------------------------------------
@@ -310,6 +340,8 @@ _bdfs_no_drive:
 
 ; ---- strings ---------------------------------------------------------------
 
+_bdfs_default_prefix:       db "BDFS-"
+_bdfs_default_prefix_len    equ $ - _bdfs_default_prefix
 _bdfs_msg_fmt_pre:          db "Formatting drive ", 0
 _bdfs_msg_fmt_ok:           db "Format ok ", 0
 _bdfs_msg_fmt_magic_fail:   db "Format fail (bad magic)", CHAR_LF, 0
