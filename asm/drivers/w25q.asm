@@ -9,16 +9,22 @@
     INCLUDE "asm/drivers/w25q.inc"
 
     EXTERN SPI_CTRL, SPI_DATA, SPI_CS_IDLE  ; system.asm - BeanBoardSPI port addresses
-    EXTERN W25Q_CS              ; system.asm - active CS byte (set by flash_select_slot)
-    EXTERN W25Q_ID_MFR          ; system.asm - cached JEDEC manufacturer ID
-    EXTERN W25Q_ID_TYPE         ; system.asm - cached JEDEC memory type
-    EXTERN W25Q_ID_CAP          ; system.asm - cached JEDEC capacity code
+    EXTERN W25Q_RAMSTART                    ; system.asm - base address of W25Q RAM block
 
     PUBLIC flash_read
     PUBLIC flash_read_jedec_id
     PUBLIC flash_sector_erase
     PUBLIC flash_page_program
     PUBLIC flash_select_slot
+    PUBLIC W25Q_RAMSIZE
+
+; ---- RAM layout (private to this module) ------------------------------------
+
+W25Q_CS             equ W25Q_RAMSTART + 0   ; 1 byte: active CS byte for flash_cs_assert
+W25Q_ID_MFR         equ W25Q_RAMSTART + 1   ; 1 byte: JEDEC manufacturer ID (cached by flash_select_slot)
+W25Q_ID_TYPE        equ W25Q_RAMSTART + 2   ; 1 byte: JEDEC memory type
+W25Q_ID_CAP         equ W25Q_RAMSTART + 3   ; 1 byte: JEDEC capacity code (see W25Q_CAP_* in w25q.inc)
+W25Q_RAMSIZE        equ 4
 
 
 ; flash_spi_byte: full-duplex SPI byte transfer via BeanBoardSPI interface
