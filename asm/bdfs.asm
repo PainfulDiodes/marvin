@@ -21,15 +21,16 @@
 
 ; ---- bdfs_set_drive / bdfs_get_drive ---------------------------------------
 
-; bdfs_set_drive: select active drive by letter and assert the corresponding flash slot
+; bdfs_set_drive: record the active drive letter
 ; in:  A = drive letter ('A'-'F')
 ; out: —
-; destroys: AF
+; destroys: -
+; NOTE: it is not possible to persistently set the slot - as SPI may also used for 
+; other purposes - so we set this as a memory variable and set the slot immediately
+; prior to accessing a device
 bdfs_set_drive:
     ld (BDFS_DRIVE), a
-    sub 'A'
-    inc a                           ; convert 'A'-'F' to slot 1-6
-    jp flash_select_slot            ; tail call
+    ret
 
 ; bdfs_get_drive: return the current drive letter
 ; in:  —
@@ -304,7 +305,8 @@ _bdfs_dir_not_formatted:
 
 _bdfs_no_drive:
     ld hl, _bdfs_msg_no_drive
-    jp con_puts                     ; tail call
+    call con_puts
+    ret
 
 ; ---- strings ---------------------------------------------------------------
 
