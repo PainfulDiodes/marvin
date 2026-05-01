@@ -23,12 +23,15 @@
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
-BDFS_HDR_BUF        equ BDFS_RAMSTART + 0    ; 16 bytes: directory header r/w buffer
-BDFS_ENT_BUF        equ BDFS_RAMSTART + 16   ; 17 bytes: entry scan buffer
-BDFS_TMP            equ BDFS_RAMSTART + 33   ; 2 bytes: scratch register
-BDFS_ACTIVE_COUNT   equ BDFS_RAMSTART + 35   ; 1 byte: active entry count
-BDFS_DRIVE          equ BDFS_RAMSTART + 36   ; 1 byte: active drive letter ('A'-'F', 0=none)
-BDFS_RAMSIZE        equ 37
+BDFS_HDR_BUF        equ BDFS_RAMSTART                           ; directory header r/w buffer
+BDFS_ENT_BUF        equ BDFS_HDR_BUF + BDFS_HDR_SIZE           ; entry scan buffer
+BDFS_TMP            equ BDFS_ENT_BUF + BDFS_ENT_SIZE           ; scratch register
+BDFS_TMP_LEN        equ 2
+BDFS_ACTIVE_COUNT   equ BDFS_TMP + BDFS_TMP_LEN                ; active entry count
+BDFS_ACTIVE_COUNT_LEN equ 1
+BDFS_DRIVE          equ BDFS_ACTIVE_COUNT + BDFS_ACTIVE_COUNT_LEN ; active drive letter ('A'-'F', 0=none)
+BDFS_DRIVE_LEN      equ 1
+BDFS_RAMSIZE        equ BDFS_HDR_SIZE + BDFS_ENT_SIZE + BDFS_TMP_LEN + BDFS_ACTIVE_COUNT_LEN + BDFS_DRIVE_LEN
 
 ; ---- bdfs_set_drive / bdfs_get_drive ---------------------------------------
 
