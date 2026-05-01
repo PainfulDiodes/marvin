@@ -343,7 +343,7 @@ _bdfs_no_drive:
 _bdfs_default_prefix:       db "BDFS-"
 _bdfs_default_prefix_len    equ $ - _bdfs_default_prefix
 _bdfs_msg_fmt_pre:          db "Formatting drive ", 0
-_bdfs_msg_fmt_ok:           db "Format ok ", 0
+_bdfs_msg_fmt_ok:           db "Format ok - ", 0
 _bdfs_msg_fmt_magic_fail:   db "Format fail (bad magic)", CHAR_LF, 0
 _bdfs_msg_fmt_erase_fail:   db "Format fail (erase timeout)", CHAR_LF, 0
 _bdfs_msg_fmt_write_fail:   db "Format fail (write timeout)", CHAR_LF, 0
