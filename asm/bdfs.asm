@@ -12,22 +12,6 @@ BDFS_MAGIC_1          EQU 0x01
 BDFS_DIR_SECTOR       EQU 0x0000
 BDFS_DATA_START       EQU 0x0001
 
-; Header offsets
-BDFS_HDR_MAGIC_OFFSET        EQU 0       ; 2 bytes
-BDFS_HDR_VOL_NAME_OFFSET     EQU 2       ; 12 bytes
-BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
-
-BDFS_HDR_SIZE         EQU 16
-
-; Entry offsets (8.3 filename: separate name and ext fields, space-padded, no dot stored)
-BDFS_ENT_NAME_OFFSET         EQU 0       ; 8 bytes, space-padded uppercase basename
-BDFS_ENT_EXT_OFFSET          EQU 8       ; 3 bytes, space-padded uppercase extension
-BDFS_ENT_SECTOR_OFFSET       EQU 11      ; 2 bytes, little-endian
-BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 3 bytes, little-endian
-BDFS_ENT_FLAGS_OFFSET        EQU 16      ; 1 byte
-
-BDFS_ENT_SIZE         EQU 17
-
 BDFS_FLAG_ACTIVE      EQU 0x00
 BDFS_FLAG_DELETED_BIT EQU 0
 BDFS_ENT_EMPTY        EQU 0xFF    ; name[0] value meaning no more entries
@@ -54,7 +38,9 @@ BDFS_VOL_NAME_LEN     EQU 12
 ; ---- RAM layout (private to this module) ------------------------------------
 
 BDFS_HDR_BUF        equ BDFS_RAMSTART                           ; directory header r/w buffer
+BDFS_HDR_SIZE         EQU 16
 BDFS_ENT_BUF        equ BDFS_HDR_BUF + BDFS_HDR_SIZE           ; entry scan buffer
+BDFS_ENT_SIZE         EQU 17
 BDFS_TMP            equ BDFS_ENT_BUF + BDFS_ENT_SIZE           ; scratch register
 BDFS_TMP_LEN        equ 2
 BDFS_ACTIVE_COUNT   equ BDFS_TMP + BDFS_TMP_LEN                ; active entry count
@@ -62,6 +48,18 @@ BDFS_ACTIVE_COUNT_LEN equ 1
 BDFS_DRIVE          equ BDFS_ACTIVE_COUNT + BDFS_ACTIVE_COUNT_LEN ; active drive letter ('A'-'F', 0=none)
 BDFS_DRIVE_LEN      equ 1
 BDFS_RAMSIZE        equ BDFS_HDR_SIZE + BDFS_ENT_SIZE + BDFS_TMP_LEN + BDFS_ACTIVE_COUNT_LEN + BDFS_DRIVE_LEN
+
+; Header offsets
+BDFS_HDR_MAGIC_OFFSET        EQU 0       ; 2 bytes
+BDFS_HDR_VOL_NAME_OFFSET     EQU 2       ; 12 bytes
+BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
+
+; Entry offsets (8.3 filename: separate name and ext fields, space-padded, no dot stored)
+BDFS_ENT_NAME_OFFSET         EQU 0       ; 8 bytes, space-padded uppercase basename
+BDFS_ENT_EXT_OFFSET          EQU 8       ; 3 bytes, space-padded uppercase extension
+BDFS_ENT_SECTOR_OFFSET       EQU 11      ; 2 bytes, little-endian
+BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 3 bytes, little-endian
+BDFS_ENT_FLAGS_OFFSET        EQU 16      ; 1 byte
 
 ; ---- bdfs_set_drive / bdfs_get_drive ---------------------------------------
 
