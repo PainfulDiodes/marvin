@@ -78,21 +78,14 @@ bdfs_set_drive:
 
 ; bdfs_get_drive: return the current drive letter
 ; in:  —
-; out: A = drive letter ('A'-'F'), or 0 if no drive has been selected
+; out: A = drive letter ('A'-'F'), or 0 if no drive has been selected (Z/NZ flag is set accordingly)
 ; destroys: AF
 bdfs_get_drive:
     ld a, (BDFS_DRIVE)
+    or a
     ret
 
 ; ---- helpers ---------------------------------------------------------------
-
-; _bdfs_check_drive: load BDFS_DRIVE and set Z if no drive is selected
-; out: A = drive letter (NZ), or 0 (Z) if no drive selected
-; destroys: AF
-_bdfs_check_drive:
-    ld a, (BDFS_DRIVE)
-    or a
-    ret
 
 ; _bdfs_con_print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
 ; destroys: —
@@ -148,7 +141,7 @@ _bcpenp_done:
 ; out: —
 ; destroys: —
 bdfs_format:
-    call _bdfs_check_drive
+    call bdfs_get_drive
     jp z, _bdfs_no_drive            ; tail call: common error handler
 
     push af
@@ -280,7 +273,7 @@ _bdfs_format_exit:
 ; out: —
 ; destroys: —
 bdfs_dir:
-    call _bdfs_check_drive
+    call bdfs_get_drive
     jp z, _bdfs_no_drive            ; tail call: common error handler
 
     push af
