@@ -156,9 +156,8 @@ bdfs_format:
     push de
     push hl
 
-    ld (BDFS_TMP), hl         ; stash name ptr across erase
-    sub 'A'
-    inc a                           ; slot 1-6
+    ld (BDFS_TMP), hl               ; stash name ptr across erase
+    sub 'A'-1                       ; slot 1-6
     call flash_select_slot
 
     ld hl, _bdfs_msg_fmt_pre
@@ -289,8 +288,7 @@ bdfs_dir:
     push de
     push hl
 
-    sub 'A'
-    inc a                           ; slot 1-6
+    sub 'A'-1                       ; slot 1-6
     call flash_select_slot
 
     xor a                           ; addr[23:16] = 0x00
