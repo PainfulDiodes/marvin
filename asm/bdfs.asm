@@ -38,12 +38,12 @@ BDFS_VOL_NAME_LEN     EQU 12
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
-BDFS_HDR_BUF            EQU BDFS_RAMSTART                           ; directory header r/w buffer
+BDFS_HDR_BUF            EQU BDFS_RAMSTART                          ; directory header r/w buffer
 BDFS_HDR_SIZE           EQU 16
 BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE           ; entry scan buffer
 BDFS_ENT_SIZE           EQU 17
 
-BDFS_TMP                EQU BDFS_ENT_BUF + BDFS_ENT_SIZE           ; scratch register
+BDFS_TMP                EQU BDFS_ENT_BUF + BDFS_ENT_SIZE           ; scratch variable
 BDFS_TMP_LEN            EQU 2
 BDFS_ACTIVE_COUNT       EQU BDFS_TMP + BDFS_TMP_LEN                ; active entry count
 BDFS_ACTIVE_COUNT_LEN   EQU 1
@@ -66,12 +66,12 @@ BDFS_ENT_FLAGS_OFFSET        EQU 16      ; 1 byte
 ; ---- bdfs_set_drive / bdfs_get_drive ---------------------------------------
 
 ; bdfs_set_drive: record the active drive letter
+; NOTE: it is not possible to persistently set the slot - as SPI may also used for 
+; other purposes - so we set the logical current drive this in RAM and set the slot 
+; immediately prior to (and for the duration of) reading/writing to a drive
 ; in:  A = drive letter ('A'-'F')
 ; out: —
 ; destroys: -
-; NOTE: it is not possible to persistently set the slot - as SPI may also used for 
-; other purposes - so we set this as a memory variable and set the slot immediately
-; prior to accessing a device
 bdfs_set_drive:
     ld (BDFS_DRIVE), a
     ret
@@ -94,25 +94,25 @@ _bdfs_check_drive:
     or a
     ret
 
-; _bdfs_con_print_trimmed: print at most B chars from (HL), stopping at first space (trims padding)
+; _bdfs_con_print_entry_name_part: print at most B chars from (HL), stopping at first space (trims padding)
 ; in:  HL = source, B = max chars
 ; destroys: —
-_bdfs_con_print_trimmed:
+_bdfs_con_print_entry_name_part:
     push af
     push hl
     push bc
-_bcpt_loop:
+_bcpenp_loop:
     ld a, b
     or a
-    jr z, _bpt_done
+    jr z, _bcpenp_done
     ld a, (hl)
     cp ' '
-    jr z, _bpt_done
+    jr z, _bcpenp_done
     call con_putchar
     inc hl
     dec b
-    jr _bcpt_loop
-_bpt_done:
+    jr _bcpenp_loop
+_bcpenp_done:
     pop bc
     pop hl
     pop af
@@ -126,7 +126,7 @@ _bdfs_con_print_entry_name:
     push hl
     ld hl, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
     ld b, BDFS_NAME_LEN
-    call _bdfs_con_print_trimmed
+    call _bdfs_con_print_entry_name_part
     ld a, (BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET)
     cp ' ' ; ext field is space-padded: leading space means no extension
     jr z, _bcpen_done
@@ -134,7 +134,7 @@ _bdfs_con_print_entry_name:
     call con_putchar
     ld hl, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
     ld b, BDFS_EXT_LEN
-    call _bdfs_con_print_trimmed
+    call _bdfs_con_print_entry_name_part
 _bcpen_done:
     pop hl
     pop bc
