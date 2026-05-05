@@ -189,11 +189,10 @@ _fpp_loop:
     out (SPI_CTRL), a
     jp flash_poll_busy          ; tail call: Z=ok NZ=timeout
 
-; flash_select_slot: select active cartridge slot and cache its JEDEC ID
+; flash_select_slot: select active cartridge slot - defined in W25Q_CS - and cache the device JEDEC ID
 ; in:  A = slot number (1-6)
 ; out: —  (JEDEC ID cached in W25Q_ID_MFR, W25Q_ID_TYPE, W25Q_ID_CAP)
 ; destroys: AF
-; note: must be called before first flash operation; default slot is undefined at power-on
 flash_select_slot:
     push bc
     inc a                       ; A = slot + 1 (bit position of CS line)
