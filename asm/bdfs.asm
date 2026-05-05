@@ -94,6 +94,29 @@ _bdfs_check_drive:
     or a
     ret
 
+; _bdfs_con_print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
+; destroys: —
+_bdfs_con_print_entry_name:
+    push af
+    push bc
+    push hl
+    ld hl, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
+    ld b, BDFS_NAME_LEN
+    call _bdfs_con_print_entry_name_part
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET)
+    cp ' ' ; ext field is space-padded: leading space means no extension
+    jr z, _bcpen_done
+    ld a, '.'
+    call con_putchar
+    ld hl, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
+    ld b, BDFS_EXT_LEN
+    call _bdfs_con_print_entry_name_part
+_bcpen_done:
+    pop hl
+    pop bc
+    pop af
+    ret
+
 ; _bdfs_con_print_entry_name_part: print at most B chars from (HL), stopping at first space (trims padding)
 ; in:  HL = source, B = max chars
 ; destroys: —
@@ -115,29 +138,6 @@ _bcpenp_loop:
 _bcpenp_done:
     pop bc
     pop hl
-    pop af
-    ret
-
-; _bdfs_con_print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
-; destroys: —
-_bdfs_con_print_entry_name:
-    push af
-    push bc
-    push hl
-    ld hl, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
-    ld b, BDFS_NAME_LEN
-    call _bdfs_con_print_entry_name_part
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET)
-    cp ' ' ; ext field is space-padded: leading space means no extension
-    jr z, _bcpen_done
-    ld a, '.'
-    call con_putchar
-    ld hl, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
-    ld b, BDFS_EXT_LEN
-    call _bdfs_con_print_entry_name_part
-_bcpen_done:
-    pop hl
-    pop bc
     pop af
     ret
 
