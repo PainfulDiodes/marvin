@@ -41,7 +41,7 @@ marvin_coldstart:
     ld hl,WELCOME_MSG
     call con_puts
     IFDEF INCLUDE_BDFS
-    ld a, 'A'
+    ld a, 0
     ld (BDFS_DRIVE), a
     ENDIF
 
@@ -364,7 +364,6 @@ _cmd_format_got_arg:
     push hl                         ; save name pointer
 
     call bdfs_get_drive
-    or a
     jr nz, _cmd_format_confirm
     pop hl                          ; discard name ptr
     jp _cmd_bad
