@@ -1,11 +1,11 @@
-; bdfs.asm - BeanDeck File System monitor command implementations
+; bdfs.asm - BeanDeck File System
 ;
-; Drive selection: bdfs_set_drive / bdfs_get_drive map letters 'A'-'F' to slots 1-6.
+; Drive selection: bdfs_set_drive / bdfs_get_drive, letters 'A'-'F' mapped to slots 1-6.
 ; bdfs_format and bdfs_dir operate on the currently selected drive (BDFS_DRIVE must be set).
 
     INCLUDE "asm/chars.inc"
 
-; ---- on-flash directory format constants ------------------------------------
+; ---- flash directory format constants ------------------------------------
 
 BDFS_MAGIC_0          EQU 0xBD
 BDFS_MAGIC_1          EQU 0x01
@@ -14,7 +14,8 @@ BDFS_DATA_START       EQU 0x0001
 
 BDFS_FLAG_ACTIVE      EQU 0x00
 BDFS_FLAG_DELETED_BIT EQU 0
-BDFS_ENT_EMPTY        EQU 0xFF    ; name[0] value meaning no more entries
+
+BDFS_ENT_EMPTY        EQU 0xFF    ; name[0] value meaning no more entries - erase sets all bytes to FF
 
 BDFS_NAME_LEN         EQU 8
 BDFS_EXT_LEN          EQU 3
@@ -37,17 +38,18 @@ BDFS_VOL_NAME_LEN     EQU 12
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
-BDFS_HDR_BUF        equ BDFS_RAMSTART                           ; directory header r/w buffer
-BDFS_HDR_SIZE         EQU 16
-BDFS_ENT_BUF        equ BDFS_HDR_BUF + BDFS_HDR_SIZE           ; entry scan buffer
-BDFS_ENT_SIZE         EQU 17
-BDFS_TMP            equ BDFS_ENT_BUF + BDFS_ENT_SIZE           ; scratch register
-BDFS_TMP_LEN        equ 2
-BDFS_ACTIVE_COUNT   equ BDFS_TMP + BDFS_TMP_LEN                ; active entry count
-BDFS_ACTIVE_COUNT_LEN equ 1
-BDFS_DRIVE          equ BDFS_ACTIVE_COUNT + BDFS_ACTIVE_COUNT_LEN ; active drive letter ('A'-'F', 0=none)
-BDFS_DRIVE_LEN      equ 1
-BDFS_RAMSIZE        equ BDFS_HDR_SIZE + BDFS_ENT_SIZE + BDFS_TMP_LEN + BDFS_ACTIVE_COUNT_LEN + BDFS_DRIVE_LEN
+BDFS_HDR_BUF            EQU BDFS_RAMSTART                           ; directory header r/w buffer
+BDFS_HDR_SIZE           EQU 16
+BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE           ; entry scan buffer
+BDFS_ENT_SIZE           EQU 17
+
+BDFS_TMP                EQU BDFS_ENT_BUF + BDFS_ENT_SIZE           ; scratch register
+BDFS_TMP_LEN            EQU 2
+BDFS_ACTIVE_COUNT       EQU BDFS_TMP + BDFS_TMP_LEN                ; active entry count
+BDFS_ACTIVE_COUNT_LEN   EQU 1
+BDFS_DRIVE              EQU BDFS_ACTIVE_COUNT + BDFS_ACTIVE_COUNT_LEN ; active drive letter ('A'-'F', 0=none)
+BDFS_DRIVE_LEN          EQU 1
+BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + BDFS_TMP_LEN + BDFS_ACTIVE_COUNT_LEN + BDFS_DRIVE_LEN
 
 ; Header offsets
 BDFS_HDR_MAGIC_OFFSET        EQU 0       ; 2 bytes
