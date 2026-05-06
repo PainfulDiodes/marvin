@@ -217,26 +217,26 @@ _bdfs_fmt_reserved:
     ld (de), a
     inc de
     ld (de), a
-; write the buffer to flash
+    ; write the buffer to flash
     ld hl, 0x0000                   ; addr[23:8]
     ld de, BDFS_HDR_BUF
     ld bc, BDFS_HDR_SIZE
     call flash_page_program         ; Z=ok NZ=timeout
     jp nz, _bdfs_format_write_fail
-; read back to buffer
+    ; read back to buffer
     xor a                           ; addr[23:16] = 0x00
     ld hl, 0x0000                   ; addr[15:0]
     ld de, BDFS_HDR_BUF
     ld bc, BDFS_HDR_SIZE
     call flash_read
-; verify
+    ; verify
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
     jr nz, _bdfs_format_magic_fail
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
     jr nz, _bdfs_format_magic_fail
-; format OK
+    ; format OK
     ld hl, _BDFS_MSG_FMT_OK
     call con_puts
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
@@ -289,47 +289,54 @@ bdfs_dir:
     ld de, BDFS_HDR_BUF
     ld bc, BDFS_HDR_SIZE
     call flash_read
-
+    ; is formatted?
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
     jr nz, _bdfs_dir_not_formatted
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
     jr nz, _bdfs_dir_not_formatted
-
+    ; print volume name
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
     call con_puts
     ld a, CHAR_LF
     call con_putchar
 
     xor a
-    ld (BDFS_ACTIVE_COUNT), a
+    ld (BDFS_ACTIVE_COUNT), a   ; reset count of active entries
+
     ld hl, BDFS_HDR_SIZE
     ld (BDFS_TMP), hl
 
 _bdfs_dir_scan:
-    xor a                           ; addr[23:16] = 0x00
+    xor a                     ; addr[23:16] = 0x00
     ld hl, (BDFS_TMP)         ; addr[15:0]
     ld de, BDFS_ENT_BUF
     ld bc, BDFS_ENT_SIZE
     call flash_read
 
+    ; empty entry?
     ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
     cp BDFS_ENT_EMPTY
     jr z, _bdfs_dir_done
-
+    
+    ; advance pointer to next entry
     ld hl, (BDFS_TMP)
     ld bc, BDFS_ENT_SIZE
     add hl, bc
     ld (BDFS_TMP), hl
 
+    ; check flags
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
     jr nz, _bdfs_dir_deleted
 
+    ; process entry
+    ; increment count
     ld a, (BDFS_ACTIVE_COUNT)
     inc a
     ld (BDFS_ACTIVE_COUNT), a
+    ; print entry
     ld hl, _BDFS_MSG_INDENT
     call con_puts
     call _bdfs_con_print_entry_name
