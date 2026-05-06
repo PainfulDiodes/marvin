@@ -30,6 +30,7 @@ BDFS_VOL_NAME_LEN     EQU 12
 
     EXTERN con_puts
     EXTERN con_putchar
+    EXTERN con_putchar_hex
     EXTERN flash_select_slot
     EXTERN flash_sector_erase
     EXTERN flash_page_program
@@ -354,8 +355,7 @@ _bdfs_dir_deleted:
 
 _bdfs_dir_done:
     ld a, (BDFS_ACTIVE_COUNT)
-    add a, '0'
-    call con_putchar
+    call con_putchar_hex
     ld hl, _BDFS_MSG_FILES
     call con_puts
     pop hl
