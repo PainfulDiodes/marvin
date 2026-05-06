@@ -172,7 +172,7 @@ bdfs_format:
     ld (hl), BDFS_MAGIC_1
     inc hl
     ex de, hl                       ; DE = vol_name field ptr
-    ld hl, (BDFS_TMP)         ; HL = name pointer or 0
+    ld hl, (BDFS_TMP)               ; HL = name pointer or 0
     ld a, h
     or l
     jr z, _bdfs_fmt_default_name
@@ -206,7 +206,7 @@ _bdfs_fmt_default_name:
     ld a, (BDFS_DRIVE)
     ld (de), a
     inc de
-    ld b, BDFS_VOL_NAME_LEN - 5     ; 7 null bytes
+    ld b, BDFS_VOL_NAME_LEN - _bdfs_default_prefix_len - 1   ; remaining space, 1 for the drive letter
 _bdfs_fmt_fill_default:
     xor a
     ld (de), a
