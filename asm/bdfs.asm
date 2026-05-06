@@ -217,26 +217,26 @@ _bdfs_fmt_reserved:
     ld (de), a
     inc de
     ld (de), a
-
+; write the buffer to flash
     ld hl, 0x0000                   ; addr[23:8]
     ld de, BDFS_HDR_BUF
     ld bc, BDFS_HDR_SIZE
     call flash_page_program         ; Z=ok NZ=timeout
     jp nz, _bdfs_format_write_fail
-
+; read back to buffer
     xor a                           ; addr[23:16] = 0x00
     ld hl, 0x0000                   ; addr[15:0]
     ld de, BDFS_HDR_BUF
     ld bc, BDFS_HDR_SIZE
     call flash_read
-
+; verify
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
     jr nz, _bdfs_format_magic_fail
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
     jr nz, _bdfs_format_magic_fail
-
+; format OK
     ld hl, _bdfs_msg_fmt_ok
     call con_puts
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
