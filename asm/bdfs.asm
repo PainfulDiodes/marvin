@@ -153,7 +153,7 @@ bdfs_format:
     sub 'A'-1                       ; slot 1-6
     call flash_select_slot
 
-    ld hl, _bdfs_msg_fmt_pre
+    ld hl, _BDFS_MSG_FMT_PRE
     call con_puts
     ld a, (BDFS_DRIVE)
     call con_putchar
@@ -200,13 +200,13 @@ _bdfs_fmt_null_loop:
     djnz _bdfs_fmt_null_loop
     jr _bdfs_fmt_reserved
 _bdfs_fmt_default_name:
-    ld hl, _bdfs_default_prefix
-    ld bc, _bdfs_default_prefix_len
+    ld hl, _BDFS_DEFAULT_PREFIX
+    ld bc, _BDFS_DEFAULT_PREFIX_LEN
     ldir                            ; copy "BDFS", DE now points past it
     ld a, (BDFS_DRIVE)
     ld (de), a
     inc de
-    ld b, BDFS_VOL_NAME_LEN - _bdfs_default_prefix_len - 1   ; remaining space, 1 for the drive letter
+    ld b, BDFS_VOL_NAME_LEN - _BDFS_DEFAULT_PREFIX_LEN - 1   ; remaining space, 1 for the drive letter
 _bdfs_fmt_fill_default:
     xor a
     ld (de), a
@@ -237,7 +237,7 @@ _bdfs_fmt_reserved:
     cp BDFS_MAGIC_1
     jr nz, _bdfs_format_magic_fail
 ; format OK
-    ld hl, _bdfs_msg_fmt_ok
+    ld hl, _BDFS_MSG_FMT_OK
     call con_puts
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
     call con_puts
@@ -246,17 +246,17 @@ _bdfs_fmt_reserved:
     jr _bdfs_format_exit
 
 _bdfs_format_magic_fail:
-    ld hl, _bdfs_msg_fmt_magic_fail
+    ld hl, _BDFS_MSG_FMT_MAGIC_FAIL
     call con_puts
     jr _bdfs_format_exit
 
 _bdfs_format_erase_fail:
-    ld hl, _bdfs_msg_fmt_erase_fail
+    ld hl, _BDFS_MSG_FMT_ERASE_FAIL
     call con_puts
     jr _bdfs_format_exit
 
 _bdfs_format_write_fail:
-    ld hl, _bdfs_msg_fmt_write_fail
+    ld hl, _BDFS_MSG_FMT_WRITE_FAIL
     call con_puts
 
 _bdfs_format_exit:
@@ -330,7 +330,7 @@ _bdfs_dir_scan:
     ld a, (BDFS_ACTIVE_COUNT)
     inc a
     ld (BDFS_ACTIVE_COUNT), a
-    ld hl, _bdfs_msg_indent
+    ld hl, _BDFS_MSG_INDENT
     call con_puts
     call _bdfs_con_print_entry_name
     ld a, CHAR_LF
@@ -338,7 +338,7 @@ _bdfs_dir_scan:
     jr _bdfs_dir_scan
 
 _bdfs_dir_deleted:
-    ld hl, _bdfs_msg_deleted
+    ld hl, _BDFS_MSG_DELETED
     call con_puts
     call _bdfs_con_print_entry_name
     ld a, CHAR_LF
@@ -349,7 +349,7 @@ _bdfs_dir_done:
     ld a, (BDFS_ACTIVE_COUNT)
     add a, '0'
     call con_putchar
-    ld hl, _bdfs_msg_files
+    ld hl, _BDFS_MSG_FILES
     call con_puts
     pop hl
     pop de
@@ -358,7 +358,7 @@ _bdfs_dir_done:
     ret
 
 _bdfs_dir_not_formatted:
-    ld hl, _bdfs_msg_not_formatted
+    ld hl, _BDFS_MSG_NOT_FORMATTED
     call con_puts
     pop hl
     pop de
@@ -369,21 +369,21 @@ _bdfs_dir_not_formatted:
 ; ---- shared error handlers -------------------------------------------------
 
 _bdfs_no_drive:
-    ld hl, _bdfs_msg_no_drive
+    ld hl, _BDFS_MSG_NO_DRIVE
     call con_puts
     ret
 
 ; ---- strings ---------------------------------------------------------------
 
-_bdfs_default_prefix:       db "BDFS-"
-_bdfs_default_prefix_len    equ $ - _bdfs_default_prefix
-_bdfs_msg_fmt_pre:          db "Formatting drive ", 0
-_bdfs_msg_fmt_ok:           db "Format ok - ", 0
-_bdfs_msg_fmt_magic_fail:   db "Format fail (bad magic)", CHAR_LF, 0
-_bdfs_msg_fmt_erase_fail:   db "Format fail (erase timeout)", CHAR_LF, 0
-_bdfs_msg_fmt_write_fail:   db "Format fail (write timeout)", CHAR_LF, 0
-_bdfs_msg_indent:           db "  ", 0
-_bdfs_msg_deleted:          db "  (deleted) ", 0
-_bdfs_msg_files:            db " file(s)", CHAR_LF, 0
-_bdfs_msg_not_formatted:    db "Not formatted", CHAR_LF, 0
-_bdfs_msg_no_drive:         db "No drive selected", CHAR_LF, 0
+_BDFS_DEFAULT_PREFIX:       db "BDFS-"
+_BDFS_DEFAULT_PREFIX_LEN    equ $ - _BDFS_DEFAULT_PREFIX
+_BDFS_MSG_FMT_PRE:          db "Formatting drive ", 0
+_BDFS_MSG_FMT_OK:           db "Format ok - ", 0
+_BDFS_MSG_FMT_MAGIC_FAIL:   db "Format fail (bad magic)", CHAR_LF, 0
+_BDFS_MSG_FMT_ERASE_FAIL:   db "Format fail (erase timeout)", CHAR_LF, 0
+_BDFS_MSG_FMT_WRITE_FAIL:   db "Format fail (write timeout)", CHAR_LF, 0
+_BDFS_MSG_INDENT:           db "  ", 0
+_BDFS_MSG_DELETED:          db "  (deleted) ", 0
+_BDFS_MSG_FILES:            db " file(s)", CHAR_LF, 0
+_BDFS_MSG_NOT_FORMATTED:    db "Not formatted", CHAR_LF, 0
+_BDFS_MSG_NO_DRIVE:         db "No drive selected", CHAR_LF, 0
