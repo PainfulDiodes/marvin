@@ -32,6 +32,7 @@ BDFS_VOL_NAME_LEN     EQU 12
     EXTERN con_putchar
     EXTERN con_putchar_hex
     EXTERN flash_select_slot
+    EXTERN flash_has_device
     EXTERN flash_sector_erase
     EXTERN flash_page_program
     EXTERN flash_read
@@ -153,6 +154,8 @@ bdfs_format:
     ld (BDFS_TMP), hl               ; stash name ptr across erase
     sub 'A'-1                       ; slot 1-6
     call flash_select_slot
+    call flash_has_device
+    jp nz, _bdfs_no_device_exit
 
     ld hl, _BDFS_MSG_FMT_PRE
     call con_puts
@@ -284,6 +287,8 @@ bdfs_dir:
 
     sub 'A'-1                       ; slot 1-6
     call flash_select_slot
+    call flash_has_device
+    jp nz, _bdfs_no_device_exit
 
     xor a                           ; addr[23:16] = 0x00
     ld hl, 0x0000                   ; addr[15:0]
@@ -375,6 +380,15 @@ _bdfs_dir_not_formatted:
 
 ; ---- shared error handlers -------------------------------------------------
 
+_bdfs_no_device_exit:
+    pop hl
+    pop de
+    pop bc
+    pop af
+    ld hl, _BDFS_MSG_NO_DEVICE
+    call con_puts
+    ret
+
 _bdfs_no_drive:
     ld hl, _BDFS_MSG_NO_DRIVE
     call con_puts
@@ -393,4 +407,5 @@ _BDFS_MSG_INDENT:           db "  ", 0
 _BDFS_MSG_DELETED:          db "  (deleted) ", 0
 _BDFS_MSG_FILES:            db " file(s)", CHAR_LF, 0
 _BDFS_MSG_NOT_FORMATTED:    db "Not formatted", CHAR_LF, 0
+_BDFS_MSG_NO_DEVICE:        db "No device in slot", CHAR_LF, 0
 _BDFS_MSG_NO_DRIVE:         db "No drive selected", CHAR_LF, 0
