@@ -27,6 +27,12 @@ MINIMAL_NAME="marvin_minimal"
 
 BASIC_MODULES="EXEC EVAL ASMB MATH DATA"
 
+# Returns true if obj does not exist or src is newer
+needs_rebuild() {
+    local obj=$1 src=$2
+    [ ! -f "$obj" ] || [ "$src" -nt "$obj" ]
+}
+
 # ---- Per-target module lists ----
 # Used by both combined and minimal builds.
 # Non-RA8875 module paths are relative to $MARVIN_ASM; drivers use drivers/ prefix.
@@ -89,7 +95,7 @@ build_target() {
     echo "==========================="
 
     mkdir -p "$OUTDIR"
-    rm -f "$OUTDIR"/*.o "$OUTDIR"/*.lis
+    rm -f "$OUTDIR"/*.lis
 
     # ---- Boot module ----
 
@@ -121,9 +127,13 @@ build_target() {
         echo "Assembling RA8875 modules..."
         for module in $RA8875_MODULES; do
             local obj_name=$(basename "$module")
-            echo "  $module.asm"
-            z88dk-z80asm -l -m -I"$RA8875_DIR" \
-                -o"$OUTDIR/$obj_name.o" "$RA8875_DIR/$module.asm"
+            if needs_rebuild "$OUTDIR/$obj_name.o" "$RA8875_DIR/$module.asm"; then
+                echo "  $module.asm"
+                z88dk-z80asm -l -m -I"$RA8875_DIR" \
+                    -o"$OUTDIR/$obj_name.o" "$RA8875_DIR/$module.asm"
+            else
+                echo "  $module.asm (cached)"
+            fi
         done
     fi
 
@@ -131,29 +141,49 @@ build_target() {
 
     echo ""
     echo "Assembling BBC BASIC modules..."
-    echo "  $BASIC_MAIN.asm"
-    z88dk-z80asm -l -m -o"$OUTDIR/$BASIC_MAIN.o" "$BASIC_SRC/$BASIC_MAIN.asm"
+    if needs_rebuild "$OUTDIR/$BASIC_MAIN.o" "$BASIC_SRC/$BASIC_MAIN.asm"; then
+        echo "  $BASIC_MAIN.asm"
+        z88dk-z80asm -l -m -o"$OUTDIR/$BASIC_MAIN.o" "$BASIC_SRC/$BASIC_MAIN.asm"
+    else
+        echo "  $BASIC_MAIN.asm (cached)"
+    fi
     for module in $BASIC_MODULES; do
         EXTRA_FLAGS=""
         if [ "$module" = "DATA" ]; then
             EXTRA_FLAGS="-DDATA_ORG=$DATA_ORG"
         fi
-        echo "  $module.asm"
-        z88dk-z80asm -l -m $EXTRA_FLAGS -o"$OUTDIR/$module.o" "$BASIC_SRC/$module.asm"
+        if needs_rebuild "$OUTDIR/$module.o" "$BASIC_SRC/$module.asm"; then
+            echo "  $module.asm"
+            z88dk-z80asm -l -m $EXTRA_FLAGS -o"$OUTDIR/$module.o" "$BASIC_SRC/$module.asm"
+        else
+            echo "  $module.asm (cached)"
+        fi
     done
 
-    echo "  HOOK.asm"
-    z88dk-z80asm -l -m -o"$OUTDIR/HOOK.o" "$BBCZ80_DIR/HOOK.asm"
+    if needs_rebuild "$OUTDIR/HOOK.o" "$BBCZ80_DIR/HOOK.asm"; then
+        echo "  HOOK.asm"
+        z88dk-z80asm -l -m -o"$OUTDIR/HOOK.o" "$BBCZ80_DIR/HOOK.asm"
+    else
+        echo "  HOOK.asm (cached)"
+    fi
 
-    echo "  MOS.asm"
-    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/MOS.o" "$BBCZ80_DIR/MOS.asm"
+    if needs_rebuild "$OUTDIR/MOS.o" "$BBCZ80_DIR/MOS.asm"; then
+        echo "  MOS.asm"
+        z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/MOS.o" "$BBCZ80_DIR/MOS.asm"
+    else
+        echo "  MOS.asm (cached)"
+    fi
 
     # ---- Shared BBC BASIC entry point ----
 
     echo ""
     echo "Assembling BBC BASIC entry point..."
-    echo "  ENTRY.asm"
-    z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/ENTRY.o" "$BBCZ80_DIR/ENTRY.asm"
+    if needs_rebuild "$OUTDIR/ENTRY.o" "$BBCZ80_DIR/ENTRY.asm"; then
+        echo "  ENTRY.asm"
+        z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/ENTRY.o" "$BBCZ80_DIR/ENTRY.asm"
+    else
+        echo "  ENTRY.asm (cached)"
+    fi
 
     # ---- Link ----
     # Boot module must be first (contains ORG 0x0000 and jump table)
@@ -245,9 +275,13 @@ build_minimal() {
         echo "Assembling RA8875 modules..."
         for module in $MINIMAL_RA8875_MODULES; do
             local obj_name=$(basename "$module")
-            echo "  $module.asm"
-            z88dk-z80asm -l -m -I"$RA8875_DIR" \
-                -o"$OUTDIR/$obj_name.o" "$RA8875_DIR/$module.asm"
+            if needs_rebuild "$OUTDIR/$obj_name.o" "$RA8875_DIR/$module.asm"; then
+                echo "  $module.asm"
+                z88dk-z80asm -l -m -I"$RA8875_DIR" \
+                    -o"$OUTDIR/$obj_name.o" "$RA8875_DIR/$module.asm"
+            else
+                echo "  $module.asm (cached)"
+            fi
         done
     fi
 
