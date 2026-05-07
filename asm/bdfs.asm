@@ -143,6 +143,32 @@ _bcpenp_done:
     pop af
     ret
 
+; _bdfs_print_decimal: print byte in A as decimal (0-99)
+_bdfs_print_decimal:
+    push af
+    push bc
+    ld b, 0
+_bpd_tens:
+    cp 10
+    jr c, _bpd_units
+    sub 10
+    inc b
+    jr _bpd_tens
+_bpd_units:
+    push af
+    ld a, b
+    or a
+    jr z, _bpd_no_tens
+    add a, '0'
+    call con_putchar
+_bpd_no_tens:
+    pop af
+    add a, '0'
+    call con_putchar
+    pop bc
+    pop af
+    ret
+
 ; ---- bdfs_format -----------------------------------------------------------
 
 ; bdfs_format: erase sector 0 of the current drive and write a BDFS directory header
@@ -442,31 +468,6 @@ _bpdi_print_mb:
     pop de
     pop bc
     pop af
-    ret
-
-; _bdfs_print_decimal: print byte in A as decimal (0-99)
-; destroys: AF
-_bdfs_print_decimal:
-    push bc
-    ld b, 0
-_bpd_tens:
-    cp 10
-    jr c, _bpd_units
-    sub 10
-    inc b
-    jr _bpd_tens
-_bpd_units:
-    push af
-    ld a, b
-    or a
-    jr z, _bpd_no_tens
-    add a, '0'
-    call con_putchar
-_bpd_no_tens:
-    pop af
-    add a, '0'
-    call con_putchar
-    pop bc
     ret
 
 ; ---- shared error handlers -------------------------------------------------
