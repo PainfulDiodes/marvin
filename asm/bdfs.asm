@@ -143,28 +143,45 @@ _bcpenp_done:
     pop af
     ret
 
-; _bdfs_print_decimal: print byte in A as decimal (0-99)
+; _bdfs_print_decimal: print byte in A as decimal (0-255)
 _bdfs_print_decimal:
     push af
     push bc
-    ld b, 0
+    ld b, 0                     ; hundreds
+    ld c, 0                     ; tens
+_bpd_hundreds:
+    cp 100
+    jr c, _bpd_tens
+    sub 100
+    inc b
+    jr _bpd_hundreds
 _bpd_tens:
     cp 10
     jr c, _bpd_units
     sub 10
-    inc b
+    inc c
     jr _bpd_tens
 _bpd_units:
-    push af
+    push af                     ; save units digit
     ld a, b
     or a
-    jr z, _bpd_no_tens
+    jr z, _bpd_no_hundreds
     add a, '0'
-    call con_putchar
-_bpd_no_tens:
+    call con_putchar            ; print hundreds
+    ld a, c
+    add a, '0'
+    call con_putchar            ; print tens (always if hundreds printed)
+    jr _bpd_print_units
+_bpd_no_hundreds:
+    ld a, c
+    or a
+    jr z, _bpd_print_units
+    add a, '0'
+    call con_putchar            ; print tens
+_bpd_print_units:
     pop af
     add a, '0'
-    call con_putchar
+    call con_putchar            ; print units
     pop bc
     pop af
     ret
@@ -395,7 +412,7 @@ _bdfs_dir_deleted:
 
 _bdfs_dir_done:
     ld a, (BDFS_ACTIVE_COUNT)
-    call con_putchar_hex
+    call _bdfs_print_decimal
     ld hl, _BDFS_MSG_FILES
     call con_puts
     pop hl
