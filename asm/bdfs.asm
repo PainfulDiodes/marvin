@@ -28,6 +28,7 @@ BDFS_VOL_NAME_LEN     EQU 12
     PUBLIC bdfs_get_drive
     PUBLIC BDFS_RAMSIZE
     PUBLIC BDFS_DRIVE
+    PUBLIC BDFS_NO_DRIVE_MSG
 
     EXTERN con_puts
     EXTERN con_putchar
@@ -500,7 +501,7 @@ _bdfs_no_device_exit:
     ret
 
 _bdfs_no_drive:
-    ld hl, _BDFS_MSG_NO_DRIVE
+    ld hl, BDFS_NO_DRIVE_MSG
     call con_puts
     ret
 
@@ -520,4 +521,4 @@ _BDFS_MSG_NOT_FORMATTED:    db "Not formatted", CHAR_LF, 0
 _BDFS_MSG_MB:               db "MB", CHAR_LF, 0
 _BDFS_MSG_UNKNOWN_DEVICE:   db "unknown", 0
 _BDFS_MSG_NO_DEVICE:        db "No device in slot", CHAR_LF, 0
-_BDFS_MSG_NO_DRIVE:         db "No drive selected", CHAR_LF, 0
+BDFS_NO_DRIVE_MSG:          db "No drive selected", CHAR_LF, 0
