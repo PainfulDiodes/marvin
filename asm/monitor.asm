@@ -21,8 +21,8 @@
     EXTERN WARM
     ENDIF
     IFDEF INCLUDE_BDFS
-    EXTERN bdfs_format
-    EXTERN bdfs_dir
+    EXTERN bdfs_mon_format
+    EXTERN bdfs_mon_dir
     EXTERN bdfs_set_drive
     EXTERN bdfs_get_drive
     EXTERN BDFS_DRIVE
@@ -396,13 +396,13 @@ _cmd_format_confirmed:
     jr nz, _cmd_format_run
     ld hl, 0                        ; no name arg: use default
 _cmd_format_run:
-    call bdfs_format
+    call bdfs_mon_format
     jp _prompt
 
 ; DIR
 ; d = list directory of current drive (select with @A-@F first)
 _cmd_dir:
-    call bdfs_dir
+    call bdfs_mon_dir
     jp _prompt
 
 ; DRIVE SELECT
