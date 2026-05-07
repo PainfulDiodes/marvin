@@ -17,7 +17,13 @@
     PUBLIC flash_page_program
     PUBLIC flash_select_slot
     PUBLIC flash_has_device
+    PUBLIC flash_get_device_id
     PUBLIC W25Q_RAMSIZE
+    PUBLIC W25Q80_NAME
+    PUBLIC W25Q16_NAME
+    PUBLIC W25Q32_NAME
+    PUBLIC W25Q64_NAME
+    PUBLIC W25Q128_NAME
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
@@ -35,6 +41,17 @@ W25Q_RAMSIZE        equ 4
 flash_has_device:
     ld a, (W25Q_ID_MFR)
     cp W25Q_MFR_WINBOND
+    ret
+
+; flash_get_device_id: return JEDEC ID cached by the last flash_select_slot call
+; out: A = manufacturer ID, B = memory type, C = capacity
+; destroys: AF, BC
+flash_get_device_id:
+    ld a, (W25Q_ID_TYPE)
+    ld b, a
+    ld a, (W25Q_ID_CAP)
+    ld c, a
+    ld a, (W25Q_ID_MFR)
     ret
 
 ; flash_spi_byte: full-duplex SPI byte transfer via BeanBoardSPI interface
@@ -221,3 +238,11 @@ _fss_loop:
     ld (W25Q_ID_CAP), a
     pop bc
     ret
+
+; ---- strings ---------------------------------------------------------------
+
+W25Q80_NAME:    db "W25Q80", 0
+W25Q16_NAME:    db "W25Q16", 0
+W25Q32_NAME:    db "W25Q32", 0
+W25Q64_NAME:    db "W25Q64", 0
+W25Q128_NAME:   db "W25Q128", 0

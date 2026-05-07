@@ -4,6 +4,7 @@
 ; bdfs_format and bdfs_dir operate on the currently selected drive (BDFS_DRIVE must be set).
 
     INCLUDE "asm/chars.inc"
+    INCLUDE "asm/drivers/w25q.inc"
 
 ; ---- flash directory format constants ------------------------------------
 
@@ -33,6 +34,12 @@ BDFS_VOL_NAME_LEN     EQU 12
     EXTERN con_putchar_hex
     EXTERN flash_select_slot
     EXTERN flash_has_device
+    EXTERN flash_get_device_id
+    EXTERN W25Q80_NAME
+    EXTERN W25Q16_NAME
+    EXTERN W25Q32_NAME
+    EXTERN W25Q64_NAME
+    EXTERN W25Q128_NAME
     EXTERN flash_sector_erase
     EXTERN flash_page_program
     EXTERN flash_read
@@ -163,6 +170,7 @@ bdfs_format:
     call con_putchar
     ld a, CHAR_LF
     call con_putchar
+    call _bdfs_print_device_info
 
     ld h, 0x00                      ; addr[23:16]
     ld l, 0x00                      ; addr[15:8]
@@ -302,7 +310,8 @@ bdfs_dir:
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
     jr nz, _bdfs_dir_not_formatted
-    ; print volume name
+    ; print device info and volume name
+    call _bdfs_print_device_info
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
     call con_puts
     ld a, CHAR_LF
@@ -378,6 +387,88 @@ _bdfs_dir_not_formatted:
     pop af
     ret
 
+; ---- helpers ---------------------------------------------------------------
+
+; _bdfs_print_device_info: print JEDEC ID, label, and capacity e.g. "ef4015 W25Q16 2MB\n"
+; destroys: HL
+_bdfs_print_device_info:
+    push af
+    push bc
+    push de
+    call flash_get_device_id        ; A=mfr, B=type, C=cap (BC preserved by con_putchar_hex)
+    call con_putchar_hex            ; print mfr
+    ld a, b
+    call con_putchar_hex            ; print type
+    ld a, c
+    call con_putchar_hex            ; print cap
+    ld a, ' '
+    call con_putchar
+    ; look up label — ld hl does not affect flags so jr z still acts on the preceding cp
+    ld a, c
+    cp W25Q_CAP_16MBIT
+    ld hl, W25Q16_NAME
+    jr z, _bpdi_print_label
+    cp W25Q_CAP_32MBIT
+    ld hl, W25Q32_NAME
+    jr z, _bpdi_print_label
+    cp W25Q_CAP_64MBIT
+    ld hl, W25Q64_NAME
+    jr z, _bpdi_print_label
+    cp W25Q_CAP_128MBIT
+    ld hl, W25Q128_NAME
+    jr z, _bpdi_print_label
+    cp W25Q_CAP_8MBIT
+    ld hl, W25Q80_NAME
+    jr z, _bpdi_print_label
+    ld hl, _BDFS_MSG_UNKNOWN_DEVICE
+_bpdi_print_label:
+    call con_puts                   ; BC preserved via con_putchar; C=cap still valid
+    ld a, ' '
+    call con_putchar
+    ; capacity in MB: 1 << (cap - W25Q_CAP_8MBIT)
+    ld a, c
+    sub W25Q_CAP_8MBIT              ; A = shift count (0=1MB, 1=2MB, ...)
+    ld b, a
+    ld a, 1
+_bpdi_shift:
+    dec b
+    jp m, _bpdi_print_mb
+    rlca
+    jr _bpdi_shift
+_bpdi_print_mb:
+    call _bdfs_print_decimal
+    ld hl, _BDFS_MSG_MB
+    call con_puts
+    pop de
+    pop bc
+    pop af
+    ret
+
+; _bdfs_print_decimal: print byte in A as decimal (0-99)
+; destroys: AF
+_bdfs_print_decimal:
+    push bc
+    ld b, 0
+_bpd_tens:
+    cp 10
+    jr c, _bpd_units
+    sub 10
+    inc b
+    jr _bpd_tens
+_bpd_units:
+    push af
+    ld a, b
+    or a
+    jr z, _bpd_no_tens
+    add a, '0'
+    call con_putchar
+_bpd_no_tens:
+    pop af
+    add a, '0'
+    call con_putchar
+    pop bc
+    ret
+
 ; ---- shared error handlers -------------------------------------------------
 
 _bdfs_no_device_exit:
@@ -407,5 +498,7 @@ _BDFS_MSG_INDENT:           db "  ", 0
 _BDFS_MSG_DELETED:          db "  (deleted) ", 0
 _BDFS_MSG_FILES:            db " file(s)", CHAR_LF, 0
 _BDFS_MSG_NOT_FORMATTED:    db "Not formatted", CHAR_LF, 0
+_BDFS_MSG_MB:               db "MB", CHAR_LF, 0
+_BDFS_MSG_UNKNOWN_DEVICE:   db "unknown", 0
 _BDFS_MSG_NO_DEVICE:        db "No device in slot", CHAR_LF, 0
 _BDFS_MSG_NO_DRIVE:         db "No drive selected", CHAR_LF, 0
