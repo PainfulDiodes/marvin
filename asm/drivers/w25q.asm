@@ -16,6 +16,7 @@
     PUBLIC flash_sector_erase
     PUBLIC flash_page_program
     PUBLIC flash_select_slot
+    PUBLIC flash_has_device
     PUBLIC W25Q_RAMSIZE
 
 ; ---- RAM layout (private to this module) ------------------------------------
@@ -26,6 +27,15 @@ W25Q_ID_TYPE        equ W25Q_RAMSTART + 2   ; 1 byte: JEDEC memory type
 W25Q_ID_CAP         equ W25Q_RAMSTART + 3   ; 1 byte: JEDEC capacity code (see W25Q_CAP_* in w25q.inc)
 W25Q_RAMSIZE        equ 4
 
+
+; flash_has_device: check whether a W25Q device was detected when the slot was last selected
+; in:  — (uses W25Q_ID_MFR cached by flash_select_slot)
+; out: Z = W25Q device present, NZ = no device
+; destroys: AF
+flash_has_device:
+    ld a, (W25Q_ID_MFR)
+    cp W25Q_MFR_WINBOND
+    ret
 
 ; flash_spi_byte: full-duplex SPI byte transfer via BeanBoardSPI interface
 ; in:  A = byte to transmit
