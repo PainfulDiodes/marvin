@@ -7,7 +7,7 @@
 WELCOME_MSG:
                 db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
-                db "2026-05-07\n",0
+                db "2026-05-07a\n",0
 
 
 BAD_CMD_MSG:    
