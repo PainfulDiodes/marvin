@@ -27,6 +27,7 @@
     EXTERN bdfs_get_drive
     EXTERN BDFS_DRIVE
     EXTERN BDFS_HELP_MSG
+    EXTERN BDFS_NO_DRIVE_MSG
     ENDIF
 
 ; ****************************************************
@@ -366,7 +367,9 @@ _cmd_format_got_arg:
     call bdfs_get_drive
     jr nz, _cmd_format_confirm
     pop hl                          ; discard name ptr
-    jp _cmd_bad
+    ld hl, BDFS_NO_DRIVE_MSG
+    call con_puts
+    jp _prompt
 _cmd_format_confirm:
     ld b, a                         ; save drive letter
     ld hl, _msg_fmt_confirm_pre
