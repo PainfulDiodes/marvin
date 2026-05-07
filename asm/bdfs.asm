@@ -144,6 +144,7 @@ _bcpenp_done:
     ret
 
 ; _bdfs_print_decimal: print byte in A as decimal (0-255)
+; TODO this should be moved into a more central location so is available elsewhere
 _bdfs_print_decimal:
     push af
     push bc
