@@ -1,16 +1,16 @@
 ; string.asm - string and display utility functions
 
-    PUBLIC con_print_decimal
+    PUBLIC con_putchar_dec
     PUBLIC hex_byte_val
     PUBLIC con_putchar_hex
 
     EXTERN con_putchar
 
-; con_print_decimal: print byte A as decimal digits (0-255), no leading zeros
+; con_putchar_dec: print byte A as decimal digits (0-255), no leading zeros
 ; in:  A = value
 ; out: —
 ; destroys: AF, BC
-con_print_decimal:
+con_putchar_dec:
     push af
     push bc
     ld b, 0                     ; hundreds digit

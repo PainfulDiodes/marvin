@@ -16,7 +16,7 @@
     EXTERN con_puts
     EXTERN con_putchar
     EXTERN con_putchar_hex
-    EXTERN con_print_decimal
+    EXTERN con_putchar_dec
     EXTERN bdfs_format
     EXTERN bdfs_dir_open
     EXTERN bdfs_dir_next
@@ -136,7 +136,7 @@ _bmd_deleted:
     jr _bmd_scan
 
 _bmd_done:
-    call con_print_decimal          ; A = active entry count
+    call con_putchar_dec          ; A = active entry count
     ld hl, _msg_files
     call con_puts                   ; " file(s)\n"
     ret
@@ -238,7 +238,7 @@ _pdi_shift:
     rlca
     jr _pdi_shift
 _pdi_print_mb:
-    call con_print_decimal
+    call con_putchar_dec
     ld hl, _msg_mb
     call con_puts
     pop hl
