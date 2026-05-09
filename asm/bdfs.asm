@@ -63,20 +63,21 @@ bdfs_get_drive:
 ; in:  HL = volume name string (null-terminated, max BDFS_VOL_NAME_LEN-1 chars), or 0 for default
 ; out: Z=ok (format succeeded)
 ;      NZ=error, A=BDFS_ERR_* code
-; destroys: AF, BC, DE, HL
+; destroys: AF
 bdfs_format:
+    push bc
+    push de
+    push hl
     call bdfs_get_drive
     jr nz, _bdfs_fmt_got_drive
+    pop hl
+    pop de
+    pop bc
     ld a, BDFS_ERR_NO_DRIVE
     or a
     ret
 
 _bdfs_fmt_got_drive:
-    push af
-    push bc
-    push de
-    push hl
-
     ld (BDFS_TMP), hl               ; stash name ptr across erase
     sub 'A'-1                       ; slot 1-6
     call flash_select_slot
@@ -85,7 +86,6 @@ _bdfs_fmt_got_drive:
     pop hl
     pop de
     pop bc
-    pop af
     ld a, BDFS_ERR_NO_DEVICE
     or a
     ret
@@ -98,7 +98,6 @@ _bdfs_fmt_has_device:
     pop hl
     pop de
     pop bc
-    pop af
     ld a, BDFS_ERR_ERASE_FAIL
     or a
     ret
@@ -165,7 +164,6 @@ _bdfs_fmt_reserved:
     pop hl
     pop de
     pop bc
-    pop af
     ld a, BDFS_ERR_WRITE_FAIL
     or a
     ret
@@ -188,7 +186,6 @@ _bdfs_fmt_write_ok:
     pop hl
     pop de
     pop bc
-    pop af
     xor a                           ; Z set, A=0
     ret
 
@@ -196,7 +193,6 @@ _bdfs_fmt_magic_fail:
     pop hl
     pop de
     pop bc
-    pop af
     ld a, BDFS_ERR_VERIFY_FAIL
     or a
     ret
@@ -207,10 +203,14 @@ _bdfs_fmt_magic_fail:
 ; in:  —
 ; out: Z=ok, HL = pointer to null-terminated volume name (in BDFS_HDR_BUF)
 ;      NZ=error, A=BDFS_ERR_* (NO_DRIVE / NO_DEVICE / NOT_FORMATTED)
-; destroys: AF, BC, DE, HL
+; destroys: AF, HL
 bdfs_dir_open:
+    push bc
+    push de
     call bdfs_get_drive
     jr nz, _bdo_got_drive
+    pop de
+    pop bc
     ld a, BDFS_ERR_NO_DRIVE
     or a
     ret
@@ -220,6 +220,8 @@ _bdo_got_drive:
     call flash_select_slot
     call flash_has_device
     jr z, _bdo_has_device
+    pop de
+    pop bc
     ld a, BDFS_ERR_NO_DEVICE
     or a
     ret
@@ -243,10 +245,14 @@ _bdo_has_device:
     ld (BDFS_ACTIVE_COUNT), a
     ; return vol name pointer
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
+    pop de
+    pop bc
     xor a                           ; Z set
     ret
 
 _bdo_not_formatted:
+    pop de
+    pop bc
     ld a, BDFS_ERR_NOT_FORMATTED
     or a
     ret
@@ -257,8 +263,10 @@ _bdo_not_formatted:
 ; in:  — (iterator state in BDFS_TMP / BDFS_ACTIVE_COUNT, set by bdfs_dir_open)
 ; out: Z=ok, HL = pointer to entry (BDFS_ENT_BUF); check flags byte for deleted status
 ;      NZ=done (no more entries), A = active entry count
-; destroys: AF, BC, DE, HL
+; destroys: AF, HL
 bdfs_dir_next:
+    push bc
+    push de
     xor a                           ; addr[23:16] = 0x00
     ld hl, (BDFS_TMP)               ; addr[15:0] = current iterator position
     ld de, BDFS_ENT_BUF
@@ -282,6 +290,8 @@ bdfs_dir_next:
     ld (BDFS_ACTIVE_COUNT), a
 _bdn_return:
     ld hl, BDFS_ENT_BUF
+    pop de
+    pop bc
     xor a                           ; Z set
     ret
 
@@ -290,6 +300,8 @@ _bdn_empty:
     ld b, a                         ; save count
     inc a                           ; ensure non-zero for count 0-254 (NZ signal for "done")
     ld a, b                         ; restore count (LD does not affect flags)
+    pop de
+    pop bc
     ret                             ; NZ, A = active entry count
 
 ; ---- strings ---------------------------------------------------------------
