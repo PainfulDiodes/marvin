@@ -7,7 +7,6 @@
 
     INCLUDE "asm/chars.inc"
     INCLUDE "asm/bdfs.inc"
-    INCLUDE "asm/drivers/w25q.inc"
 
     PUBLIC bdfs_mon_cmd_format
     PUBLIC bdfs_mon_cmd_dir
@@ -21,6 +20,7 @@
     EXTERN con_getchar
     EXTERN con_putchar_hex
     EXTERN con_putchar_dec
+    EXTERN bdfs_has_device
     EXTERN bdfs_format
     EXTERN bdfs_dir_open
     EXTERN bdfs_dir_next
@@ -29,14 +29,9 @@
     EXTERN BDFS_DRIVE
     EXTERN BDFS_HDR_BUF
     EXTERN BDFS_ENT_BUF
-    EXTERN flash_select_slot
-    EXTERN flash_has_device
     EXTERN flash_get_device_id
-    EXTERN W25Q80_NAME
-    EXTERN W25Q16_NAME
-    EXTERN W25Q32_NAME
-    EXTERN W25Q64_NAME
-    EXTERN W25Q128_NAME
+    EXTERN flash_get_device_name
+    EXTERN flash_get_capacity_mb
 
 ; ---- monitor command handlers ----------------------------------------------
 
@@ -125,28 +120,16 @@ _bmcd_bad:
 ; destroys: AF, BC, DE, HL
 bdfs_mon_format:
     push hl                         ; save vol name ptr
-
-    call bdfs_get_drive
-    jr nz, _bmf_got_drive
-    pop hl                          ; discard vol name ptr
-    ld hl, BDFS_NO_DRIVE_MSG
-    call con_puts
-    ld a, BDFS_ERR_NO_DRIVE
-    or a
-    ret
-
-_bmf_got_drive:
-    ; check for device before printing header, to match original output ordering:
-    ; no-device shows "No device in slot" without the "Formatting drive X" header
-    sub 'A'-1
-    call flash_select_slot
-    call flash_has_device
+    call bdfs_has_device
     jr z, _bmf_has_device
     pop hl                          ; discard vol name ptr
+    cp BDFS_ERR_NO_DRIVE
+    ld hl, BDFS_NO_DRIVE_MSG
+    jr z, _bmf_pre_error
     ld hl, _msg_no_device
+_bmf_pre_error:
     call con_puts
-    ld a, BDFS_ERR_NO_DEVICE
-    or a
+    or a                            ; NZ (A = BDFS_ERR_*)
     ret
 
 _bmf_has_device:
@@ -289,39 +272,11 @@ _print_device_info:
     call con_putchar_hex            ; print cap
     ld a, ' '
     call con_putchar
-    ; look up label — ld hl does not affect flags so jr z still acts on the preceding cp
-    ld a, c
-    cp W25Q_CAP_16MBIT
-    ld hl, W25Q16_NAME
-    jr z, _pdi_print_label
-    cp W25Q_CAP_32MBIT
-    ld hl, W25Q32_NAME
-    jr z, _pdi_print_label
-    cp W25Q_CAP_64MBIT
-    ld hl, W25Q64_NAME
-    jr z, _pdi_print_label
-    cp W25Q_CAP_128MBIT
-    ld hl, W25Q128_NAME
-    jr z, _pdi_print_label
-    cp W25Q_CAP_8MBIT
-    ld hl, W25Q80_NAME
-    jr z, _pdi_print_label
-    ld hl, _msg_unknown_device
-_pdi_print_label:
-    call con_puts                   ; BC preserved via con_putchar; C=cap still valid
+    call flash_get_device_name      ; HL = name string
+    call con_puts
     ld a, ' '
     call con_putchar
-    ; capacity in MB: 1 << (cap - W25Q_CAP_8MBIT)
-    ld a, c
-    sub W25Q_CAP_8MBIT              ; A = shift count (0=1MB, 1=2MB, ...)
-    ld b, a
-    ld a, 1
-_pdi_shift:
-    dec b
-    jp m, _pdi_print_mb
-    rlca
-    jr _pdi_shift
-_pdi_print_mb:
+    call flash_get_capacity_mb      ; A = MB
     call con_putchar_dec
     ld hl, _msg_mb
     call con_puts
@@ -379,7 +334,6 @@ _msg_deleted:           db "  (deleted) ", 0
 _msg_files:             db " file(s)", CHAR_LF, 0
 _msg_not_formatted:     db "Not formatted", CHAR_LF, 0
 _msg_mb:                db "MB", CHAR_LF, 0
-_msg_unknown_device:    db "unknown", 0
 _msg_no_device:         db "No device in slot", CHAR_LF, 0
 BDFS_NO_DRIVE_MSG:      db "No drive selected", CHAR_LF, 0
 
