@@ -2,12 +2,14 @@
 ;
 ; bdfs_init: initialise RAM state; call once at startup.
 ; Drive selection: bdfs_set_drive / bdfs_get_drive, letters 'A'-'F' mapped to slots 1-6.
+; bdfs_has_device: check whether a device is present on the current drive's slot.
 ; bdfs_format: erase and write header; returns Z=ok, NZ=error (A=BDFS_ERR_*).
 ; bdfs_dir_open / bdfs_dir_next: iterator for directory entries (no output).
 
     INCLUDE "asm/bdfs.inc"
 
     PUBLIC bdfs_init
+    PUBLIC bdfs_has_device
     PUBLIC bdfs_format
     PUBLIC bdfs_dir_open
     PUBLIC bdfs_dir_next
@@ -65,6 +67,27 @@ bdfs_set_drive:
 ; destroys: AF
 bdfs_get_drive:
     ld a, (BDFS_DRIVE)
+    or a
+    ret
+
+; bdfs_has_device: check whether a device is present on the current drive's slot
+; Side effect: selects the slot (JEDEC ID cache populated for flash_get_device_id)
+; in:  — (uses BDFS_DRIVE)
+; out: Z=device present
+;      NZ=no device, A=BDFS_ERR_NO_DRIVE or BDFS_ERR_NO_DEVICE
+; destroys: AF
+bdfs_has_device:
+    call bdfs_get_drive
+    jr nz, _bhd_got_drive
+    ld a, BDFS_ERR_NO_DRIVE
+    or a
+    ret
+_bhd_got_drive:
+    sub 'A'-1
+    call flash_select_slot
+    call flash_has_device
+    ret z                            ; Z = device present
+    ld a, BDFS_ERR_NO_DEVICE
     or a
     ret
 

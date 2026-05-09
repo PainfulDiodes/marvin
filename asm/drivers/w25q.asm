@@ -18,6 +18,8 @@
     PUBLIC flash_select_slot
     PUBLIC flash_has_device
     PUBLIC flash_get_device_id
+    PUBLIC flash_get_device_name
+    PUBLIC flash_get_capacity_mb
     PUBLIC W25Q_RAMSIZE
     PUBLIC W25Q80_NAME
     PUBLIC W25Q16_NAME
@@ -239,8 +241,52 @@ _fss_loop:
     pop bc
     ret
 
+; flash_get_device_name: return name string for the cached device
+; in:  — (uses W25Q_ID_CAP cache populated by flash_select_slot)
+; out: HL = pointer to null-terminated device name string
+; destroys: AF, BC, HL
+flash_get_device_name:
+    call flash_get_device_id         ; C = cap
+    ld a, c
+    cp W25Q_CAP_16MBIT
+    ld hl, W25Q16_NAME
+    ret z
+    cp W25Q_CAP_32MBIT
+    ld hl, W25Q32_NAME
+    ret z
+    cp W25Q_CAP_64MBIT
+    ld hl, W25Q64_NAME
+    ret z
+    cp W25Q_CAP_128MBIT
+    ld hl, W25Q128_NAME
+    ret z
+    cp W25Q_CAP_8MBIT
+    ld hl, W25Q80_NAME
+    ret z
+    ld hl, _MSG_UNKNOWN_DEVICE
+    ret
+
+; flash_get_capacity_mb: return device capacity in megabytes
+; in:  — (uses W25Q_ID_CAP cache populated by flash_select_slot)
+; out: A = capacity in MB
+; destroys: AF, BC
+flash_get_capacity_mb:
+    call flash_get_device_id         ; C = cap
+    ld a, c
+    sub W25Q_CAP_8MBIT               ; shift count (0=1MB, 1=2MB, ...)
+    ld b, a
+    ld a, 1
+_fgcm_shift:
+    dec b
+    jp m, _fgcm_done
+    rlca
+    jr _fgcm_shift
+_fgcm_done:
+    ret
+
 ; ---- strings ---------------------------------------------------------------
 
+_MSG_UNKNOWN_DEVICE:    db "unknown", 0
 W25Q80_NAME:    db "W25Q80", 0
 W25Q16_NAME:    db "W25Q16", 0
 W25Q32_NAME:    db "W25Q32", 0
