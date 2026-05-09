@@ -1,7 +1,7 @@
 ; bdfs_mon.asm - BDFS monitor presentation layer
 ;
 ; Wraps bdfs.asm pure functions with console output for the monitor.
-; _cmd_format and _cmd_dir in monitor.asm call bdfs_mon_format / bdfs_mon_dir.
+; Command handlers (bdfs_mon_cmd_*) are called from monitor.asm dispatch stubs.
 
     IFDEF INCLUDE_BDFS
 
@@ -9,18 +9,23 @@
     INCLUDE "asm/bdfs.inc"
     INCLUDE "asm/drivers/w25q.inc"
 
+    PUBLIC bdfs_mon_cmd_format
+    PUBLIC bdfs_mon_cmd_dir
+    PUBLIC bdfs_mon_cmd_drive
     PUBLIC bdfs_mon_format
     PUBLIC bdfs_mon_dir
     PUBLIC BDFS_NO_DRIVE_MSG
 
     EXTERN con_puts
     EXTERN con_putchar
+    EXTERN con_getchar
     EXTERN con_putchar_hex
     EXTERN con_putchar_dec
     EXTERN bdfs_format
     EXTERN bdfs_dir_open
     EXTERN bdfs_dir_next
     EXTERN bdfs_get_drive
+    EXTERN bdfs_set_drive
     EXTERN BDFS_DRIVE
     EXTERN BDFS_HDR_BUF
     EXTERN BDFS_ENT_BUF
@@ -32,6 +37,85 @@
     EXTERN W25Q32_NAME
     EXTERN W25Q64_NAME
     EXTERN W25Q128_NAME
+
+; ---- monitor command handlers ----------------------------------------------
+
+; bdfs_mon_cmd_format: 'f' command — confirm and format the current drive
+; in:  HL = pointer into CMD_BUFFER past 'f' (optional volume name arg follows)
+; out: — (all output already printed)
+; destroys: AF, BC, DE, HL
+bdfs_mon_cmd_format:
+_bcf_skip_sp:
+    ld a, (hl)
+    cp ' '
+    jr nz, _bcf_got_arg
+    inc hl
+    jr _bcf_skip_sp
+_bcf_got_arg:
+    push hl                          ; save name pointer
+
+    call bdfs_get_drive
+    jr nz, _bcf_confirm
+    pop hl                           ; discard name ptr
+    ld hl, BDFS_NO_DRIVE_MSG
+    call con_puts
+    ret
+
+_bcf_confirm:
+    ld b, a                          ; save drive letter
+    ld hl, _msg_fmt_confirm_pre
+    call con_puts                    ; "Format "
+    ld a, b
+    call con_putchar                 ; drive letter
+    ld hl, _msg_fmt_confirm_post
+    call con_puts                    ; "? y/n "
+    call con_getchar
+    ld b, a                          ; save response before echo clobbers A
+    call con_putchar                 ; echo
+    ld a, CHAR_LF
+    call con_putchar
+    ld a, b
+    cp 'y'
+    jr z, _bcf_confirmed
+    pop hl                           ; discard name ptr: user declined
+    ret
+
+_bcf_confirmed:
+    pop hl                           ; restore name pointer
+    ld a, (hl)
+    or a
+    jr nz, _bcf_run
+    ld hl, 0                         ; no name arg: use default
+_bcf_run:
+    call bdfs_mon_format
+    ret
+
+; bdfs_mon_cmd_dir: 'd' command — list current drive directory
+; in:  —
+; out: — (all output already printed)
+; destroys: AF, BC, DE, HL
+bdfs_mon_cmd_dir:
+    call bdfs_mon_dir
+    ret
+
+; bdfs_mon_cmd_drive: '@' command — select drive A-F
+; in:  HL = pointer to drive letter char in CMD_BUFFER
+; out: — (error message printed on invalid input)
+; destroys: AF
+bdfs_mon_cmd_drive:
+    ld a, (hl)
+    and 0dfh                         ; fold lowercase to uppercase
+    cp 'A'
+    jr c, _bcd_bad
+    cp 'G'
+    jr nc, _bcd_bad
+    call bdfs_set_drive
+    ret
+
+_bcd_bad:
+    ld hl, _msg_bad_drive
+    call con_puts
+    ret
 
 ; ---- bdfs_mon_format -------------------------------------------------------
 
@@ -282,6 +366,9 @@ _derr_print:
 
 ; ---- strings ---------------------------------------------------------------
 
+_msg_fmt_confirm_pre:   db "Format ", 0
+_msg_fmt_confirm_post:  db "? y/n ", 0
+_msg_bad_drive:         db "Invalid drive", CHAR_LF, 0
 _msg_fmt_pre:           db "Formatting drive ", 0
 _msg_fmt_ok:            db "Format ok - ", 0
 _msg_fmt_magic_fail:    db "Format fail (bad magic)", CHAR_LF, 0

@@ -1,11 +1,13 @@
 ; bdfs.asm - BeanDeck File System (pure data/operation layer)
 ;
+; bdfs_init: initialise RAM state; call once at startup.
 ; Drive selection: bdfs_set_drive / bdfs_get_drive, letters 'A'-'F' mapped to slots 1-6.
 ; bdfs_format: erase and write header; returns Z=ok, NZ=error (A=BDFS_ERR_*).
 ; bdfs_dir_open / bdfs_dir_next: iterator for directory entries (no output).
 
     INCLUDE "asm/bdfs.inc"
 
+    PUBLIC bdfs_init
     PUBLIC bdfs_format
     PUBLIC bdfs_dir_open
     PUBLIC bdfs_dir_next
@@ -35,7 +37,16 @@ BDFS_DRIVE              EQU BDFS_ACTIVE_COUNT + BDFS_ACTIVE_COUNT_LEN ; active d
 BDFS_DRIVE_LEN          EQU 1
 BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + BDFS_TMP_LEN + BDFS_ACTIVE_COUNT_LEN + BDFS_DRIVE_LEN
 
-; ---- bdfs_set_drive / bdfs_get_drive ---------------------------------------
+; ---- bdfs_init / bdfs_set_drive / bdfs_get_drive ---------------------------
+
+; bdfs_init: initialise BDFS RAM state; call once at system startup
+; in:  —
+; out: —
+; destroys: AF
+bdfs_init:
+    xor a
+    ld (BDFS_DRIVE), a
+    ret
 
 ; bdfs_set_drive: record the active drive letter
 ; NOTE: it is not possible to persistently set the slot - as SPI may also be used for

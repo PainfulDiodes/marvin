@@ -21,13 +21,12 @@
     EXTERN WARM
     ENDIF
     IFDEF INCLUDE_BDFS
-    EXTERN bdfs_mon_format
-    EXTERN bdfs_mon_dir
-    EXTERN bdfs_set_drive
+    EXTERN bdfs_init
     EXTERN bdfs_get_drive
-    EXTERN BDFS_DRIVE
+    EXTERN bdfs_mon_cmd_format
+    EXTERN bdfs_mon_cmd_dir
+    EXTERN bdfs_mon_cmd_drive
     EXTERN BDFS_HELP_MSG
-    EXTERN BDFS_NO_DRIVE_MSG
     ENDIF
 
 ; ****************************************************
@@ -42,8 +41,7 @@ marvin_coldstart:
     ld hl,WELCOME_MSG
     call con_puts
     IFDEF INCLUDE_BDFS
-    ld a, 0
-    ld (BDFS_DRIVE), a
+    call bdfs_init
     ENDIF
 
 marvin_warmstart:
@@ -54,8 +52,7 @@ _prompt:
     ; point HL to the beginning of the input buffer
     ld hl,CMD_BUFFER
     IFDEF INCLUDE_BDFS
-    ld a, (BDFS_DRIVE)
-    or a
+    call bdfs_get_drive
     jr z, _prompt_no_drive
     call con_putchar            ; drive letter
 _prompt_no_drive:
@@ -354,71 +351,20 @@ _cmd_load_end:
 ; FORMAT
 ; f [name] = format current drive (select with @A-@F first); prompts for confirmation
 _cmd_format:
-    ; skip spaces, find optional volume name argument
-_cmd_format_skip_sp:
-    ld a, (hl)
-    cp ' '
-    jr nz, _cmd_format_got_arg
-    inc hl
-    jr _cmd_format_skip_sp
-_cmd_format_got_arg:
-    push hl                         ; save name pointer
-
-    call bdfs_get_drive
-    jr nz, _cmd_format_confirm
-    pop hl                          ; discard name ptr
-    ld hl, BDFS_NO_DRIVE_MSG
-    call con_puts
-    jp _prompt
-_cmd_format_confirm:
-    ld b, a                         ; save drive letter
-    ld hl, _msg_fmt_confirm_pre
-    call con_puts                   ; "Format "
-    ld a, b
-    call con_putchar                ; drive letter
-    ld hl, _msg_fmt_confirm_post
-    call con_puts                   ; "? y/n "
-    call con_getchar
-    ld b, a                         ; save response before echo clobbers A
-    call con_putchar                ; echo
-    ld a, CHAR_LF
-    call con_putchar
-    ld a, b
-    cp 'y'
-    jr z, _cmd_format_confirmed
-    pop hl                          ; discard name ptr: user declined
-    jp _prompt
-_cmd_format_confirmed:
-    pop hl                          ; restore name pointer
-
-    ld a, (hl)
-    or a
-    jr nz, _cmd_format_run
-    ld hl, 0                        ; no name arg: use default
-_cmd_format_run:
-    call bdfs_mon_format
+    call bdfs_mon_cmd_format
     jp _prompt
 
 ; DIR
 ; d = list directory of current drive (select with @A-@F first)
 _cmd_dir:
-    call bdfs_mon_dir
+    call bdfs_mon_cmd_dir
     jp _prompt
 
 ; DRIVE SELECT
 ; @A-@F or @a-@f = select drive A-F
 _cmd_drive:
-    ld a, (hl)
-    and 0dfh                        ; fold lowercase to uppercase
-    cp 'A'
-    jp c, _cmd_bad
-    cp 'G'
-    jp nc, _cmd_bad
-    call bdfs_set_drive
+    call bdfs_mon_cmd_drive
     jp _prompt
-
-_msg_fmt_confirm_pre:   db "Format ", 0
-_msg_fmt_confirm_post:  db "? y/n ", 0
 
     ENDIF
 
