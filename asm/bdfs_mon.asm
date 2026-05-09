@@ -45,23 +45,23 @@
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL
 bdfs_mon_cmd_format:
-_bcf_skip_sp:
+_bmcf_skip_sp:
     ld a, (hl)
     cp ' '
-    jr nz, _bcf_got_arg
+    jr nz, _bmcf_got_arg
     inc hl
-    jr _bcf_skip_sp
-_bcf_got_arg:
+    jr _bmcf_skip_sp
+_bmcf_got_arg:
     push hl                          ; save name pointer
 
     call bdfs_get_drive
-    jr nz, _bcf_confirm
+    jr nz, _bmcf_confirm
     pop hl                           ; discard name ptr
     ld hl, BDFS_NO_DRIVE_MSG
     call con_puts
     ret
 
-_bcf_confirm:
+_bmcf_confirm:
     ld b, a                          ; save drive letter
     ld hl, _msg_fmt_confirm_pre
     call con_puts                    ; "Format "
@@ -76,17 +76,17 @@ _bcf_confirm:
     call con_putchar
     ld a, b
     cp 'y'
-    jr z, _bcf_confirmed
+    jr z, _bmcf_confirmed
     pop hl                           ; discard name ptr: user declined
     ret
 
-_bcf_confirmed:
+_bmcf_confirmed:
     pop hl                           ; restore name pointer
     ld a, (hl)
     or a
-    jr nz, _bcf_run
+    jr nz, _bmcf_run
     ld hl, 0                         ; no name arg: use default
-_bcf_run:
+_bmcf_run:
     call bdfs_mon_format
     ret
 
@@ -106,13 +106,13 @@ bdfs_mon_cmd_drive:
     ld a, (hl)
     and 0dfh                         ; fold lowercase to uppercase
     cp 'A'
-    jr c, _bcd_bad
+    jr c, _bmcd_bad
     cp 'G'
-    jr nc, _bcd_bad
+    jr nc, _bmcd_bad
     call bdfs_set_drive
     ret
 
-_bcd_bad:
+_bmcd_bad:
     ld hl, _msg_bad_drive
     call con_puts
     ret
@@ -127,7 +127,7 @@ bdfs_mon_format:
     push hl                         ; save vol name ptr
 
     call bdfs_get_drive
-    jr nz, _bfm_got_drive
+    jr nz, _bmf_got_drive
     pop hl                          ; discard vol name ptr
     ld hl, BDFS_NO_DRIVE_MSG
     call con_puts
@@ -135,13 +135,13 @@ bdfs_mon_format:
     or a
     ret
 
-_bfm_got_drive:
+_bmf_got_drive:
     ; check for device before printing header, to match original output ordering:
     ; no-device shows "No device in slot" without the "Formatting drive X" header
     sub 'A'-1
     call flash_select_slot
     call flash_has_device
-    jr z, _bfm_has_device
+    jr z, _bmf_has_device
     pop hl                          ; discard vol name ptr
     ld hl, _msg_no_device
     call con_puts
@@ -149,7 +149,7 @@ _bfm_got_drive:
     or a
     ret
 
-_bfm_has_device:
+_bmf_has_device:
     ld hl, _msg_fmt_pre
     call con_puts                   ; "Formatting drive "
     ld a, (BDFS_DRIVE)
@@ -159,7 +159,7 @@ _bfm_has_device:
     call _print_device_info         ; preserves HL
     pop hl                          ; restore vol name ptr
     call bdfs_format
-    jr nz, _bfm_error
+    jr nz, _bmf_error
     ; success: "Format ok - <volname>\n"
     ld hl, _msg_fmt_ok
     call con_puts
@@ -170,7 +170,7 @@ _bfm_has_device:
     xor a                           ; Z
     ret
 
-_bfm_error:
+_bmf_error:
     ld b, a                         ; save error code across _format_error call
     call _format_error
     ld a, b
@@ -337,15 +337,15 @@ _pdi_print_mb:
 _format_error:
     cp BDFS_ERR_VERIFY_FAIL
     ld hl, _msg_fmt_magic_fail
-    jr z, _ferr_print
+    jr z, _fe_print
     cp BDFS_ERR_ERASE_FAIL
     ld hl, _msg_fmt_erase_fail
-    jr z, _ferr_print
+    jr z, _fe_print
     cp BDFS_ERR_WRITE_FAIL
     ld hl, _msg_fmt_write_fail
-    jr z, _ferr_print
+    jr z, _fe_print
     ret                             ; no message for other codes (NO_DRIVE/NO_DEVICE handled by caller)
-_ferr_print:
+_fe_print:
     call con_puts
     ret
 
@@ -355,12 +355,12 @@ _ferr_print:
 _dir_error:
     cp BDFS_ERR_NO_DRIVE
     ld hl, BDFS_NO_DRIVE_MSG
-    jr z, _derr_print
+    jr z, _de_print
     cp BDFS_ERR_NOT_FORMATTED
     ld hl, _msg_not_formatted
-    jr z, _derr_print
+    jr z, _de_print
     ld hl, _msg_no_device           ; default: BDFS_ERR_NO_DEVICE
-_derr_print:
+_de_print:
     call con_puts
     ret
 
