@@ -4,7 +4,7 @@
 ; flash_read, flash_sector_erase, and flash_page_program consume their
 ; input registers (they do not restore HL, DE, BC on return).
 ;
-; flash_read disturbs AF' (uses ex af,af' to save addr[23:16] across CS assert).
+; flash_read and flash_page_program disturb AF' (use ex af,af' to save addr[23:16] across CS assert).
 
     INCLUDE "asm/drivers/w25q.inc"
 
@@ -20,6 +20,7 @@
     PUBLIC flash_get_device_id
     PUBLIC flash_get_device_name
     PUBLIC flash_get_capacity_mb
+    PUBLIC flash_get_sector_count
     PUBLIC W25Q_RAMSIZE
     PUBLIC W25Q80_NAME
     PUBLIC W25Q16_NAME
@@ -188,24 +189,26 @@ flash_sector_erase:
     out (SPI_CTRL), a
     jp flash_poll_busy          ; tail call: Z=ok NZ=timeout
 
-; flash_page_program: send Write Enable, write BC bytes from DE to flash page at HL, poll
-; in:  H = addr[23:16], L = addr[15:8]  (page must be 256-byte-aligned; addr[7:0] = 0)
+; flash_page_program: send Write Enable, write BC bytes from DE to flash address A:HL, poll
+; in:  A  = addr[23:16]
+;      HL = addr[15:0]  (H = addr[15:8], L = addr[7:0])
 ;      DE = source (RAM pointer)
-;      BC = byte count (must be ≤ 256)
+;      BC = byte count (must be ≤ remaining bytes in 256-byte page)
 ; out: Z = ok, NZ = timeout
-; destroys: AF, BC, DE, HL
+; destroys: AF, AF', BC, DE, HL
 flash_page_program:
+    ex af, af'                  ; A' = addr[23:16]; save before CS assert clobbers A
     call flash_write_enable
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_PP
     call flash_spi_byte
+    ex af, af'                  ; A = addr[23:16]
+    call flash_spi_byte         ; send addr[23:16]
     ld a, h
-    call flash_spi_byte         ; addr[23:16]
+    call flash_spi_byte         ; send addr[15:8]
     ld a, l
-    call flash_spi_byte         ; addr[15:8]
-    ld a, 0x00
-    call flash_spi_byte         ; addr[7:0] = 0
+    call flash_spi_byte         ; send addr[7:0]
 _fpp_loop:
     ld a, (de)
     call flash_spi_byte
@@ -282,6 +285,23 @@ _fgcm_shift:
     rlca
     jr _fgcm_shift
 _fgcm_done:
+    ret
+
+; flash_get_sector_count: return total 4KB sector count for the current device
+; in:  — (uses W25Q_ID_CAP cached by flash_select_slot)
+; out: HL = sector count (256 for W25Q80, 512 for W25Q16, 1024 for W25Q32, ...)
+; destroys: AF, BC, HL
+flash_get_sector_count:
+    ld a, (W25Q_ID_CAP)
+    sub W25Q_CAP_8MBIT          ; A = shift count (0 for W25Q80, 1 for W25Q16, ...)
+    ld b, a
+    ld hl, 256                  ; base: W25Q80 has 256 sectors
+_fgsc_shift:
+    dec b
+    jp m, _fgsc_done            ; shifted enough
+    add hl, hl                  ; HL <<= 1
+    jr _fgsc_shift
+_fgsc_done:
     ret
 
 ; ---- strings ---------------------------------------------------------------
