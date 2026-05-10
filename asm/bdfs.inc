@@ -18,7 +18,7 @@ BDFS_NAME_LEN         EQU 8
 BDFS_EXT_LEN          EQU 3
 BDFS_VOL_NAME_LEN     EQU 12
 BDFS_HDR_SIZE         EQU 16
-BDFS_ENT_SIZE         EQU 17
+BDFS_ENT_SIZE         EQU 16
 
 ; Directory header offsets
 BDFS_HDR_MAGIC_OFFSET        EQU 0       ; 2 bytes
@@ -29,13 +29,15 @@ BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
 BDFS_ENT_NAME_OFFSET         EQU 0       ; 8 bytes, space-padded uppercase basename
 BDFS_ENT_EXT_OFFSET          EQU 8       ; 3 bytes, space-padded uppercase extension
 BDFS_ENT_SECTOR_OFFSET       EQU 11      ; 2 bytes, little-endian
-BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 3 bytes, little-endian
-BDFS_ENT_FLAGS_OFFSET        EQU 16      ; 1 byte
+BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian (max 65535)
+BDFS_ENT_FLAGS_OFFSET        EQU 15      ; 1 byte
 
-; Error codes returned by bdfs_format, bdfs_dir_open
+; Error codes
 BDFS_ERR_NO_DRIVE       EQU 1
 BDFS_ERR_NO_DEVICE      EQU 2
 BDFS_ERR_NOT_FORMATTED  EQU 3
 BDFS_ERR_ERASE_FAIL     EQU 4
 BDFS_ERR_WRITE_FAIL     EQU 5
 BDFS_ERR_VERIFY_FAIL    EQU 6
+BDFS_ERR_DIR_FULL       EQU 7   ; all 255 entry slots occupied
+BDFS_ERR_DISK_FULL      EQU 8   ; not enough free sectors for the file

@@ -190,7 +190,8 @@ _bdfs_fmt_reserved:
     inc de
     ld (de), a
     ; write the buffer to flash
-    ld hl, 0x0000                   ; addr[23:8]
+    xor a                           ; addr[23:16] = 0x00
+    ld hl, 0x0000                   ; addr[15:0]
     ld de, BDFS_HDR_BUF
     ld bc, BDFS_HDR_SIZE
     call flash_page_program         ; Z=ok NZ=fail
@@ -337,6 +338,80 @@ _bdn_empty:
     pop de
     pop bc
     ret                             ; NZ, A = active entry count
+
+; ---- _bdfs_parse_filename --------------------------------------------------
+
+; _bdfs_parse_filename: parse 8.3 filename string into BDFS_ENT_BUF name/ext fields
+; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
+; out: BDFS_ENT_BUF bytes 0-10 filled (name space-padded to 8, ext space-padded to 3)
+; destroys: AF, BC, DE, HL
+_bdfs_parse_filename:
+    ld de, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
+    ld b, BDFS_NAME_LEN             ; 8 chars remaining in name field
+_pfn_name_loop:
+    ld a, (hl)
+    or a
+    jr z, _pfn_name_end             ; null: end of string before name full
+    cp '.'
+    jr z, _pfn_dot                  ; dot: switch to ext
+    ld (de), a
+    inc hl
+    inc de
+    djnz _pfn_name_loop
+    ; name field full: skip chars until dot or null
+_pfn_skip_to_dot:
+    ld a, (hl)
+    or a
+    jr z, _pfn_no_dot               ; null reached with no dot
+    inc hl
+    cp '.'
+    jr nz, _pfn_skip_to_dot
+    jr _pfn_ext                     ; dot found, HL points to first ext char
+
+_pfn_name_end:
+    ; null found mid-name: space-fill remainder of name field
+_pfn_name_fill:
+    ld a, ' '
+    ld (de), a
+    inc de
+    djnz _pfn_name_fill
+_pfn_no_dot:
+    ; no dot in filename: fill ext field with spaces
+    ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
+    ld b, BDFS_EXT_LEN
+    ld a, ' '
+_pfn_no_dot_fill:
+    ld (de), a
+    inc de
+    djnz _pfn_no_dot_fill
+    ret
+
+_pfn_dot:
+    inc hl                          ; skip past the dot
+    ; space-fill remainder of name field (B = chars still to fill)
+_pfn_name_fill_after_dot:
+    ld a, ' '
+    ld (de), a
+    inc de
+    djnz _pfn_name_fill_after_dot
+_pfn_ext:
+    ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
+    ld b, BDFS_EXT_LEN              ; 3 chars in ext field
+_pfn_ext_loop:
+    ld a, (hl)
+    or a
+    jr z, _pfn_ext_fill             ; null: space-fill remaining ext
+    ld (de), a
+    inc hl
+    inc de
+    djnz _pfn_ext_loop
+    ret                             ; ext field full
+_pfn_ext_fill:
+    ld a, ' '
+    ld (de), a
+    inc de
+    djnz _pfn_ext_fill
+    ret
 
 ; ---- strings ---------------------------------------------------------------
 
