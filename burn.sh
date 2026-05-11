@@ -15,6 +15,12 @@ while getopts "m8" opt; do
 done
 shift $((OPTIND - 1))
 
+if [ -z "$1" ]; then
+    echo "Error: target name is required"
+    echo "Usage: $0 [-m] [-8] target"
+    exit 1
+fi
+
 f=${1%.*} #extract base filename
 
 if [ "$minimal" = true ]; then
