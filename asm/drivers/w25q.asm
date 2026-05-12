@@ -21,6 +21,8 @@
     PUBLIC flash_get_device_name
     PUBLIC flash_get_capacity_mb
     PUBLIC flash_get_sector_count
+    PUBLIC W25Q_SECTOR_SIZE
+    PUBLIC W25Q_PAGE_SIZE
     PUBLIC W25Q_RAMSIZE
     PUBLIC W25Q80_NAME
     PUBLIC W25Q16_NAME

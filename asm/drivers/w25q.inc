@@ -4,6 +4,10 @@
 ; W25Q flash cartridge slots occupy SPI_CS_SLOT1-6.
 ; Port addresses (SPI_CTRL, SPI_DATA) are in system.asm.
 
+; Device geometry
+W25Q_SECTOR_SIZE    EQU 4096    ; erase unit (Sector Erase command, 4KB)
+W25Q_PAGE_SIZE      EQU 256     ; write unit (Page Program command)
+
 ; Command bytes
 W25Q_CMD_JEDEC_ID   EQU 0x9F    ; Read JEDEC ID
 W25Q_CMD_READ       EQU 0x03    ; Read Data

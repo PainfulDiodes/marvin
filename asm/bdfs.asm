@@ -5,6 +5,13 @@
 ; bdfs_has_device: check whether a device is present on the current drive's slot.
 ; bdfs_format: erase and write header; returns Z=ok, NZ=error (A=BDFS_ERR_*).
 ; bdfs_dir_open / bdfs_dir_next: iterator for directory entries (no output).
+;
+; Flash medium assumptions (coupled to underlying device geometry):
+;   Sector size : 4096 bytes — erase unit; directory sector holds exactly 255 entries
+;                 (16-byte header + 255 × 16-byte entries = 4096)
+;   Page size   : 256 bytes  — write unit; file data written in 256-byte pages
+;   Address width: 24 bits   — passed as A:HL (A = addr[23:16], HL = addr[15:0])
+;   Directory   : sector 0; file data starts at sector 1 (BDFS_DATA_START)
 
     INCLUDE "asm/bdfs.inc"
 
@@ -28,14 +35,21 @@
     EXTERN flash_get_sector_count
     EXTERN flash_read
     EXTERN BDFS_RAMSTART
+    EXTERN W25Q_SECTOR_SIZE     ; hardware geometry — erase unit
+    EXTERN W25Q_PAGE_SIZE       ; hardware geometry — write unit
+
+; Aliases coupling BDFS to W25Q geometry (hardware dependency made explicit)
+BDFS_SECTOR_SIZE    EQU W25Q_SECTOR_SIZE
+BDFS_PAGE_SIZE      EQU W25Q_PAGE_SIZE
+BDFS_MAX_ENTRIES    EQU (BDFS_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; header occupies one slot
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
 BDFS_HDR_BUF            EQU BDFS_RAMSTART                                    ; directory header r/w buffer
-BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE                    ; entry scan buffer
-BDFS_DIR_SCAN_OFST      EQU BDFS_ENT_BUF + BDFS_ENT_SIZE                    ; directory iterator scan offset (2 bytes)
+BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE                     ; entry scan buffer
+BDFS_DIR_SCAN_OFST      EQU BDFS_ENT_BUF + BDFS_ENT_SIZE                     ; directory iterator scan offset (2 bytes)
 BDFS_DIR_SCAN_OFST_LEN  EQU 2
-BDFS_ACTIVE_COUNT       EQU BDFS_DIR_SCAN_OFST + BDFS_DIR_SCAN_OFST_LEN     ; active entry count (1 byte)
+BDFS_ACTIVE_COUNT       EQU BDFS_DIR_SCAN_OFST + BDFS_DIR_SCAN_OFST_LEN      ; active entry count (1 byte)
 BDFS_ACTIVE_COUNT_LEN   EQU 1
 BDFS_DRIVE              EQU BDFS_ACTIVE_COUNT + BDFS_ACTIVE_COUNT_LEN        ; active drive letter ('A'-'F', 0=none)
 BDFS_DRIVE_LEN          EQU 1
@@ -429,7 +443,7 @@ _pfn_ext_fill:
 ;      DE = source address in RAM
 ;      BC = length in bytes
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
-; destroys: AF, BC, DE, HL
+; destroys: AF, BC, DE, HL, IX
 bdfs_file_write:
     push bc                     ; save length
     push de                     ; save source
@@ -489,9 +503,9 @@ _bfw_not_formatted:
 
 _bfw_step2:
     ld hl, 0x0000
-    ld (BDFS_TMP1), hl           ; free_entry_offset = 0 (not yet found)
+    ld (BDFS_TMP1), hl          ; free_entry_offset = 0 (not yet found)
     ld hl, BDFS_DATA_START
-    ld (BDFS_TMP2), hl       ; next_free_sector = 1
+    ld (BDFS_TMP2), hl          ; next_free_sector = 1
     ld ix, BDFS_HDR_SIZE        ; scan_offset = first entry
     ld b, 0                     ; entry count
 
@@ -505,7 +519,7 @@ _bfw_scan_loop:
     call flash_read
     pop bc                      ; restore B = entry count
 
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET) ; first char of file name in dir entry
     cp BDFS_ENT_EMPTY
     jr z, _bfw_scan_empty       ; end of directory
 
@@ -514,9 +528,14 @@ _bfw_scan_loop:
     bit BDFS_FLAG_DELETED_BIT, a
     jr nz, _bfw_scan_next
 
-    ; active entry: end_sector = start_sector + ceil(length / 4096)
+    ; active entry: end_sector = start_sector + ceil(length / BDFS_SECTOR_SIZE)
+    ; ceil(n / 4096) = (n + 4095) >> 12. HL holds a 16-bit value so HL >> 12
+    ; requires 12 shifts; instead we load only H (= HL >> 8) and shift 4 more
+    ; times, giving H >> 4 = HL >> 12. Requires length + 4095 <= 0xFFFF, i.e.
+    ; length <= 61440 bytes; files longer than 60 KB will overflow silently.
+    ; TODO: revisit 
     ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
-    ld de, 4095
+    ld de, BDFS_SECTOR_SIZE - 1
     add hl, de
     ld a, h
     srl a
@@ -530,7 +549,7 @@ _bfw_scan_loop:
 
     ; update next_free_sector if end_sector exceeds it
     ex de, hl                   ; DE = end_sector
-    ld hl, (BDFS_TMP2)       ; HL = next_free_sector
+    ld hl, (BDFS_TMP2)          ; HL = next_free_sector
     ld a, d
     cp h
     jr c, _bfw_scan_next        ; end_sector < next_free_sector (high byte)
@@ -548,7 +567,7 @@ _bfw_scan_next:
     add ix, de                  ; advance scan_offset
     inc b
     ld a, b
-    cp 255
+    cp BDFS_MAX_ENTRIES         ; directory sector full
     jp z, _bfw_dir_full
     jr _bfw_scan_loop
 
@@ -560,7 +579,7 @@ _bfw_scan_empty:
     jr nz, _bfw_step3           ; already set
     push ix
     pop hl
-    ld (BDFS_TMP1), hl
+    ld (BDFS_TMP1), hl          ; free_entry_offset
 
 ; --- Step 3: disk-full check ------------------------------------------------
 
@@ -571,10 +590,10 @@ _bfw_step3:
     push de                     ; re-save source
     push bc                     ; re-save length
 
-    ; sectors_needed = (length + 4095) >> 12
+    ; sectors_needed = (length + BDFS_SECTOR_SIZE - 1) >> 12
     ld h, b
     ld l, c                     ; HL = length
-    ld de, 4095
+    ld de, BDFS_SECTOR_SIZE - 1
     add hl, de                  ; HL = length + 4095
     ld a, h
     srl a
@@ -663,8 +682,8 @@ _bfw_page_loop:
     push bc                     ; save remaining count
     push hl                     ; save H = addr[15:8] for post-call increment
     ld a, (BDFS_TMP3)        ; A = addr[23:16]
-    ld bc, 256
-    call flash_page_program     ; A:HL=addr, DE=src, BC=256 → Z=ok NZ=timeout
+    ld bc, BDFS_PAGE_SIZE
+    call flash_page_program     ; A:HL=addr, DE=src, BC=BDFS_PAGE_SIZE → Z=ok NZ=timeout
     pop hl                      ; restore H:L for address increment
     pop bc
     jr nz, _bfw_write_fail
