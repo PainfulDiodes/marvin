@@ -13,12 +13,15 @@ BDFS_FLAG_ACTIVE      EQU 0x00
 BDFS_FLAG_DELETED_BIT EQU 0
 BDFS_ENT_EMPTY        EQU 0xFF    ; name[0] = FF means no more entries
 
-; Field sizes
+; Format field sizes
+; BDFS_HDR_SIZE and BDFS_ENT_SIZE are both multiples of W25Q_PAGE_SIZE (256) and
+; exact divisors of W25Q_SECTOR_SIZE (4096), so reads and writes never cross page
+; or sector boundaries. As a result the directory sector holds exactly 4096/16 - 1 = 255 entries.
 BDFS_NAME_LEN         EQU 8
 BDFS_EXT_LEN          EQU 3
 BDFS_VOL_NAME_LEN     EQU 12
-BDFS_HDR_SIZE         EQU 16
-BDFS_ENT_SIZE         EQU 16
+BDFS_HDR_SIZE         EQU 16   ; 2 (magic) + 12 (vol name) + 2 (reserved)
+BDFS_ENT_SIZE         EQU 16   ; 8 (name) + 3 (ext) + 2 (sector) + 2 (length) + 1 (flags)
 
 ; Directory header offsets
 BDFS_HDR_MAGIC_OFFSET        EQU 0       ; 2 bytes
