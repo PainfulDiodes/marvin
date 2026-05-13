@@ -516,10 +516,10 @@ _bfw_scan_loop:
     xor a
     ld de, BDFS_ENT_BUF
     ld bc, BDFS_ENT_SIZE
-    call flash_read
+    call flash_read                 ; load into entry buffer
     pop bc                          ; restore B = entry count
 
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET) ; first char of file name in dir entry
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET) ; first char of file name in entry buffer
     cp BDFS_ENT_EMPTY
     jr z, _bfw_scan_empty           ; end of directory
 
@@ -559,7 +559,7 @@ _bfw_scan_loop:
     jr z, _bfw_scan_next            ; equal: no update
 _bfw_nfs_update:
     ex de, hl                       ; HL = end_sector
-    ld (_TMP2), hl
+    ld (_TMP2), hl                  ; next_free_sector
 
 _bfw_scan_next:
     ld de, BDFS_ENT_SIZE
@@ -572,7 +572,7 @@ _bfw_scan_next:
 
 _bfw_scan_empty:
     ; record free_entry_offset if not yet found
-    ld hl, (_TMP1)
+    ld hl, (_TMP1)                  ; free_entry_offset
     ld a, h
     or l
     jr nz, _bfw_step3               ; already set
@@ -633,7 +633,7 @@ _bfw_step4_ok:
 ; --- Step 4: erase data sectors ---------------------------------------------
 
     ; IX = next_free_sector; B = sectors_needed (loop count)
-    ld ix, (_TMP2)
+    ld ix, (_TMP2)                  ; next_free_sector
     ld b, a
 
 _bfw_erase_loop:
