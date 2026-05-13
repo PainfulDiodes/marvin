@@ -3,10 +3,10 @@
 ; Included by bdfs.asm (pure data layer) and bdfs_mon.asm (monitor presentation layer).
 
 ; Magic bytes
-BDFS_MAGIC_0          EQU 0xBD
-BDFS_MAGIC_1          EQU 0x01
-BDFS_DIR_SECTOR       EQU 0x0000
-BDFS_DATA_START       EQU 0x0001
+BDFS_MAGIC_0            EQU 0xBD
+BDFS_MAGIC_1            EQU 0x01
+BDFS_DIR_SECTOR         EQU 0x0000
+BDFS_DATA_START_SECTOR  EQU 0x0001
 
 ; Entry flags (bit 0 of flags byte: 0=active, 1=deleted)
 BDFS_FLAG_ACTIVE      EQU 0x00
