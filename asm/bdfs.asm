@@ -39,27 +39,27 @@
     EXTERN W25Q_PAGE_SIZE       ; hardware geometry — write unit
 
 ; Aliases coupling BDFS to W25Q geometry (hardware dependency made explicit)
-BDFS_SECTOR_SIZE    EQU W25Q_SECTOR_SIZE
-BDFS_PAGE_SIZE      EQU W25Q_PAGE_SIZE
-BDFS_MAX_ENTRIES    EQU (BDFS_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; header occupies one slot
+_SECTOR_SIZE    EQU W25Q_SECTOR_SIZE
+_PAGE_SIZE      EQU W25Q_PAGE_SIZE
+_MAX_ENTRIES    EQU (_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; header occupies one slot
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
 BDFS_HDR_BUF            EQU BDFS_RAMSTART                                    ; directory header r/w buffer
 BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE                     ; entry scan buffer
-BDFS_DIR_SCAN_OFST      EQU BDFS_ENT_BUF + BDFS_ENT_SIZE                     ; directory iterator scan offset (2 bytes)
-BDFS_DIR_SCAN_OFST_LEN  EQU 2
-BDFS_ACTIVE_COUNT       EQU BDFS_DIR_SCAN_OFST + BDFS_DIR_SCAN_OFST_LEN      ; active entry count (1 byte)
-BDFS_ACTIVE_COUNT_LEN   EQU 1
-BDFS_DRIVE              EQU BDFS_ACTIVE_COUNT + BDFS_ACTIVE_COUNT_LEN        ; active drive letter ('A'-'F', 0=none)
-BDFS_DRIVE_LEN          EQU 1
-BDFS_TMP1               EQU BDFS_DRIVE + BDFS_DRIVE_LEN                      ; scratch (2 bytes)
-BDFS_TMP1_LEN           EQU 2
-BDFS_TMP2               EQU BDFS_TMP1 + BDFS_TMP1_LEN                        ; scratch (2 bytes)
-BDFS_TMP2_LEN           EQU 2
-BDFS_TMP3               EQU BDFS_TMP2 + BDFS_TMP2_LEN                        ; scratch (2 bytes)
-BDFS_TMP3_LEN           EQU 2
-BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + BDFS_TMP1_LEN + BDFS_TMP2_LEN + BDFS_TMP3_LEN + BDFS_DIR_SCAN_OFST_LEN + BDFS_ACTIVE_COUNT_LEN + BDFS_DRIVE_LEN
+_DIR_SCAN_OFST      EQU BDFS_ENT_BUF + BDFS_ENT_SIZE                     ; directory iterator scan offset (2 bytes)
+_DIR_SCAN_OFST_LEN  EQU 2
+_ACTIVE_COUNT       EQU _DIR_SCAN_OFST + _DIR_SCAN_OFST_LEN      ; active entry count (1 byte)
+_ACTIVE_COUNT_LEN   EQU 1
+BDFS_DRIVE              EQU _ACTIVE_COUNT + _ACTIVE_COUNT_LEN        ; active drive letter ('A'-'F', 0=none)
+_DRIVE_LEN          EQU 1
+_TMP1               EQU BDFS_DRIVE + _DRIVE_LEN                      ; scratch (2 bytes)
+_TMP1_LEN           EQU 2
+_TMP2               EQU _TMP1 + _TMP1_LEN                        ; scratch (2 bytes)
+_TMP2_LEN           EQU 2
+_TMP3               EQU _TMP2 + _TMP2_LEN                        ; scratch (2 bytes)
+_TMP3_LEN           EQU 2
+BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + _TMP1_LEN + _TMP2_LEN + _TMP3_LEN + _DIR_SCAN_OFST_LEN + _ACTIVE_COUNT_LEN + _DRIVE_LEN
 
 ; ---- bdfs_init / bdfs_set_drive / bdfs_get_drive ---------------------------
 
@@ -134,7 +134,7 @@ bdfs_format:
     ret
 
 _bdfs_fmt_got_drive:
-    ld (BDFS_TMP1), hl               ; stash name ptr across erase
+    ld (_TMP1), hl               ; stash name ptr across erase
     sub 'A'-1                       ; slot 1-6
     call flash_select_slot
     call flash_has_device
@@ -166,7 +166,7 @@ _bdfs_fmt_erase_ok:
     ld (hl), BDFS_MAGIC_1
     inc hl
     ex de, hl                       ; DE = vol_name field ptr
-    ld hl, (BDFS_TMP1)               ; HL = name pointer or 0
+    ld hl, (_TMP1)               ; HL = name pointer or 0
     ld a, h
     or l
     jr z, _bdfs_fmt_default_name
@@ -297,9 +297,9 @@ _bdo_has_device:
     jr nz, _bdo_not_formatted
     ; initialise iterator state
     ld hl, BDFS_HDR_SIZE
-    ld (BDFS_DIR_SCAN_OFST), hl
+    ld (_DIR_SCAN_OFST), hl
     xor a
-    ld (BDFS_ACTIVE_COUNT), a
+    ld (_ACTIVE_COUNT), a
     ; return vol name pointer
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
     pop de
@@ -317,7 +317,7 @@ _bdo_not_formatted:
 ; ---- bdfs_dir_next ---------------------------------------------------------
 
 ; bdfs_dir_next: read the next directory entry into BDFS_ENT_BUF
-; in:  — (iterator state in BDFS_DIR_SCAN_OFST / BDFS_ACTIVE_COUNT, set by bdfs_dir_open)
+; in:  — (iterator state in _DIR_SCAN_OFST / _ACTIVE_COUNT, set by bdfs_dir_open)
 ; out: Z=ok, HL = pointer to entry (BDFS_ENT_BUF); check flags byte for deleted status
 ;      NZ=done (no more entries), A = active entry count
 ; destroys: AF, HL
@@ -325,7 +325,7 @@ bdfs_dir_next:
     push bc
     push de
     xor a                           ; addr[23:16] = 0x00
-    ld hl, (BDFS_DIR_SCAN_OFST)          ; addr[15:0] = current iterator position
+    ld hl, (_DIR_SCAN_OFST)          ; addr[15:0] = current iterator position
     ld de, BDFS_ENT_BUF
     ld bc, BDFS_ENT_SIZE
     call flash_read
@@ -334,17 +334,17 @@ bdfs_dir_next:
     cp BDFS_ENT_EMPTY
     jr z, _bdn_empty
     ; advance iterator to next entry
-    ld hl, (BDFS_DIR_SCAN_OFST)
+    ld hl, (_DIR_SCAN_OFST)
     ld bc, BDFS_ENT_SIZE
     add hl, bc
-    ld (BDFS_DIR_SCAN_OFST), hl
+    ld (_DIR_SCAN_OFST), hl
     ; increment active count only for non-deleted entries
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
     jr nz, _bdn_return              ; deleted: skip count increment
-    ld a, (BDFS_ACTIVE_COUNT)
+    ld a, (_ACTIVE_COUNT)
     inc a
-    ld (BDFS_ACTIVE_COUNT), a
+    ld (_ACTIVE_COUNT), a
 _bdn_return:
     ld hl, BDFS_ENT_BUF
     pop de
@@ -353,7 +353,7 @@ _bdn_return:
     ret
 
 _bdn_empty:
-    ld a, (BDFS_ACTIVE_COUNT)
+    ld a, (_ACTIVE_COUNT)
     ld b, a                         ; save count
     inc a                           ; ensure non-zero for count 0-254 (NZ signal for "done")
     ld a, b                         ; restore count (LD does not affect flags)
@@ -495,17 +495,17 @@ _bfw_not_formatted:
 ; --- Step 2: directory scan -------------------------------------------------
 ;
 ; Scans entries to find:
-;   BDFS_TMP1    = free_entry_offset (flash byte address of first empty slot)
-;   BDFS_TMP2 = next_free_sector (sector after the last active file)
+;   _TMP1    = free_entry_offset (flash byte address of first empty slot)
+;   _TMP2 = next_free_sector (sector after the last active file)
 ;
 ; IX = scan_offset (flash byte address of current entry)
 ; B  = entries scanned (up to 255)
 
 _bfw_step2:
     ld hl, 0x0000
-    ld (BDFS_TMP1), hl          ; free_entry_offset = 0 (not yet found)
+    ld (_TMP1), hl          ; free_entry_offset = 0 (not yet found)
     ld hl, BDFS_DATA_START
-    ld (BDFS_TMP2), hl          ; next_free_sector = 1
+    ld (_TMP2), hl          ; next_free_sector = 1
     ld ix, BDFS_HDR_SIZE        ; scan_offset = first entry
     ld b, 0                     ; entry count
 
@@ -528,13 +528,13 @@ _bfw_scan_loop:
     bit BDFS_FLAG_DELETED_BIT, a
     jr nz, _bfw_scan_next
 
-    ; active entry: end_sector = start_sector + ceil(length / BDFS_SECTOR_SIZE)
+    ; active entry: end_sector = start_sector + ceil(length / _SECTOR_SIZE)
     ; ceil(n / 4096) = (n + 4095) >> 12. HL holds a 16-bit value so HL >> 12
     ; requires 12 shifts; instead we load only H (= HL >> 8) and shift 4 more
     ; times, giving H >> 4 = HL >> 12. Requires length + 4095 <= 0xFFFF, i.e.
     ; length <= 61440 bytes; files longer than 60 KB will overflow silently.
     ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
-    ld de, BDFS_SECTOR_SIZE - 1
+    ld de, _SECTOR_SIZE - 1
     add hl, de
     ld a, h
     srl a
@@ -548,7 +548,7 @@ _bfw_scan_loop:
 
     ; update next_free_sector if end_sector exceeds it
     ex de, hl                   ; DE = end_sector
-    ld hl, (BDFS_TMP2)          ; HL = next_free_sector
+    ld hl, (_TMP2)          ; HL = next_free_sector
     ld a, d
     cp h
     jr c, _bfw_scan_next        ; end_sector < next_free_sector (high byte)
@@ -559,26 +559,26 @@ _bfw_scan_loop:
     jr z, _bfw_scan_next        ; equal: no update
 _bfw_nfs_update:
     ex de, hl                   ; HL = end_sector
-    ld (BDFS_TMP2), hl
+    ld (_TMP2), hl
 
 _bfw_scan_next:
     ld de, BDFS_ENT_SIZE
     add ix, de                  ; advance scan_offset
     inc b
     ld a, b
-    cp BDFS_MAX_ENTRIES         ; directory sector full
+    cp _MAX_ENTRIES         ; directory sector full
     jp z, _bfw_dir_full
     jr _bfw_scan_loop
 
 _bfw_scan_empty:
     ; record free_entry_offset if not yet found
-    ld hl, (BDFS_TMP1)
+    ld hl, (_TMP1)
     ld a, h
     or l
     jr nz, _bfw_step3           ; already set
     push ix
     pop hl
-    ld (BDFS_TMP1), hl          ; free_entry_offset
+    ld (_TMP1), hl          ; free_entry_offset
 
 ; --- Step 3: disk-full check ------------------------------------------------
 
@@ -589,10 +589,10 @@ _bfw_step3:
     push de                     ; re-save source
     push bc                     ; re-save length
 
-    ; sectors_needed = (length + BDFS_SECTOR_SIZE - 1) >> 12
+    ; sectors_needed = (length + _SECTOR_SIZE - 1) >> 12
     ld h, b
     ld l, c                     ; HL = length
-    ld de, BDFS_SECTOR_SIZE - 1
+    ld de, _SECTOR_SIZE - 1
     add hl, de                  ; HL = length + 4095
     ld a, h
     srl a
@@ -601,7 +601,7 @@ _bfw_step3:
     srl a                       ; A = sectors_needed
     push af                     ; save sectors_needed
 
-    ld hl, (BDFS_TMP2)       ; HL = next_free_sector
+    ld hl, (_TMP2)       ; HL = next_free_sector
     ld d, 0
     ld e, a
     add hl, de                  ; HL = next_free_sector + sectors_needed
@@ -633,7 +633,7 @@ _bfw_step4_ok:
 ; --- Step 4: erase data sectors ---------------------------------------------
 
     ; IX = next_free_sector; B = sectors_needed (loop count)
-    ld ix, (BDFS_TMP2)
+    ld ix, (_TMP2)
     ld b, a
 
 _bfw_erase_loop:
@@ -658,7 +658,7 @@ _bfw_step5:
 
     ; starting flash address = next_free_sector << 12
     ; addr[23:8] in H:L = sector_num << 4
-    ld hl, (BDFS_TMP2)
+    ld hl, (_TMP2)
     add hl, hl
     add hl, hl
     add hl, hl
@@ -666,7 +666,7 @@ _bfw_step5:
     ld a, h                     ; A = addr[23:16]
     ld h, l                     ; H = addr[15:8]
     ld l, 0                     ; L = addr[7:0] = 0 (page-aligned)
-    ld (BDFS_TMP3), a        ; save addr[23:16] for use across page_program calls
+    ld (_TMP3), a        ; save addr[23:16] for use across page_program calls
 
 _bfw_page_loop:
     ld a, b
@@ -680,24 +680,24 @@ _bfw_page_loop:
     ; full 256-byte page
     push bc                     ; save remaining count
     push hl                     ; save H = addr[15:8] for post-call increment
-    ld a, (BDFS_TMP3)        ; A = addr[23:16]
-    ld bc, BDFS_PAGE_SIZE
-    call flash_page_program     ; A:HL=addr, DE=src, BC=BDFS_PAGE_SIZE → Z=ok NZ=timeout
+    ld a, (_TMP3)        ; A = addr[23:16]
+    ld bc, _PAGE_SIZE
+    call flash_page_program     ; A:HL=addr, DE=src, BC=_PAGE_SIZE → Z=ok NZ=timeout
     pop hl                      ; restore H:L for address increment
     pop bc
     jr nz, _bfw_write_fail
     inc h                       ; addr[15:8]++: advance to next page
     jr nz, _bfw_page_inc_ok
-    ld a, (BDFS_TMP3)        ; H wrapped: propagate carry into addr[23:16]
+    ld a, (_TMP3)        ; H wrapped: propagate carry into addr[23:16]
     inc a
-    ld (BDFS_TMP3), a
+    ld (_TMP3), a
 _bfw_page_inc_ok:
     dec b                       ; remaining -= 256
     jr _bfw_page_loop
 
 _bfw_partial_page:
     ; B = 0, C = remaining bytes (< 256); write and finish
-    ld a, (BDFS_TMP3)        ; A = addr[23:16]
+    ld a, (_TMP3)        ; A = addr[23:16]
     call flash_page_program     ; A:HL=addr, DE=src, BC=C bytes
     jr nz, _bfw_write_fail
 
