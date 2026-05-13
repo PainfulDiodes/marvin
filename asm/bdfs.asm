@@ -11,7 +11,7 @@
 ;                 (16-byte header + 255 × 16-byte entries = 4096)
 ;   Page size   : 256 bytes  — write unit; file data written in 256-byte pages
 ;   Address width: 24 bits   — passed as A:HL (A = addr[23:16], HL = addr[15:0])
-;   Directory   : sector 0; file data starts at sector 1 (BDFS_DATA_START)
+;   Directory   : sector 0; file data starts at sector 1 (BDFS_DATA_START_SECTOR)
 
     INCLUDE "asm/bdfs.inc"
 
@@ -504,8 +504,8 @@ _bfw_not_formatted:
 _bfw_step2:
     ld hl, 0x0000
     ld (_TMP1), hl                  ; free_entry_offset = 0 (not yet found)
-    ld hl, BDFS_DATA_START
-    ld (_TMP2), hl                  ; next_free_sector = 1
+    ld hl, BDFS_DATA_START_SECTOR
+    ld (_TMP2), hl                  ; next_free_sector = first data sector
     ld ix, BDFS_HDR_SIZE            ; scan_offset = first entry
     ld b, 0                         ; entry count
 
