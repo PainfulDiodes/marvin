@@ -12,7 +12,8 @@ for target in beanzee beanboard beandeck; do
     fi
 done
 
-# Clean assembler listing files
+# Clean assembler listing files and generated includes
 rm -f "$SCRIPT_DIR"/asm/*.lis
+rm -f "$SCRIPT_DIR"/asm/version.inc
 rm -f "$SCRIPT_DIR"/asm/drivers/*.lis
 rm -f "$SCRIPT_DIR"/asm/BBCZ80/*.lis

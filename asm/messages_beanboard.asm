@@ -7,7 +7,8 @@
 WELCOME_MSG:
                 db "PainfulDiodes\n"
                 db "MARVIN Z80 monitor\n"
-                db "2026-05-12\n",0
+                INCLUDE "asm/version.inc"
+                db "\n",0
 
 
 BAD_CMD_MSG:    
