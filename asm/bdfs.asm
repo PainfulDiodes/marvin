@@ -6,6 +6,13 @@
 ; bdfs_format: erase and write header; returns Z=ok, NZ=error (A=BDFS_ERR_*).
 ; bdfs_dir_open / bdfs_dir_next: iterator for directory entries (no output).
 ;
+; Deletion and free-space fragmentation:
+;   Deleting a file marks its directory entry as deleted but does not erase its sectors.
+;   New files are written after the last *active* file's end sector, so deleted sectors
+;   at the tail of used space are silently reclaimed; deleted sectors surrounded by active
+;   files are stranded until a full reclaim (e.g. copy all active files to a second drive,
+;   format this drive, copy back - or some other reclaim / defrag process).
+;
 ; Flash medium assumptions (coupled to underlying device geometry):
 ;   Sector size : 4096 bytes — erase unit; directory sector holds exactly 255 entries
 ;                 (16-byte header + 255 × 16-byte entries = 4096)
@@ -547,21 +554,7 @@ _bfw_scan_loop:
     ld d, 0
     ld e, a
     add hl, de                      ; HL = end_sector
-
-    ; update next_free_sector if end_sector exceeds it
-    ex de, hl                       ; DE = end_sector
-    ld hl, (_NEXT_FREE_SECTOR)
-    ld a, d
-    cp h
-    jr c, _bfw_scan_next            ; end_sector < next_free_sector (high byte)
-    jr nz, _bfw_nfs_update          ; end_sector > next_free_sector (high byte)
-    ld a, e
-    cp l
-    jr c, _bfw_scan_next            ; end_sector < next_free_sector (low byte, high equal)
-    jr z, _bfw_scan_next            ; equal: no update
-_bfw_nfs_update:
-    ex de, hl                       ; HL = end_sector
-    ld (_NEXT_FREE_SECTOR), hl
+    ld (_NEXT_FREE_SECTOR), hl      ; always ascending: last active entry wins
 
 _bfw_scan_next:
     ld de, BDFS_ENT_SIZE
