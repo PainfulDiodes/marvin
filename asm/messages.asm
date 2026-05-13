@@ -5,7 +5,9 @@
     PUBLIC BDFS_HELP_MSG
 
 WELCOME_MSG:
-                db "MARVIN 2026-05-12\n"
+                defm "MARVIN "
+                INCLUDE "asm/version.inc"
+                defm "\n"
                 db "A simple Z80 homebrew monitor program\n"
                 db "(c) Stephen Willcock 2024\n"
                 db "https://github.com/PainfulDiodes\n",0

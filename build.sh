@@ -321,6 +321,10 @@ build_minimal() {
 
 # ---- Main ----
 
+# Generate version include from VERSION.txt
+VERSION=$(tr -d '[:space:]' < "$REPO_DIR/VERSION.txt")
+echo "defm \"$VERSION\"" > "$MARVIN_ASM/version.inc"
+
 # Check submodules are initialised
 if [ ! -f "$REPO_DIR/BBCZ80-repo/build.sh" ]; then
     echo "Error: BBCZ80 submodule not initialised."

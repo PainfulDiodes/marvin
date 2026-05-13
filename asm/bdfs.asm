@@ -533,7 +533,6 @@ _bfw_scan_loop:
     ; requires 12 shifts; instead we load only H (= HL >> 8) and shift 4 more
     ; times, giving H >> 4 = HL >> 12. Requires length + 4095 <= 0xFFFF, i.e.
     ; length <= 61440 bytes; files longer than 60 KB will overflow silently.
-    ; TODO: revisit 
     ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
     ld de, BDFS_SECTOR_SIZE - 1
     add hl, de
