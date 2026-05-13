@@ -505,9 +505,9 @@ _bfw_not_formatted:
 
 _bfw_step2:
     ld hl, 0x0000
-    ld (_FREE_ENTRY_OFFSET), hl                  ; = 0 (not yet found)
+    ld (_FREE_ENTRY_OFFSET), hl     ; = 0 (not yet found)
     ld hl, BDFS_DATA_START_SECTOR
-    ld (_NEXT_FREE_SECTOR), hl                  ; = first data sector
+    ld (_NEXT_FREE_SECTOR), hl      ; = first data sector
     ld ix, BDFS_HDR_SIZE            ; scan_offset = first entry
     ld b, 0                         ; entry count
 
