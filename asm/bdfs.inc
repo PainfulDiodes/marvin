@@ -11,7 +11,7 @@ BDFS_DATA_START_SECTOR  EQU 0x0001
 ; Entry flags (bit 0 of flags byte: 0=active, 1=deleted)
 BDFS_FLAG_ACTIVE      EQU 0x00
 BDFS_FLAG_DELETED_BIT EQU 0
-BDFS_ENT_EMPTY        EQU 0xFF    ; name[0] = FF means no more entries
+BDFS_ENT_EMPTY        EQU 0xFF    ; name[0] = FF means no more entries - 0xFF is the erased state, and names can't include 0xFF
 
 ; Format field sizes
 ; BDFS_HDR_SIZE and BDFS_ENT_SIZE are both multiples of W25Q_PAGE_SIZE (256) and
