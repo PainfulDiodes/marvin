@@ -74,6 +74,7 @@ BDFS_ERR_DISK_FULL      EQU 8   ; not enough free sectors for the file
     EXTERN flash_page_program
     EXTERN flash_get_sector_count
     EXTERN flash_bytes_to_sectors
+    EXTERN flash_sector_to_addr
     EXTERN flash_read
     EXTERN BDFS_RAMSTART
     EXTERN W25Q_SECTOR_SIZE     ; hardware geometry — erase unit
@@ -652,16 +653,8 @@ _bfw_step5:
     pop bc                          ; BC = length (pushed last in step 3, so on top)
     pop de                          ; DE = source
 
-    ; starting flash address = next_free_sector << 12
-    ; addr[23:8] in H:L = sector_num << 4
     ld hl, (_NEXT_FREE_SECTOR)
-    add hl, hl
-    add hl, hl
-    add hl, hl
-    add hl, hl                      ; HL = addr[23:8] as H:L
-    ld a, h                         ; A = addr[23:16]
-    ld h, l                         ; H = addr[15:8]
-    ld l, 0                         ; L = addr[7:0] = 0 (page-aligned)
+    call flash_sector_to_addr       ; A = addr[23:16], HL = addr[15:0]
     ld (_PAGE_ADDR_BANK), a         ; save addr[23:16] for use across page_program calls
 
 _bfw_page_loop:
