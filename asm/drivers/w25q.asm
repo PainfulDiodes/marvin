@@ -206,11 +206,15 @@ _fr_loop:
     out (SPI_CTRL), a
     ret
 
-; flash_sector_erase: send Write Enable, erase 4KB sector at HL, poll until done
-; in:  H = addr[23:16], L = addr[15:8]  (sector must be 4KB-aligned; addr[7:0] = 0)
+; flash_sector_erase: send Write Enable, erase a 4KB sector, poll until done
+; in:  HL = sector number
 ; out: Z = ok, NZ = timeout
 ; destroys: AF, BC, DE, HL
 flash_sector_erase:
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl                  ; HL = sector_num << 4 = addr[23:8] (H=addr[23:16], L=addr[15:8])
     call flash_write_enable
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
