@@ -619,12 +619,12 @@ _bfw_step3:
     ; disk full if HL > DE (strictly greater than)
     ld a, h
     cp d
-    jr c, _bfw_step4_ok             ; HL < DE: ok
+    jr c, _bfw_step4             ; HL < DE: ok
     jr nz, _bfw_disk_full           ; H > D: disk full
     ld a, l
     cp e
-    jr c, _bfw_step4_ok             ; HL < DE (low byte, high equal): ok
-    jr z, _bfw_step4_ok             ; HL = DE: exactly fills device, ok
+    jr c, _bfw_step4             ; HL < DE (low byte, high equal): ok
+    jr z, _bfw_step4             ; HL = DE: exactly fills device, ok
 _bfw_disk_full:
     pop af                          ; discard sectors_needed
     pop bc                          ; discard length
@@ -633,21 +633,15 @@ _bfw_disk_full:
     or a
     ret
 
-_bfw_step4_ok:
-    pop af                          ; A = sectors_needed
-
 ; --- Step 4: erase data sectors ---------------------------------------------
-
-    ; IX = next_free_sector; B = sectors_needed (loop count)
+_bfw_step4:
+    pop af                          ; A = sectors_needed
+    ld b, a                         ; B = sectors_needed (loop count)
     ld ix, (_NEXT_FREE_SECTOR)
-    ld b, a
-
 _bfw_erase_loop:
-    push bc                         ; save B = remaining sectors
-    push ix
-    pop hl                          ; HL = current sector number
+    push ix                         ; IX => HL
+    pop hl                          ; = current sector number
     call flash_sector_erase         ; Z=ok, NZ=timeout
-    pop bc
     jr nz, _bfw_erase_fail
     inc ix                          ; next sector
     djnz _bfw_erase_loop

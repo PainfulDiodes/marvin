@@ -1,8 +1,8 @@
 ; w25q.asm - W25Q series NOR flash driver for BeanBoardSPI hardware SPI
 ;
 ; All functions preserve caller registers unless documented otherwise.
-; flash_read, flash_sector_erase, and flash_page_program consume their
-; input registers (they do not restore HL, DE, BC on return).
+; flash_read and flash_page_program consume their input registers
+; (they do not restore HL, DE, BC on return).
 ;
 ; flash_read and flash_page_program disturb AF' (use ex af,af' to save addr[23:16] across CS assert).
 
@@ -209,8 +209,17 @@ _fr_loop:
 ; flash_sector_erase: send Write Enable, erase a 4KB sector, poll until done
 ; in:  HL = sector number
 ; out: Z = ok, NZ = timeout
-; destroys: AF, BC, DE, HL
+; destroys: AF
+;
+; The W25Q sector erase command takes a 24-bit byte address as three bytes:
+; addr[23:16], addr[15:8], addr[7:0]. Sectors are 4096-byte aligned so addr[7:0]
+; is always 0. The full byte address is sector_num << 12; discarding the always-zero
+; low byte gives addr[23:8] = sector_num << 4. Four add hl,hl shifts HL into H:L
+; as addr[23:16]:addr[15:8], ready to send as two SPI bytes.
 flash_sector_erase:
+    push bc
+    push de
+    push hl
     add hl, hl
     add hl, hl
     add hl, hl
@@ -228,7 +237,11 @@ flash_sector_erase:
     call flash_spi_byte         ; addr[7:0] = 0
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
-    jp flash_poll_busy          ; tail call: Z=ok NZ=timeout
+    call flash_poll_busy        ; Z=ok NZ=timeout
+    pop hl
+    pop de
+    pop bc
+    ret
 
 ; flash_page_program: send Write Enable, write BC bytes from DE to flash address A:HL, poll
 ; in:  A  = addr[23:16]
