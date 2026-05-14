@@ -56,6 +56,7 @@ W25Q_CAP_128MBIT    EQU 0x18    ; W25Q128  - 16 MByte
     PUBLIC flash_get_capacity_mb
     PUBLIC flash_get_sector_count
     PUBLIC flash_bytes_to_sectors
+    PUBLIC flash_sector_to_addr
     PUBLIC W25Q_SECTOR_SIZE
     PUBLIC W25Q_PAGE_SIZE
     PUBLIC W25Q_RAMSIZE
@@ -382,6 +383,24 @@ flash_bytes_to_sectors:
     srl a
     srl a
     srl a                           ; A = HL >> 12 = ceil(length / 4096)
+    ret
+
+; flash_sector_to_addr: convert a sector number to a 24-bit flash byte address in A:HL form
+; in:  HL = sector number
+; out: A  = addr[23:16], HL = addr[15:0] (H = addr[15:8], L = 0)
+; destroys: AF, HL
+;
+; byte_addr = sector_num << 12. Split as A:HL for flash_read / flash_page_program:
+;   addr[23:8] = sector_num << 4 (four add hl,hl); then A=H (addr[23:16]),
+;   H=L (addr[15:8]), L=0 (addr[7:0] always 0: sectors are 4096-byte aligned).
+flash_sector_to_addr:
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl                      ; HL = sector_num << 4 = addr[23:8] (H=addr[23:16], L=addr[15:8])
+    ld a, h                         ; A = addr[23:16]
+    ld h, l                         ; H = addr[15:8]
+    ld l, 0                         ; L = addr[7:0] = 0
     ret
 
 ; ---- strings ---------------------------------------------------------------
