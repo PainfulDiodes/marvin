@@ -190,8 +190,7 @@ _bdfs_fmt_got_drive:
     ret
 
 _bdfs_fmt_has_device:
-    ld h, 0x00                      ; addr[23:16]
-    ld l, 0x00                      ; addr[15:8]
+    ld hl, BDFS_DIR_SECTOR          ; sector 0 = directory sector
     call flash_sector_erase         ; Z=ok NZ=fail
     jr z, _bdfs_fmt_erase_ok
     pop hl
@@ -647,10 +646,6 @@ _bfw_erase_loop:
     push bc                         ; save B = remaining sectors
     push ix
     pop hl                          ; HL = current sector number
-    add hl, hl
-    add hl, hl
-    add hl, hl
-    add hl, hl                      ; HL = sector_num << 4 = addr[23:8] (H=addr[23:16], L=addr[15:8])
     call flash_sector_erase         ; Z=ok, NZ=timeout
     pop bc
     jr nz, _bfw_erase_fail

@@ -87,7 +87,7 @@ ALIGN 0x0040
     jp ra8875_console_cursor_show    ; 0x0088 - show software cursor
     jp flash_read                    ; 0x008B - flash read (A=addr[23:16], HL=addr[15:0], DE=dest, BC=len)
     jp flash_page_program            ; 0x008E - flash page program (HL=addr, DE=src, BC=len)
-    jp flash_sector_erase            ; 0x0091 - flash sector erase (H=addr[23:16], L=addr[15:8])
+    jp flash_sector_erase            ; 0x0091 - flash sector erase (HL=sector number)
     jp flash_select_slot             ; 0x0094 - select flash slot (A=slot 1-6)
     jp flash_read_jedec_id           ; 0x0097 - read JEDEC ID (out: A=mfr B=type C=cap)
 _stub:
