@@ -1,10 +1,6 @@
 ; w25q.asm - W25Q series NOR flash driver for BeanBoardSPI hardware SPI
 ;
 ; All functions preserve caller registers unless documented otherwise.
-; flash_read and flash_page_program consume their input registers
-; (they do not restore HL, DE, BC on return).
-;
-; flash_read and flash_page_program disturb AF' (use ex af,af' to save addr[23:16] across CS assert).
 
 ; SPI CS values (SPI_CS_IDLE, SPI_CS_SLOT0-6) are in system.asm.
 ; W25Q flash cartridge slots occupy SPI_CS_SLOT1-6.
@@ -250,8 +246,11 @@ flash_sector_erase:
 ;      DE = source (RAM pointer)
 ;      BC = byte count (must be ≤ remaining bytes in 256-byte page)
 ; out: Z = ok, NZ = timeout
-; destroys: AF, AF', BC, DE, HL
+;      DE = one past last byte written (caller may use this to chain page writes)
+; destroys: AF, AF'
 flash_page_program:
+    push bc
+    push hl
     ex af, af'                  ; A' = addr[23:16]; save before CS assert clobbers A
     call flash_write_enable
     ld a, (W25Q_CS)
@@ -274,7 +273,10 @@ _fpp_loop:
     jr nz, _fpp_loop
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
-    jp flash_poll_busy          ; tail call: Z=ok NZ=timeout
+    call flash_poll_busy        ; Z=ok NZ=timeout; pop does not disturb flags
+    pop hl
+    pop bc
+    ret
 
 ; flash_select_slot: select active cartridge slot - defined in W25Q_CS - and cache the device JEDEC ID
 ; in:  A = slot number (1-6)

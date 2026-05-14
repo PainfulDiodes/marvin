@@ -667,13 +667,11 @@ _bfw_page_loop:
     jr z, _bfw_partial_page         ; B = 0: fewer than 256 bytes remain
 
     ; full 256-byte page
-    push bc                         ; save remaining count
-    push hl                         ; save H = addr[15:8] for post-call increment
     ld a, (_PAGE_ADDR_BANK)         ; A = addr[23:16]
+    push bc                         ; save remaining count
     ld bc, _PAGE_SIZE
-    call flash_page_program         ; A:HL=addr, DE=src, BC=_PAGE_SIZE → Z=ok NZ=timeout
-    pop hl                          ; restore H:L for address increment
-    pop bc
+    call flash_page_program         ; A:HL=addr, DE=src, BC=_PAGE_SIZE → Z=ok NZ=timeout; preserves HL, BC; DE advances
+    pop bc                          ; restore remaining count
     jr nz, _bfw_write_fail
     inc h                           ; addr[15:8]++: advance to next page
     jr nz, _bfw_page_inc_ok
