@@ -6,7 +6,41 @@
 ;
 ; flash_read and flash_page_program disturb AF' (use ex af,af' to save addr[23:16] across CS assert).
 
-    INCLUDE "asm/drivers/w25q.inc"
+; SPI CS values (SPI_CS_IDLE, SPI_CS_SLOT0-6) are in system.asm.
+; W25Q flash cartridge slots occupy SPI_CS_SLOT1-6.
+; Port addresses (SPI_CTRL, SPI_DATA) are in system.asm.
+
+; Device geometry
+W25Q_SECTOR_SIZE    EQU 4096    ; erase unit (Sector Erase command, 4KB)
+W25Q_PAGE_SIZE      EQU 256     ; write unit (Page Program command)
+
+; Command bytes
+W25Q_CMD_JEDEC_ID   EQU 0x9F    ; Read JEDEC ID
+W25Q_CMD_READ       EQU 0x03    ; Read Data
+W25Q_CMD_WREN       EQU 0x06    ; Write Enable
+W25Q_CMD_SE         EQU 0x20    ; Sector Erase (4KB)
+W25Q_CMD_PP         EQU 0x02    ; Page Program
+W25Q_CMD_RDSR       EQU 0x05    ; Read Status Register 1
+
+; Status register bits
+W25Q_BUSY_BIT       EQU 0       ; bit 0: BUSY (1 = operation in progress)
+
+; Polling timeout (loop iterations)
+; At 10MHz Z80 with ~134 T-states/iteration (~13 µs): 0xFFFF ≈ 0.88s
+; Covers W25Q16/W25Q128 worst-case 400ms sector erase.
+W25Q_POLL_TIMEOUT   EQU 0xFFFF
+
+; JEDEC manufacturer IDs
+W25Q_MFR_WINBOND    EQU 0xEF    ; Winbond NOR flash
+
+; Capacity codes (JEDEC third byte, returned by flash_read_jedec_id and cached in W25Q_ID_CAP)
+; Capacity byte = log2(bits); e.g. 0x15 = log2(16Mbit) + constant
+W25Q_CAP_8MBIT      EQU 0x14    ; W25Q80   - 1 MByte
+W25Q_CAP_16MBIT     EQU 0x15    ; W25Q16   - 2 MByte
+W25Q_CAP_32MBIT     EQU 0x16    ; W25Q32   - 4 MByte
+W25Q_CAP_64MBIT     EQU 0x17    ; W25Q64   - 8 MByte
+W25Q_CAP_128MBIT    EQU 0x18    ; W25Q128  - 16 MByte
+; W25Q_CAP_256MBIT EQU 0x19  ; W25Q256 - 32 MByte - not supported: requires 4-byte addressing above 16MB
 
     EXTERN SPI_CTRL, SPI_DATA, SPI_CS_IDLE  ; system.asm - BeanBoardSPI port addresses
     EXTERN W25Q_RAMSTART                    ; system.asm - base address of W25Q RAM block
@@ -21,6 +55,7 @@
     PUBLIC flash_get_device_name
     PUBLIC flash_get_capacity_mb
     PUBLIC flash_get_sector_count
+    PUBLIC flash_bytes_to_sectors
     PUBLIC W25Q_SECTOR_SIZE
     PUBLIC W25Q_PAGE_SIZE
     PUBLIC W25Q_RAMSIZE
@@ -304,6 +339,32 @@ _fgsc_shift:
     add hl, hl                  ; HL <<= 1
     jr _fgsc_shift
 _fgsc_done:
+    ret
+
+; flash_bytes_to_sectors: ceiling division of a byte count by the sector size
+; in:  HL = byte count - max 0xF000 = 61440; files longer than this will overflow silently
+; out: A  = ceil(HL / W25Q_SECTOR_SIZE)
+; destroys: AF, DE, HL
+;
+; NOTE this function is fixed to the sector size being 2^12=4096
+;       Also this calculation effectively limits the max file size to 0xF000 = 61440 
+;       - adding sector_size-1 must not overflow 16 bits
+;
+; num sectors = ceil(length / _SECTOR_SIZE)  
+;   = (length + _SECTOR_SIZE - 1) / _SECTOR_SIZE
+;   = (length + 4096 - 1) / 4096 
+;   = (length + 4096 - 1) >> 12
+; Adding divisor-1 before truncating gives the ceiling without a remainder check.
+; 4096 = 2^12, so >> 12 replaces / 4096; HL >> 12 is done as H >> 4 (load H,
+; shift 4 times) to avoid 12 individual shift instructions.
+flash_bytes_to_sectors:
+    ld de, W25Q_SECTOR_SIZE - 1
+    add hl, de                      ; HL = length + (sector_size - 1)
+    ld a, h
+    srl a
+    srl a
+    srl a
+    srl a                           ; A = HL >> 12 = ceil(length / 4096)
     ret
 
 ; ---- strings ---------------------------------------------------------------

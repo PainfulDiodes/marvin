@@ -22,6 +22,39 @@
 
     INCLUDE "asm/bdfs.inc"
 
+; Magic bytes - used on the directory sector to indicate a formatted drive
+BDFS_MAGIC_0            EQU 0xBD
+BDFS_MAGIC_1            EQU 0x01
+
+; volume layout
+BDFS_DIR_SECTOR         EQU 0x0000
+BDFS_DATA_START_SECTOR  EQU 0x0001
+
+; Entry state
+BDFS_FLAG_ACTIVE      EQU 0x00
+BDFS_ENT_EMPTY        EQU 0xFF    ; name[0] = FF means no more entries; 0xFF is the erased state, names can't include 0xFF
+
+; Format field sizes
+; BDFS_HDR_SIZE and BDFS_ENT_SIZE are both multiples of W25Q_PAGE_SIZE (256) and
+; exact divisors of W25Q_SECTOR_SIZE (4096), so reads and writes never cross page
+; or sector boundaries. As a result the directory sector holds exactly 4096/16 - 1 = 255 entries.
+BDFS_VOL_NAME_LEN     EQU 12
+BDFS_HDR_SIZE         EQU 16   ; 2 (magic) + 12 (vol name) + 2 (reserved)
+BDFS_ENT_SIZE         EQU 16   ; 8 (name) + 3 (ext) + 2 (sector) + 2 (length) + 1 (flags)
+
+; Directory header offsets
+BDFS_HDR_MAGIC_OFFSET        EQU 0       ; 2 bytes
+BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
+
+; Directory entry offsets (additional to those shared via bdfs.inc)
+BDFS_ENT_SECTOR_OFFSET       EQU 11      ; 2 bytes, little-endian
+BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian (max 65535)
+
+; Error codes (additional to those shared via bdfs.inc)
+BDFS_ERR_NO_DEVICE      EQU 2
+BDFS_ERR_DIR_FULL       EQU 7   ; all 255 entry slots occupied
+BDFS_ERR_DISK_FULL      EQU 8   ; not enough free sectors for the file
+
     PUBLIC bdfs_init
     PUBLIC bdfs_has_device
     PUBLIC bdfs_format
@@ -40,6 +73,7 @@
     EXTERN flash_sector_erase
     EXTERN flash_page_program
     EXTERN flash_get_sector_count
+    EXTERN flash_bytes_to_sectors
     EXTERN flash_read
     EXTERN BDFS_RAMSTART
     EXTERN W25Q_SECTOR_SIZE     ; hardware geometry — erase unit
@@ -48,7 +82,7 @@
 ; Aliases coupling BDFS to W25Q geometry (hardware dependency made explicit)
 _SECTOR_SIZE    EQU W25Q_SECTOR_SIZE
 _PAGE_SIZE      EQU W25Q_PAGE_SIZE
-_MAX_ENTRIES    EQU (_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; header occupies one slot
+_MAX_ENTRIES    EQU (_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; -1 : header occupies one slot
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
@@ -537,19 +571,9 @@ _bfw_scan_loop:
     bit BDFS_FLAG_DELETED_BIT, a
     jr nz, _bfw_scan_next
 
-    ; active entry: end_sector = start_sector + ceil(length / _SECTOR_SIZE)
-    ; ceil(n / 4096) = (n + 4095) >> 12. HL holds a 16-bit value so HL >> 12
-    ; requires 12 shifts; instead we load only H (= HL >> 8) and shift 4 more
-    ; times, giving H >> 4 = HL >> 12. Requires length + 4095 <= 0xFFFF, i.e.
-    ; length <= 61440 bytes; files longer than 60 KB will overflow silently.
-    ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
-    ld de, _SECTOR_SIZE - 1
-    add hl, de
-    ld a, h
-    srl a
-    srl a
-    srl a
-    srl a                           ; A = ceil(length / 4096)
+    ; active entry: end_sector = start_sector + num_sectors
+    ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET) ; file length bytes
+    call flash_bytes_to_sectors     ; A = num sectors
     ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
     ld d, 0
     ld e, a
@@ -579,16 +603,9 @@ _bfw_step3:
     push de                         ; re-save source
     push bc                         ; re-save length
 
-    ; sectors_needed = (length + _SECTOR_SIZE - 1) >> 12
     ld h, b
     ld l, c                         ; HL = length
-    ld de, _SECTOR_SIZE - 1
-    add hl, de                      ; HL = length + 4095
-    ld a, h
-    srl a
-    srl a
-    srl a
-    srl a                           ; A = sectors_needed
+    call flash_bytes_to_sectors     ; A = sectors_needed
     push af                         ; save sectors_needed
 
     ld hl, (_NEXT_FREE_SECTOR)
