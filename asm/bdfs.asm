@@ -362,69 +362,67 @@ _dir_next_exit:
 _bdfs_parse_filename:
     ld de, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
     ld b, BDFS_NAME_LEN             ; 8 chars remaining in name field
-_pfn_name_loop:
+_parse_filename_name_loop:
     ld a, (hl)
     or a
-    jr z, _pfn_name_end             ; null: end of string before name full
+    jr z, _parse_filename_name_end  ; null: end of string before name full
     cp '.'
-    jr z, _pfn_dot                  ; dot: switch to ext
+    jr z, _parse_filename_dot       ; dot: switch to ext
     ld (de), a
     inc hl
     inc de
-    djnz _pfn_name_loop
+    djnz _parse_filename_name_loop
     ; name field full: skip chars until dot or null
-_pfn_skip_to_dot:
+_parse_filename_skip_to_dot:
     ld a, (hl)
     or a
-    jr z, _pfn_no_dot               ; null reached with no dot
+    jr z, _parse_filename_no_dot    ; null reached with no dot
     inc hl
     cp '.'
-    jr nz, _pfn_skip_to_dot
-    jr _pfn_ext                     ; dot found, HL points to first ext char
-
-_pfn_name_end:
+    jr nz, _parse_filename_skip_to_dot
+    jr _parse_filename_ext          ; dot found, HL points to first ext char
+_parse_filename_name_end:
     ; null found mid-name: space-fill remainder of name field
-_pfn_name_fill:
+_parse_filename_name_fill:
     ld a, ' '
     ld (de), a
     inc de
-    djnz _pfn_name_fill
-_pfn_no_dot:
+    djnz _parse_filename_name_fill
+_parse_filename_no_dot:
     ; no dot in filename: fill ext field with spaces
     ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
     ld b, BDFS_EXT_LEN
     ld a, ' '
-_pfn_no_dot_fill:
+_parse_filename_no_dot_fill:
     ld (de), a
     inc de
-    djnz _pfn_no_dot_fill
+    djnz _parse_filename_no_dot_fill
     ret
-
-_pfn_dot:
+_parse_filename_dot:
     inc hl                          ; skip past the dot
     ; space-fill remainder of name field (B = chars still to fill)
-_pfn_name_fill_after_dot:
+_parse_filename_name_fill_after_dot:
     ld a, ' '
     ld (de), a
     inc de
-    djnz _pfn_name_fill_after_dot
-_pfn_ext:
+    djnz _parse_filename_name_fill_after_dot
+_parse_filename_ext:
     ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
     ld b, BDFS_EXT_LEN              ; 3 chars in ext field
-_pfn_ext_loop:
+_parse_filename_ext_loop:
     ld a, (hl)
     or a
-    jr z, _pfn_ext_fill             ; null: space-fill remaining ext
+    jr z, _parse_filename_ext_fill  ; null: space-fill remaining ext
     ld (de), a
     inc hl
     inc de
-    djnz _pfn_ext_loop
+    djnz _parse_filename_ext_loop
     ret                             ; ext field full
-_pfn_ext_fill:
+_parse_filename_ext_fill:
     ld a, ' '
     ld (de), a
     inc de
-    djnz _pfn_ext_fill
+    djnz _parse_filename_ext_fill
     ret
 
 ; ---- bdfs_file_write -------------------------------------------------------
