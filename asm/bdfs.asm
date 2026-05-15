@@ -2,8 +2,7 @@
 ;
 ; bdfs_init: initialise RAM state; call once at startup.
 ; Drive selection: bdfs_set_drive / bdfs_get_drive, letters 'A'-'F' mapped to slots 1-6.
-; bdfs_get_device: check whether a device is present on the given drive's slot, select it
-;  and return the device number
+; bdfs_select_drive: make a drive active ready for read/write
 ; bdfs_format: erase and write header; returns Z=ok, NZ=error (A=BDFS_ERR_*).
 ; bdfs_dir_open / bdfs_dir_next: iterator for directory entries (no output).
 ;
@@ -57,7 +56,7 @@ BDFS_ERR_DIR_FULL       EQU 7   ; all 255 entry slots occupied
 BDFS_ERR_DISK_FULL      EQU 8   ; not enough free sectors for the file
 
     PUBLIC bdfs_init
-    PUBLIC bdfs_get_device
+    PUBLIC bdfs_select_drive
     PUBLIC bdfs_format
     PUBLIC bdfs_dir_open
     PUBLIC bdfs_dir_next
@@ -96,15 +95,13 @@ _ACTIVE_COUNT           EQU _DIR_SCAN_OFST + _DIR_SCAN_OFST_LEN      ; active en
 _ACTIVE_COUNT_LEN       EQU 1
 BDFS_DRIVE              EQU _ACTIVE_COUNT + _ACTIVE_COUNT_LEN    ; active drive letter ('A'-'F', 0=none)
 _DRIVE_LEN              EQU 1
-_FMT_NAME_PTR           EQU BDFS_DRIVE + _DRIVE_LEN                                  ; volume name ptr stashed during bdfs_format (2 bytes)
-_FMT_NAME_PTR_LEN       EQU 2
-_FREE_ENTRY_OFFSET      EQU _FMT_NAME_PTR + _FMT_NAME_PTR_LEN                       ; first free dir entry byte offset from scan (2 bytes)
+_FREE_ENTRY_OFFSET      EQU BDFS_DRIVE + _DRIVE_LEN                                  ; first free dir entry byte offset from scan (2 bytes)
 _FREE_ENTRY_OFFSET_LEN  EQU 2
 _NEXT_FREE_SECTOR       EQU _FREE_ENTRY_OFFSET + _FREE_ENTRY_OFFSET_LEN             ; next free sector number from scan (2 bytes)
 _NEXT_FREE_SECTOR_LEN   EQU 2
 _PAGE_ADDR_BANK         EQU _NEXT_FREE_SECTOR + _NEXT_FREE_SECTOR_LEN               ; addr[23:16] during page writes (1 byte)
 _PAGE_ADDR_BANK_LEN     EQU 1
-BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + _DIR_SCAN_OFST_LEN + _ACTIVE_COUNT_LEN + _DRIVE_LEN + _FMT_NAME_PTR_LEN + _FREE_ENTRY_OFFSET_LEN + _NEXT_FREE_SECTOR_LEN + _PAGE_ADDR_BANK_LEN
+BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + _DIR_SCAN_OFST_LEN + _ACTIVE_COUNT_LEN + _DRIVE_LEN + _FREE_ENTRY_OFFSET_LEN + _NEXT_FREE_SECTOR_LEN + _PAGE_ADDR_BANK_LEN
 
 ; ---- bdfs_init / bdfs_set_drive / bdfs_get_drive ---------------------------
 
@@ -144,33 +141,23 @@ _get_drive_no_drive:
     or a
     ret
 
-; bdfs_get_device: check whether a device is present on the given drive's slot,
-; select the slot (JEDEC ID cache populated for flash_get_device_id)
-; in:   A = drive letter ('A'-'F')
-; out:  Z=device present, A = device number (slot 1-6)
-;       NZ=no device, A=BDFS_ERR_NO_DEVICE
-; destroys: AF
-bdfs_get_device:
-    push bc
-    sub 'A'-1                       ; A = device number (slot 1-6)
-    ld b, a                         ; stash device number
+; bdfs_select_drive: select the slot for a drive letter and verify a device is present
+; in:  A = drive letter ('A'-'F')
+; out: Z=ok, NZ=error A=BDFS_ERR_NO_DEVICE
+; destroys: AF, BC
+bdfs_select_drive:
+    sub 'A'-1                       ; A = slot number (1-6)
     call flash_select_slot
     call flash_has_device
-    jr nz, _bgdev_no_device
-    ; has device
-    ld a, b                         ; restore device number
-    cp a                            ; Z set, A = device number
-    jr _bgdev_exit
-_bgdev_no_device:
+    ret z
     ld a, BDFS_ERR_NO_DEVICE
-    or a                            ; NZ set
-_bgdev_exit:
-    pop bc
+    or a
     ret
 
 ; ---- bdfs_format -----------------------------------------------------------
 
 ; bdfs_format: erase sector 0 of the current drive and write a BDFS directory header
+; assumes bdfs_select_drive has been called for the target drive
 ; in:  HL = volume name string (null-terminated, max BDFS_VOL_NAME_LEN-1 chars), or 0 for default
 ; out: Z=ok (format succeeded)
 ;      NZ=error, A=BDFS_ERR_* code
@@ -178,23 +165,13 @@ _bgdev_exit:
 bdfs_format:
     push bc
     push de
-    push hl
-    call bdfs_get_drive
-    jp nz, _bdfs_fmt_exit           ; A = BDFS_ERR_NO_DRIVE from bdfs_get_drive
-    ld (_FMT_NAME_PTR), hl          ; stash name ptr across erase
-    call bdfs_get_device
-    jr z, _bdfs_fmt_has_device
-    ld a, BDFS_ERR_NO_DEVICE
-    jp _bdfs_fmt_exit
-
-_bdfs_fmt_has_device:
+    push hl                         ; name ptr
     ld hl, BDFS_DIR_SECTOR          ; sector 0 = directory sector
     call flash_sector_erase         ; Z=ok NZ=fail
-    jr z, _bdfs_fmt_erase_ok
+    jr z, _format_erase_ok
     ld a, BDFS_ERR_ERASE_FAIL
     jp _bdfs_fmt_exit
-
-_bdfs_fmt_erase_ok:
+_format_erase_ok:
     ; build 16-byte header in BDFS_HDR_BUF: magic + vol_name + reserved
     ld hl, BDFS_HDR_BUF
     ld (hl), BDFS_MAGIC_0
@@ -202,7 +179,8 @@ _bdfs_fmt_erase_ok:
     ld (hl), BDFS_MAGIC_1
     inc hl
     ex de, hl                       ; DE = vol_name field ptr
-    ld hl, (_FMT_NAME_PTR)          ; HL = name pointer or 0
+    pop hl                          ; HL = name ptr (saved on stack at entry)
+    push hl                         ; restore stack for exit
     ld a, h
     or l
     jr z, _bdfs_fmt_default_name
