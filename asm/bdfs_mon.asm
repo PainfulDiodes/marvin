@@ -197,7 +197,7 @@ _bmd_opened:
 
 _bmd_scan:
     call bdfs_dir_next
-    jr nz, _bmd_done                ; NZ = no more entries, A = count
+    jr nz, _bmd_done                ; NZ = BDFS_ERR_END_OF_DIR, C = count
     ; Z = entry found; check flags for deleted status
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
@@ -219,7 +219,8 @@ _bmd_deleted:
     jr _bmd_scan
 
 _bmd_done:
-    call con_putchar_dec          ; A = active entry count
+    ld a, c
+    call con_putchar_dec          ; C = active entry count from bdfs_dir_next
     ld hl, _msg_files
     call con_puts                   ; " file(s)\n"
     ret

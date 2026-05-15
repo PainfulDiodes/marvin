@@ -315,10 +315,9 @@ _dir_open_exit:
 ; bdfs_dir_next: read the next directory entry into BDFS_ENT_BUF
 ; in:  — (iterator state in _DIR_SCAN_OFST / _ACTIVE_COUNT, set by bdfs_dir_open)
 ; out: Z=ok, HL = pointer to entry (BDFS_ENT_BUF); check flags byte for deleted status
-;      NZ=done (no more entries), A = active entry count
-; destroys: AF, HL
+;      NZ=BDFS_ERR_END_OF_DIR, C = active entry count
+; destroys: AF, BC, HL
 bdfs_dir_next:
-    push bc
     push de
     xor a                           ; addr[23:16] = 0x00
     ld hl, (_DIR_SCAN_OFST)         ; addr[15:0] = current iterator position
@@ -328,7 +327,7 @@ bdfs_dir_next:
     ; empty entry signals end of directory
     ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
     cp BDFS_ENT_EMPTY
-    jr z, _dir_next_done
+    jr z, _dir_next_empty
     ; advance iterator to next entry
     ld hl, (_DIR_SCAN_OFST)
     ld bc, BDFS_ENT_SIZE
@@ -337,23 +336,22 @@ bdfs_dir_next:
     ; increment active count only for non-deleted entries
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
-    jr nz, _dir_next_return              ; deleted: skip count increment
+    jr nz, _dir_next_return         ; deleted: skip count increment
     ld a, (_ACTIVE_COUNT)
     inc a
     ld (_ACTIVE_COUNT), a
 _dir_next_return:
     ld hl, BDFS_ENT_BUF
     xor a                           ; Z set, A=0
+    jr _dir_next_exit
+_dir_next_empty:
+    ld a, (_ACTIVE_COUNT)
+    ld c, a                         ; C = active entry count
+    ld a, BDFS_ERR_END_OF_DIR
 _dir_next_exit:
     pop de
-    pop bc
-    ret                             ; flags set by caller: Z=ok, NZ=done
-_dir_next_done:
-    ld a, (_ACTIVE_COUNT)
-    ld b, a                         ; save count in B
-    inc a                           ; set NZ (count 0-254 → 1-255, never wraps)
-    ld a, b                         ; restore count; flags unchanged
-    jr _dir_next_exit
+    or a
+    ret
 
 ; ---- _bdfs_parse_filename --------------------------------------------------
 
