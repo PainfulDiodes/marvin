@@ -167,7 +167,7 @@ _bsd_exit:
 ; ---- bdfs_format -----------------------------------------------------------
 
 ; bdfs_format: erase sector 0 of the current drive and write a BDFS directory header
-; assumes bdfs_select_drive has been called for the target drive
+; assumes bdfs_select_drive has been called
 ; in:  HL = volume name string (null-terminated, max BDFS_VOL_NAME_LEN-1 chars), or 0 for default
 ; out: Z=ok (format succeeded)
 ;      NZ=error, A=BDFS_ERR_* code
