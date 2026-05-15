@@ -106,10 +106,8 @@ flash_spi_byte:
 
 ; flash_read_jedec_id: read 3-byte JEDEC ID
 ; out: A = manufacturer ID, B = memory type, C = capacity
-; destroys: AF, BC
+; destroys: AF, BC, DE, HL
 flash_read_jedec_id:
-    push de
-    push hl
     ld a, (W25Q_CS)             ; RAM var selected status for current slot
     out (SPI_CTRL), a
     ld a, W25Q_CMD_JEDEC_ID
@@ -128,8 +126,6 @@ flash_read_jedec_id:
     ld c, l                     ; C = capacity
     ld b, e                     ; B = memory type
     ld a, d                     ; A = manufacturer ID
-    pop hl
-    pop de
     ret
 
 ; flash_write_enable: send Write Enable command (own CS transaction)
@@ -281,7 +277,7 @@ _fpp_loop:
 ; flash_select_slot: select active cartridge slot - defined in W25Q_CS - and cache the device JEDEC ID
 ; in:  A = slot number (1-6)
 ; out: —  (JEDEC ID cached in W25Q_ID_MFR, W25Q_ID_TYPE, W25Q_ID_CAP)
-; destroys: AF, BC
+; destroys: AF, BC, DE, HL
 flash_select_slot:
     inc a                       ; A = slot + 1 (bit position of CS line)
     ld b, a                     ; B = shift count

@@ -144,13 +144,23 @@ _get_drive_no_drive:
 ; bdfs_select_drive: select the slot for a drive letter and verify a device is present
 ; in:  A = drive letter ('A'-'F')
 ; out: Z=ok, NZ=error A=BDFS_ERR_NO_DEVICE
-; destroys: AF, BC
+; destroys: AF
 bdfs_select_drive:
+    push bc
+    push de
+    push hl
     sub 'A'-1                       ; A = slot number (1-6)
     call flash_select_slot
     call flash_has_device
-    ret z
+    jr nz, _bsd_no_device
+    xor a
+    jr _bsd_exit
+_bsd_no_device:
     ld a, BDFS_ERR_NO_DEVICE
+_bsd_exit:
+    pop hl
+    pop de
+    pop bc
     or a
     ret
 
