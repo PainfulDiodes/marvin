@@ -429,23 +429,23 @@ _file_write_scan_dir:
     ld (_NEXT_FREE_SECTOR), hl      ; = first data sector
     ld ix, BDFS_HDR_SIZE            ; scan_offset = first entry
     ld b, 0                         ; entry count
-_scan_dir_loop:
+_file_write_scan_dir_loop:
     call _file_write_scan_dir_entry ; Z=occupied, NZ=empty
-    jr nz, _scan_dir_found_empty
+    jr nz, _file_write_scan_dir_found_empty
     ld de, BDFS_ENT_SIZE
     add ix, de                      ; advance scan_offset
     inc b                           ; entry count
     ld a, b
     cp _MAX_ENTRIES                 ; directory sector full
-    jr z, _scan_dir_full
-    jr _scan_dir_loop
-_scan_dir_found_empty:
+    jr z, _file_write_scan_dir_full
+    jr _file_write_scan_dir_loop
+_file_write_scan_dir_found_empty:
     push ix
     pop hl
     ld (_FREE_ENTRY_OFFSET), hl
     xor a                           ; Z: ok
     ret
-_scan_dir_full:
+_file_write_scan_dir_full:
     ld a, BDFS_ERR_DIR_FULL
     or a                            ; NZ
     ret
@@ -467,7 +467,7 @@ _file_write_scan_dir_entry:
     call flash_read
     ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
     cp BDFS_ENT_EMPTY
-    jr z, _scan_dir_entry_empty
+    jr z, _file_write_scan_dir_entry_empty
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
     jr nz, _file_write_scan_dir_entry_done     ; deleted: skip sector update
@@ -482,7 +482,7 @@ _file_write_scan_dir_entry:
 _file_write_scan_dir_entry_done:
     xor a                           ; Z: occupied
     jr _file_write_scan_dir_entry_exit
-_scan_dir_entry_empty:
+_file_write_scan_dir_entry_empty:
     ld a, 1                         ; NZ: empty
 _file_write_scan_dir_entry_exit:
     pop hl
@@ -537,16 +537,16 @@ _file_write_check_device_full_ok:
 ; destroys: AF, B, IX
 _file_write_erase_sectors:
     ld ix, (_NEXT_FREE_SECTOR)
-_erase_sectors_loop:
+_file_write_erase_sectors_loop:
     push ix
     pop hl                          ; HL = current sector number
     call flash_sector_erase         ; Z=ok, NZ=timeout
-    jr nz, _erase_sectors_fail
+    jr nz, _file_write_erase_sectors_fail
     inc ix                          ; next sector
-    djnz _erase_sectors_loop
+    djnz _file_write_erase_sectors_loop
     xor a                           ; Z: ok
     ret
-_erase_sectors_fail:
+_file_write_erase_sectors_fail:
     ld a, BDFS_ERR_ERASE_FAIL
     or a                            ; NZ
     ret
@@ -559,37 +559,37 @@ _file_write_prog_pages:
     ld hl, (_NEXT_FREE_SECTOR)
     call flash_sector_to_addr       ; A = addr[23:16], HL = addr[15:0]
     ld (_PAGE_ADDR_BANK), a         ; save addr[23:16] for use across page_program calls
-_write_pages_loop:
+_file_write_prog_pages_loop:
     ld a, b
     or c
-    jr z, _write_pages_ok           ; BC = 0: done
+    jr z, _file_write_prog_pages_ok           ; BC = 0: done
     ld a, b
     or a
-    jr z, _write_pages_partial      ; B = 0: fewer than 256 bytes remain
+    jr z, _file_write_prog_pages_partial      ; B = 0: fewer than 256 bytes remain
     ; full 256-byte page
     ld a, (_PAGE_ADDR_BANK)         ; A = addr[23:16]
     push bc                         ; save remaining count
     ld bc, _PAGE_SIZE
     call flash_page_program         ; A:HL=addr, DE=src, BC=_PAGE_SIZE → Z=ok NZ=timeout; preserves HL, BC; DE advances
     pop bc                          ; restore remaining count
-    jr nz, _write_pages_fail
+    jr nz, _file_write_prog_pages_fail
     inc h                           ; addr[15:8]++: advance to next page
-    jr nz, _write_pages_inc_ok
+    jr nz, _file_write_prog_pages_inc_ok
     ld a, (_PAGE_ADDR_BANK)         ; H wrapped: propagate carry into addr[23:16]
     inc a
     ld (_PAGE_ADDR_BANK), a
-_write_pages_inc_ok:
+_file_write_prog_pages_inc_ok:
     dec b                           ; remaining -= 256
-    jr _write_pages_loop
-_write_pages_partial:
+    jr _file_write_prog_pages_loop
+_file_write_prog_pages_partial:
     ; B = 0, C = remaining bytes (< 256); write and finish
     ld a, (_PAGE_ADDR_BANK)         ; A = addr[23:16]
     call flash_page_program         ; A:HL=addr, DE=src, BC=C bytes
-    jr nz, _write_pages_fail
-_write_pages_ok:
+    jr nz, _file_write_prog_pages_fail
+_file_write_prog_pages_ok:
     xor a                           ; Z set, A = 0
     ret
-_write_pages_fail:
+_file_write_prog_pages_fail:
     ld a, BDFS_ERR_WRITE_FAIL
     or a
     ret
