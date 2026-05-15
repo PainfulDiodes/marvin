@@ -353,203 +353,6 @@ _dir_next_exit:
     or a
     ret
 
-; ---- _parse_filename --------------------------------------------------
-
-; _parse_filename: parse 8.3 filename string into BDFS_ENT_BUF name/ext fields
-; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
-; out: BDFS_ENT_BUF bytes 0-10 filled (name space-padded to 8, ext space-padded to 3)
-; destroys: —
-_parse_filename:
-    push af
-    push bc
-    push de
-    push hl
-    ld de, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
-    ld b, BDFS_NAME_LEN             ; 8 chars remaining in name field
-_parse_filename_name_loop:
-    ld a, (hl)
-    or a
-    jr z, _parse_filename_name_end  ; null: end of string before name full
-    cp '.'
-    jr z, _parse_filename_dot       ; dot: switch to ext
-    ld (de), a
-    inc hl
-    inc de
-    djnz _parse_filename_name_loop
-    ; name field full: skip chars until dot or null
-_parse_filename_skip_to_dot:
-    ld a, (hl)
-    or a
-    jr z, _parse_filename_no_dot    ; null reached with no dot
-    inc hl
-    cp '.'
-    jr nz, _parse_filename_skip_to_dot
-    jr _parse_filename_ext          ; dot found, HL points to first ext char
-_parse_filename_name_end:
-    ; null found mid-name: space-fill remainder of name field
-_parse_filename_name_fill:
-    ld a, ' '
-    ld (de), a
-    inc de
-    djnz _parse_filename_name_fill
-_parse_filename_no_dot:
-    ; no dot in filename: fill ext field with spaces
-    ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
-    ld b, BDFS_EXT_LEN
-    ld a, ' '
-_parse_filename_no_dot_fill:
-    ld (de), a
-    inc de
-    djnz _parse_filename_no_dot_fill
-    jr _parse_filename_exit
-_parse_filename_dot:
-    inc hl                          ; skip past the dot
-    ; space-fill remainder of name field (B = chars still to fill)
-_parse_filename_name_fill_after_dot:
-    ld a, ' '
-    ld (de), a
-    inc de
-    djnz _parse_filename_name_fill_after_dot
-_parse_filename_ext:
-    ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
-    ld b, BDFS_EXT_LEN              ; 3 chars in ext field
-_parse_filename_ext_loop:
-    ld a, (hl)
-    or a
-    jr z, _parse_filename_ext_fill  ; null: space-fill remaining ext
-    ld (de), a
-    inc hl
-    inc de
-    djnz _parse_filename_ext_loop
-    jr _parse_filename_exit         ; ext field full
-_parse_filename_ext_fill:
-    ld a, ' '
-    ld (de), a
-    inc de
-    djnz _parse_filename_ext_fill
-_parse_filename_exit:
-    pop hl
-    pop de
-    pop bc
-    pop af
-    ret
-
-; ---- _file_write_verify_format ---------------------------------------------------
-
-; _file_write_verify_format: read sector 0 header and verify BDFS magic bytes
-; in:  —
-; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
-; destroys: AF
-_file_write_verify_format:
-    push bc
-    push de
-    push hl
-    xor a
-    ld hl, 0x0000
-    ld de, BDFS_HDR_BUF
-    ld bc, BDFS_HDR_SIZE
-    call flash_read
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
-    cp BDFS_MAGIC_0
-    jr nz, _file_write_verify_format_fail
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
-    cp BDFS_MAGIC_1
-    jr nz, _file_write_verify_format_fail
-    xor a                           ; Z set, A=0
-    jr _file_write_verify_format_exit
-_file_write_verify_format_fail:
-    ld a, BDFS_ERR_NOT_FORMATTED
-_file_write_verify_format_exit:
-    pop hl
-    pop de
-    pop bc
-    or a
-    ret
-
-; ---- _file_write_scan_dir_entry --------------------------------------------------
-
-; _file_write_scan_dir_entry: read one directory entry at IX and update scan state
-; in:  IX = flash byte offset of entry to read
-; out: Z = occupied (active or deleted); _NEXT_FREE_SECTOR updated if active
-;      NZ = empty entry (end of directory)
-; destroys: AF
-_file_write_scan_dir_entry:
-    push bc
-    push de
-    push hl
-    push ix
-    pop hl                          ; HL = scan offset (flash address)
-    xor a                           ; addr[23:16] = 0
-    ld de, BDFS_ENT_BUF
-    ld bc, BDFS_ENT_SIZE
-    call flash_read
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
-    cp BDFS_ENT_EMPTY
-    jr z, _scan_dir_entry_empty
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
-    bit BDFS_FLAG_DELETED_BIT, a
-    jr nz, _file_write_scan_dir_entry_done     ; deleted: skip sector update
-    ; active: end_sector = start_sector + num_sectors
-    ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
-    call flash_bytes_to_sectors     ; A = num sectors
-    ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
-    ld d, 0
-    ld e, a
-    add hl, de                      ; HL = end_sector
-    ld (_NEXT_FREE_SECTOR), hl      ; always ascending: last active entry wins
-_file_write_scan_dir_entry_done:
-    xor a                           ; Z: occupied
-    jr _file_write_scan_dir_entry_exit
-_scan_dir_entry_empty:
-    ld a, 1                         ; NZ: empty
-_file_write_scan_dir_entry_exit:
-    pop hl
-    pop de
-    pop bc
-    or a
-    ret
-
-; ---- _file_write_device_full_check -----------------------------------------------
-
-; _file_write_device_full_check: check whether BC bytes fit in remaining device space
-; in:  BC = file length in bytes
-; out: Z=ok, B = sectors needed; NZ+A=BDFS_ERR_DISK_FULL
-; destroys: AF, B
-_file_write_device_full_check:
-    push de
-    push hl
-    ld h, b
-    ld l, c                         ; HL = length
-    call flash_bytes_to_sectors     ; A = sectors_needed
-    ld b, a                         ; B = sectors_needed
-    ld hl, (_NEXT_FREE_SECTOR)
-    ld d, 0
-    ld e, a
-    add hl, de                      ; HL = next_free_sector + sectors_needed
-    push hl
-    call flash_get_sector_count     ; HL = total sector count
-    ex de, hl                       ; DE = total
-    pop hl                          ; HL = next_free + needed
-    ; full if HL > DE (strictly greater than)
-    ld a, h
-    cp d
-    jr c, _file_write_check_device_full_ok     ; HL < DE: ok
-    jr nz, _file_write_check_device_full_fail  ; H > D: full
-    ld a, l
-    cp e
-    jr c, _file_write_check_device_full_ok     ; HL < DE (high byte equal): ok
-    jr z, _file_write_check_device_full_ok     ; HL = DE: exactly fills device, ok
-_file_write_check_device_full_fail:
-    pop hl
-    pop de
-    ld a, BDFS_ERR_DISK_FULL
-    or a                            ; NZ
-    ret
-_file_write_check_device_full_ok:
-    pop hl
-    pop de
-    xor a                           ; Z; B = sectors_needed
-    ret
 
 ; ---- bdfs_file_write -------------------------------------------------------
 
@@ -698,6 +501,208 @@ _bfw_erase_fail:
     pop de                          ; saved source
     ld a, BDFS_ERR_ERASE_FAIL
     or a
+    ret
+
+
+; ---- _file_write_verify_format ---------------------------------------------------
+
+; _file_write_verify_format: read sector 0 header and verify BDFS magic bytes
+; in:  —
+; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
+; destroys: AF
+_file_write_verify_format:
+    push bc
+    push de
+    push hl
+    xor a
+    ld hl, 0x0000
+    ld de, BDFS_HDR_BUF
+    ld bc, BDFS_HDR_SIZE
+    call flash_read
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
+    cp BDFS_MAGIC_0
+    jr nz, _file_write_verify_format_fail
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
+    cp BDFS_MAGIC_1
+    jr nz, _file_write_verify_format_fail
+    xor a                           ; Z set, A=0
+    jr _file_write_verify_format_exit
+_file_write_verify_format_fail:
+    ld a, BDFS_ERR_NOT_FORMATTED
+_file_write_verify_format_exit:
+    pop hl
+    pop de
+    pop bc
+    or a
+    ret
+
+; ---- _file_write_scan_dir_entry --------------------------------------------------
+
+; _file_write_scan_dir_entry: read one directory entry at IX and update scan state
+; in:  IX = flash byte offset of entry to read
+; out: Z = occupied (active or deleted); _NEXT_FREE_SECTOR updated if active
+;      NZ = empty entry (end of directory)
+; destroys: AF
+_file_write_scan_dir_entry:
+    push bc
+    push de
+    push hl
+    push ix
+    pop hl                          ; HL = scan offset (flash address)
+    xor a                           ; addr[23:16] = 0
+    ld de, BDFS_ENT_BUF
+    ld bc, BDFS_ENT_SIZE
+    call flash_read
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
+    cp BDFS_ENT_EMPTY
+    jr z, _scan_dir_entry_empty
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
+    bit BDFS_FLAG_DELETED_BIT, a
+    jr nz, _file_write_scan_dir_entry_done     ; deleted: skip sector update
+    ; active: end_sector = start_sector + num_sectors
+    ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
+    call flash_bytes_to_sectors     ; A = num sectors
+    ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
+    ld d, 0
+    ld e, a
+    add hl, de                      ; HL = end_sector
+    ld (_NEXT_FREE_SECTOR), hl      ; always ascending: last active entry wins
+_file_write_scan_dir_entry_done:
+    xor a                           ; Z: occupied
+    jr _file_write_scan_dir_entry_exit
+_scan_dir_entry_empty:
+    ld a, 1                         ; NZ: empty
+_file_write_scan_dir_entry_exit:
+    pop hl
+    pop de
+    pop bc
+    or a
+    ret
+
+
+; ---- _file_write_device_full_check -----------------------------------------------
+
+; _file_write_device_full_check: check whether BC bytes fit in remaining device space
+; in:  BC = file length in bytes
+; out: Z=ok, B = sectors needed; NZ+A=BDFS_ERR_DISK_FULL
+; destroys: AF, B
+_file_write_device_full_check:
+    push de
+    push hl
+    ld h, b
+    ld l, c                         ; HL = length
+    call flash_bytes_to_sectors     ; A = sectors_needed
+    ld b, a                         ; B = sectors_needed
+    ld hl, (_NEXT_FREE_SECTOR)
+    ld d, 0
+    ld e, a
+    add hl, de                      ; HL = next_free_sector + sectors_needed
+    push hl
+    call flash_get_sector_count     ; HL = total sector count
+    ex de, hl                       ; DE = total
+    pop hl                          ; HL = next_free + needed
+    ; full if HL > DE (strictly greater than)
+    ld a, h
+    cp d
+    jr c, _file_write_check_device_full_ok     ; HL < DE: ok
+    jr nz, _file_write_check_device_full_fail  ; H > D: full
+    ld a, l
+    cp e
+    jr c, _file_write_check_device_full_ok     ; HL < DE (high byte equal): ok
+    jr z, _file_write_check_device_full_ok     ; HL = DE: exactly fills device, ok
+_file_write_check_device_full_fail:
+    pop hl
+    pop de
+    ld a, BDFS_ERR_DISK_FULL
+    or a                            ; NZ
+    ret
+_file_write_check_device_full_ok:
+    pop hl
+    pop de
+    xor a                           ; Z; B = sectors_needed
+    ret
+
+
+
+; ---- _parse_filename --------------------------------------------------
+
+; _parse_filename: parse 8.3 filename string into BDFS_ENT_BUF name/ext fields
+; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
+; out: BDFS_ENT_BUF bytes 0-10 filled (name space-padded to 8, ext space-padded to 3)
+; destroys: —
+_parse_filename:
+    push af
+    push bc
+    push de
+    push hl
+    ld de, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
+    ld b, BDFS_NAME_LEN             ; 8 chars remaining in name field
+_parse_filename_name_loop:
+    ld a, (hl)
+    or a
+    jr z, _parse_filename_name_end  ; null: end of string before name full
+    cp '.'
+    jr z, _parse_filename_dot       ; dot: switch to ext
+    ld (de), a
+    inc hl
+    inc de
+    djnz _parse_filename_name_loop
+    ; name field full: skip chars until dot or null
+_parse_filename_skip_to_dot:
+    ld a, (hl)
+    or a
+    jr z, _parse_filename_no_dot    ; null reached with no dot
+    inc hl
+    cp '.'
+    jr nz, _parse_filename_skip_to_dot
+    jr _parse_filename_ext          ; dot found, HL points to first ext char
+_parse_filename_name_end:
+    ; null found mid-name: space-fill remainder of name field
+_parse_filename_name_fill:
+    ld a, ' '
+    ld (de), a
+    inc de
+    djnz _parse_filename_name_fill
+_parse_filename_no_dot:
+    ; no dot in filename: fill ext field with spaces
+    ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
+    ld b, BDFS_EXT_LEN
+    ld a, ' '
+_parse_filename_no_dot_fill:
+    ld (de), a
+    inc de
+    djnz _parse_filename_no_dot_fill
+    jr _parse_filename_exit
+_parse_filename_dot:
+    inc hl                          ; skip past the dot
+    ; space-fill remainder of name field (B = chars still to fill)
+_parse_filename_name_fill_after_dot:
+    ld a, ' '
+    ld (de), a
+    inc de
+    djnz _parse_filename_name_fill_after_dot
+_parse_filename_ext:
+    ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
+    ld b, BDFS_EXT_LEN              ; 3 chars in ext field
+_parse_filename_ext_loop:
+    ld a, (hl)
+    or a
+    jr z, _parse_filename_ext_fill  ; null: space-fill remaining ext
+    ld (de), a
+    inc hl
+    inc de
+    djnz _parse_filename_ext_loop
+    jr _parse_filename_exit         ; ext field full
+_parse_filename_ext_fill:
+    ld a, ' '
+    ld (de), a
+    inc de
+    djnz _parse_filename_ext_fill
+_parse_filename_exit:
+    pop hl
+    pop de
+    pop bc
+    pop af
     ret
 
 ; ---- strings ---------------------------------------------------------------
