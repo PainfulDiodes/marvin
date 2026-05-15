@@ -353,13 +353,13 @@ _dir_next_exit:
     or a
     ret
 
-; ---- _bdfs_parse_filename --------------------------------------------------
+; ---- _parse_filename --------------------------------------------------
 
-; _bdfs_parse_filename: parse 8.3 filename string into BDFS_ENT_BUF name/ext fields
+; _parse_filename: parse 8.3 filename string into BDFS_ENT_BUF name/ext fields
 ; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
 ; out: BDFS_ENT_BUF bytes 0-10 filled (name space-padded to 8, ext space-padded to 3)
 ; destroys: —
-_bdfs_parse_filename:
+_parse_filename:
     push af
     push bc
     push de
@@ -434,13 +434,13 @@ _parse_filename_exit:
     pop af
     ret
 
-; ---- _bdfs_verify_format ---------------------------------------------------
+; ---- _file_write_verify_format ---------------------------------------------------
 
-; _bdfs_verify_format: read sector 0 header and verify BDFS magic bytes
+; _file_write_verify_format: read sector 0 header and verify BDFS magic bytes
 ; in:  —
 ; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
 ; destroys: AF
-_bdfs_verify_format:
+_file_write_verify_format:
     push bc
     push de
     push hl
@@ -451,29 +451,29 @@ _bdfs_verify_format:
     call flash_read
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
-    jr nz, _verify_format_fail
+    jr nz, _file_write_verify_format_fail
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
-    jr nz, _verify_format_fail
+    jr nz, _file_write_verify_format_fail
     xor a                           ; Z set, A=0
-    jr _verify_format_exit
-_verify_format_fail:
+    jr _file_write_verify_format_exit
+_file_write_verify_format_fail:
     ld a, BDFS_ERR_NOT_FORMATTED
-_verify_format_exit:
+_file_write_verify_format_exit:
     pop hl
     pop de
     pop bc
     or a
     ret
 
-; ---- _bdfs_scan_dir_entry --------------------------------------------------
+; ---- _file_write_scan_dir_entry --------------------------------------------------
 
-; _bdfs_scan_dir_entry: read one directory entry at IX and update scan state
+; _file_write_scan_dir_entry: read one directory entry at IX and update scan state
 ; in:  IX = flash byte offset of entry to read
 ; out: Z = occupied (active or deleted); _NEXT_FREE_SECTOR updated if active
 ;      NZ = empty entry (end of directory)
 ; destroys: AF
-_bdfs_scan_dir_entry:
+_file_write_scan_dir_entry:
     push bc
     push de
     push hl
@@ -488,7 +488,7 @@ _bdfs_scan_dir_entry:
     jr z, _scan_dir_entry_empty
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
-    jr nz, _scan_dir_entry_done     ; deleted: skip sector update
+    jr nz, _file_write_scan_dir_entry_done     ; deleted: skip sector update
     ; active: end_sector = start_sector + num_sectors
     ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
     call flash_bytes_to_sectors     ; A = num sectors
@@ -497,25 +497,25 @@ _bdfs_scan_dir_entry:
     ld e, a
     add hl, de                      ; HL = end_sector
     ld (_NEXT_FREE_SECTOR), hl      ; always ascending: last active entry wins
-_scan_dir_entry_done:
+_file_write_scan_dir_entry_done:
     xor a                           ; Z: occupied
-    jr _scan_dir_entry_exit
+    jr _file_write_scan_dir_entry_exit
 _scan_dir_entry_empty:
     ld a, 1                         ; NZ: empty
-_scan_dir_entry_exit:
+_file_write_scan_dir_entry_exit:
     pop hl
     pop de
     pop bc
     or a
     ret
 
-; ---- _bdfs_check_device_full -----------------------------------------------
+; ---- _file_write_device_full_check -----------------------------------------------
 
-; _bdfs_check_device_full: check whether BC bytes fit in remaining device space
+; _file_write_device_full_check: check whether BC bytes fit in remaining device space
 ; in:  BC = file length in bytes
 ; out: Z=ok, B = sectors needed; NZ+A=BDFS_ERR_DISK_FULL
 ; destroys: AF, B
-_bdfs_check_device_full:
+_file_write_device_full_check:
     push de
     push hl
     ld h, b
@@ -533,19 +533,19 @@ _bdfs_check_device_full:
     ; full if HL > DE (strictly greater than)
     ld a, h
     cp d
-    jr c, _check_device_full_ok     ; HL < DE: ok
-    jr nz, _check_device_full_fail  ; H > D: full
+    jr c, _file_write_check_device_full_ok     ; HL < DE: ok
+    jr nz, _file_write_check_device_full_fail  ; H > D: full
     ld a, l
     cp e
-    jr c, _check_device_full_ok     ; HL < DE (high byte equal): ok
-    jr z, _check_device_full_ok     ; HL = DE: exactly fills device, ok
-_check_device_full_fail:
+    jr c, _file_write_check_device_full_ok     ; HL < DE (high byte equal): ok
+    jr z, _file_write_check_device_full_ok     ; HL = DE: exactly fills device, ok
+_file_write_check_device_full_fail:
     pop hl
     pop de
     ld a, BDFS_ERR_DISK_FULL
     or a                            ; NZ
     ret
-_check_device_full_ok:
+_file_write_check_device_full_ok:
     pop hl
     pop de
     xor a                           ; Z; B = sectors_needed
@@ -568,9 +568,9 @@ bdfs_file_write:
 
 ; --- Step 1: verify format --------------------------------------------------
 
-    call _bdfs_verify_format
-    jr z, _bfw_step2
-_bfw_not_formatted:
+    call _file_write_verify_format
+    jr z, _file_write_scan_dir
+    ; device not formatted
     pop hl
     pop de
     pop bc
@@ -586,24 +586,24 @@ _bfw_not_formatted:
 ; IX = scan_offset (flash byte address of current entry)
 ; B  = entries scanned (up to 255)
 
-_bfw_step2:
+_file_write_scan_dir:
     ld hl, 0x0000
     ld (_FREE_ENTRY_OFFSET), hl     ; = 0 (not yet found)
     ld hl, BDFS_DATA_START_SECTOR
     ld (_NEXT_FREE_SECTOR), hl      ; = first data sector
     ld ix, BDFS_HDR_SIZE            ; scan_offset = first entry
     ld b, 0                         ; entry count
-_bfw_scan_loop:
-    call _bdfs_scan_dir_entry       ; Z=occupied, NZ=empty
-    jr nz, _bfw_scan_found_empty
+_file_write_scan_dir_loop:
+    call _file_write_scan_dir_entry       ; Z=occupied, NZ=empty
+    jr nz, _file_write_scan_dir_empty
     ld de, BDFS_ENT_SIZE
     add ix, de                      ; advance scan_offset
     inc b                           ; entry count
     ld a, b
     cp _MAX_ENTRIES                 ; directory sector full
-    jp z, _bfw_dir_full
-    jr _bfw_scan_loop
-_bfw_scan_found_empty:
+    jp z, _file_write_scan_dir_full
+    jr _file_write_scan_dir_loop
+_file_write_scan_dir_empty:
     push ix
     pop hl
     ld (_FREE_ENTRY_OFFSET), hl
@@ -616,7 +616,7 @@ _bfw_step3:
     pop bc                          ; BC = length
     push de                         ; re-save source
     push bc                         ; re-save length
-    call _bdfs_check_device_full    ; Z=ok B=sectors_needed, NZ+A=BDFS_ERR_DISK_FULL
+    call _file_write_device_full_check    ; Z=ok B=sectors_needed, NZ+A=BDFS_ERR_DISK_FULL
     jr z, _bfw_step4
     pop bc                          ; discard length
     pop de                          ; discard source
@@ -625,7 +625,7 @@ _bfw_step3:
 
 ; --- Step 4: erase data sectors ---------------------------------------------
 _bfw_step4:
-    ; B = sectors_needed from _bdfs_check_device_full
+    ; B = sectors_needed from _file_write_device_full_check
     ld ix, (_NEXT_FREE_SECTOR)
 _bfw_erase_loop:
     push ix                         ; IX => HL
@@ -685,7 +685,7 @@ _bfw_write_fail:
     or a
     ret
 
-_bfw_dir_full:
+_file_write_scan_dir_full:
     pop hl                          ; discard filename
     pop de                          ; discard source
     pop bc                          ; discard length
