@@ -358,8 +358,12 @@ _dir_next_exit:
 ; _bdfs_parse_filename: parse 8.3 filename string into BDFS_ENT_BUF name/ext fields
 ; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
 ; out: BDFS_ENT_BUF bytes 0-10 filled (name space-padded to 8, ext space-padded to 3)
-; destroys: AF, BC, DE, HL
+; destroys: —
 _bdfs_parse_filename:
+    push af
+    push bc
+    push de
+    push hl
     ld de, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
     ld b, BDFS_NAME_LEN             ; 8 chars remaining in name field
 _parse_filename_name_loop:
@@ -397,7 +401,7 @@ _parse_filename_no_dot_fill:
     ld (de), a
     inc de
     djnz _parse_filename_no_dot_fill
-    ret
+    jr _parse_filename_exit
 _parse_filename_dot:
     inc hl                          ; skip past the dot
     ; space-fill remainder of name field (B = chars still to fill)
@@ -417,12 +421,17 @@ _parse_filename_ext_loop:
     inc hl
     inc de
     djnz _parse_filename_ext_loop
-    ret                             ; ext field full
+    jr _parse_filename_exit         ; ext field full
 _parse_filename_ext_fill:
     ld a, ' '
     ld (de), a
     inc de
     djnz _parse_filename_ext_fill
+_parse_filename_exit:
+    pop hl
+    pop de
+    pop bc
+    pop af
     ret
 
 ; ---- bdfs_file_write -------------------------------------------------------
