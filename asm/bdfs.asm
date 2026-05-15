@@ -170,7 +170,7 @@ bdfs_format:
     call flash_sector_erase         ; Z=ok NZ=fail
     jr z, _format_erase_ok
     ld a, BDFS_ERR_ERASE_FAIL
-    jp _bdfs_fmt_exit
+    jp _format_exit
 _format_erase_ok:
     ; build 16-byte header in BDFS_HDR_BUF: magic + vol_name + reserved
     ld hl, BDFS_HDR_BUF
@@ -183,31 +183,31 @@ _format_erase_ok:
     push hl                         ; restore stack for exit
     ld a, h
     or l
-    jr z, _bdfs_fmt_default_name
+    jr z, _format_default_name
     ; custom name: copy up to BDFS_VOL_NAME_LEN chars, ensure null-terminated
     ld b, BDFS_VOL_NAME_LEN
-_bdfs_fmt_copy_name:
+_format_copy_name:
     ld a, (hl)
     or a
-    jr z, _bdfs_fmt_null_fill       ; end of source: null-fill remaining
+    jr z, _format_name_null_fill       ; end of source: null-fill remaining
     ld (de), a
     inc hl
     inc de
-    djnz _bdfs_fmt_copy_name
+    djnz _format_copy_name
     ; wrote full BDFS_VOL_NAME_LEN chars: overwrite last with null terminator
     dec de
     xor a
     ld (de), a
     inc de
-    jr _bdfs_fmt_reserved
-_bdfs_fmt_null_fill:
+    jr _format_reserved
+_format_name_null_fill:
     xor a
-_bdfs_fmt_null_loop:
+_format_name_null_fill_loop:
     ld (de), a
     inc de
-    djnz _bdfs_fmt_null_loop
-    jr _bdfs_fmt_reserved
-_bdfs_fmt_default_name:
+    djnz _format_name_null_fill_loop
+    jr _format_reserved
+_format_default_name:
     ld hl, _BDFS_DEFAULT_PREFIX
     ld bc, _BDFS_DEFAULT_PREFIX_LEN
     ldir                            ; copy "BDFS-", DE now points past it
@@ -215,12 +215,12 @@ _bdfs_fmt_default_name:
     ld (de), a
     inc de
     ld b, BDFS_VOL_NAME_LEN - _BDFS_DEFAULT_PREFIX_LEN - 1   ; remaining space after drive letter
-_bdfs_fmt_fill_default:
+_format_default_name_null_fill:
     xor a
     ld (de), a
     inc de
-    djnz _bdfs_fmt_fill_default
-_bdfs_fmt_reserved:
+    djnz _format_default_name_null_fill
+_format_reserved:
     xor a
     ld (de), a
     inc de
@@ -231,11 +231,10 @@ _bdfs_fmt_reserved:
     ld de, BDFS_HDR_BUF
     ld bc, BDFS_HDR_SIZE
     call flash_page_program         ; Z=ok NZ=fail
-    jr z, _bdfs_fmt_write_ok
+    jr z, _format_write_ok
     ld a, BDFS_ERR_WRITE_FAIL
-    jp _bdfs_fmt_exit
-
-_bdfs_fmt_write_ok:
+    jp _format_exit
+_format_write_ok:
     ; read back to buffer
     xor a                           ; addr[23:16] = 0x00
     ld hl, 0x0000                   ; addr[15:0]
@@ -245,18 +244,16 @@ _bdfs_fmt_write_ok:
     ; verify magic
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
-    jr nz, _bdfs_fmt_magic_fail
+    jr nz, _format_verify_magic_fail
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
-    jr nz, _bdfs_fmt_magic_fail
+    jr nz, _format_verify_magic_fail
     ; success
     xor a                           ; Z set, A=0
-    jr _bdfs_fmt_exit
-
-_bdfs_fmt_magic_fail:
+    jr _format_exit
+_format_verify_magic_fail:
     ld a, BDFS_ERR_VERIFY_FAIL
-
-_bdfs_fmt_exit:
+_format_exit:
     pop hl
     pop de
     pop bc
