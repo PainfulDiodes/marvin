@@ -142,6 +142,8 @@ _get_drive_no_drive:
     ret
 
 ; bdfs_select_drive: select the slot for a drive letter and verify a device is present
+; must be performed before read/write activities, as the SPI transport may be used for 
+; other things and therefore may disrupt the active slot.
 ; in:  A = drive letter ('A'-'F')
 ; out: Z=ok, NZ=error A=BDFS_ERR_NO_DEVICE
 ; destroys: AF
