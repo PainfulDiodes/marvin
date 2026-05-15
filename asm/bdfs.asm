@@ -180,35 +180,19 @@ bdfs_format:
     push de
     push hl
     call bdfs_get_drive
-    jr nz, _bdfs_fmt_no_drive
+    jp nz, _bdfs_fmt_exit           ; A = BDFS_ERR_NO_DRIVE from bdfs_get_drive
     ld (_FMT_NAME_PTR), hl          ; stash name ptr across erase
-    sub 'A'-1                       ; slot 1-6
-    call flash_select_slot
-    call flash_has_device
+    call bdfs_get_device
     jr z, _bdfs_fmt_has_device
-    pop hl
-    pop de
-    pop bc
     ld a, BDFS_ERR_NO_DEVICE
-    or a
-    ret
-_bdfs_fmt_no_drive:
-    pop hl
-    pop de
-    pop bc
-    or a                            ; A = BDFS_ERR_NO_DRIVE, ensure NZ
-    ret
+    jp _bdfs_fmt_exit
 
 _bdfs_fmt_has_device:
     ld hl, BDFS_DIR_SECTOR          ; sector 0 = directory sector
     call flash_sector_erase         ; Z=ok NZ=fail
     jr z, _bdfs_fmt_erase_ok
-    pop hl
-    pop de
-    pop bc
     ld a, BDFS_ERR_ERASE_FAIL
-    or a
-    ret
+    jp _bdfs_fmt_exit
 
 _bdfs_fmt_erase_ok:
     ; build 16-byte header in BDFS_HDR_BUF: magic + vol_name + reserved
@@ -270,12 +254,8 @@ _bdfs_fmt_reserved:
     ld bc, BDFS_HDR_SIZE
     call flash_page_program         ; Z=ok NZ=fail
     jr z, _bdfs_fmt_write_ok
-    pop hl
-    pop de
-    pop bc
     ld a, BDFS_ERR_WRITE_FAIL
-    or a
-    ret
+    jp _bdfs_fmt_exit
 
 _bdfs_fmt_write_ok:
     ; read back to buffer
@@ -292,17 +272,16 @@ _bdfs_fmt_write_ok:
     cp BDFS_MAGIC_1
     jr nz, _bdfs_fmt_magic_fail
     ; success
-    pop hl
-    pop de
-    pop bc
     xor a                           ; Z set, A=0
-    ret
+    jr _bdfs_fmt_exit
 
 _bdfs_fmt_magic_fail:
+    ld a, BDFS_ERR_VERIFY_FAIL
+
+_bdfs_fmt_exit:
     pop hl
     pop de
     pop bc
-    ld a, BDFS_ERR_VERIFY_FAIL
     or a
     ret
 
