@@ -281,21 +281,13 @@ bdfs_dir_open:
     push bc
     push de
     call bdfs_get_drive
-    jr nz, _bdo_no_drive
+    jp nz, _bdo_exit                ; A = BDFS_ERR_NO_DRIVE from bdfs_get_drive
     sub 'A'-1
     call flash_select_slot
     call flash_has_device
     jr z, _bdo_has_device
-    pop de
-    pop bc
     ld a, BDFS_ERR_NO_DEVICE
-    or a
-    ret
-_bdo_no_drive:
-    pop de
-    pop bc
-    or a                            ; A = BDFS_ERR_NO_DRIVE, ensure NZ
-    ret
+    jp _bdo_exit
 
 _bdo_has_device:
     xor a                           ; addr[23:16] = 0x00
@@ -314,18 +306,17 @@ _bdo_has_device:
     ld (_DIR_SCAN_OFST), hl
     xor a
     ld (_ACTIVE_COUNT), a
-    ; return vol name pointer
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
-    pop de
-    pop bc
-    xor a                           ; Z set
-    ret
+    xor a                           ; Z set, A=0
+    jr _bdo_exit
 
 _bdo_not_formatted:
+    ld a, BDFS_ERR_NOT_FORMATTED
+
+_bdo_exit:
     pop de
     pop bc
-    ld a, BDFS_ERR_NOT_FORMATTED
-    or a
+    or a                            ; A=0 on success (no return value), non-zero = error code → NZ
     ret
 
 ; ---- bdfs_dir_next ---------------------------------------------------------
@@ -346,7 +337,7 @@ bdfs_dir_next:
     ; empty entry signals end of directory
     ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
     cp BDFS_ENT_EMPTY
-    jr z, _bdn_empty
+    jr z, _bdn_done
     ; advance iterator to next entry
     ld hl, (_DIR_SCAN_OFST)
     ld bc, BDFS_ENT_SIZE
@@ -361,19 +352,19 @@ bdfs_dir_next:
     ld (_ACTIVE_COUNT), a
 _bdn_return:
     ld hl, BDFS_ENT_BUF
-    pop de
-    pop bc
-    xor a                           ; Z set
-    ret
+    xor a                           ; Z set, A=0
 
-_bdn_empty:
-    ld a, (_ACTIVE_COUNT)
-    ld b, a                         ; save count
-    inc a                           ; ensure non-zero for count 0-254 (NZ signal for "done")
-    ld a, b                         ; restore count (LD does not affect flags)
+_bdn_exit:
     pop de
     pop bc
-    ret                             ; NZ, A = active entry count
+    ret                             ; flags set by caller: Z=ok, NZ=done
+
+_bdn_done:
+    ld a, (_ACTIVE_COUNT)
+    ld b, a                         ; save count in B
+    inc a                           ; set NZ (count 0-254 → 1-255, never wraps)
+    ld a, b                         ; restore count; flags unchanged
+    jr _bdn_exit
 
 ; ---- _bdfs_parse_filename --------------------------------------------------
 
