@@ -470,8 +470,8 @@ _verify_format_exit:
 
 ; _bdfs_scan_dir_entry: read one directory entry at IX and update scan state
 ; in:  IX = flash byte offset of entry to read
-; out: Z = empty entry (end of directory), NZ = occupied (active or deleted)
-;      _NEXT_FREE_SECTOR updated if entry is active
+; out: Z = occupied (active or deleted); _NEXT_FREE_SECTOR updated if active
+;      NZ = empty entry (end of directory)
 ; destroys: AF
 _bdfs_scan_dir_entry:
     push bc
@@ -498,10 +498,10 @@ _bdfs_scan_dir_entry:
     add hl, de                      ; HL = end_sector
     ld (_NEXT_FREE_SECTOR), hl      ; always ascending: last active entry wins
 _scan_dir_entry_done:
-    ld a, 1                         ; NZ: occupied
+    xor a                           ; Z: occupied
     jr _scan_dir_entry_exit
 _scan_dir_entry_empty:
-    xor a                           ; Z: empty slot
+    ld a, 1                         ; NZ: empty
 _scan_dir_entry_exit:
     pop hl
     pop de
@@ -552,8 +552,8 @@ _bfw_step2:
     ld ix, BDFS_HDR_SIZE            ; scan_offset = first entry
     ld b, 0                         ; entry count
 _bfw_scan_loop:
-    call _bdfs_scan_dir_entry       ; Z=empty, NZ=occupied
-    jr z, _bfw_scan_found_empty
+    call _bdfs_scan_dir_entry       ; Z=occupied, NZ=empty
+    jr nz, _bfw_scan_found_empty
     ld de, BDFS_ENT_SIZE
     add ix, de                      ; advance scan_offset
     inc b                           ; entry count
