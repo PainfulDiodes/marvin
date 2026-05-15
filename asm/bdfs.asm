@@ -2,7 +2,8 @@
 ;
 ; bdfs_init: initialise RAM state; call once at startup.
 ; Drive selection: bdfs_set_drive / bdfs_get_drive, letters 'A'-'F' mapped to slots 1-6.
-; bdfs_has_device: check whether a device is present on the current drive's slot.
+; bdfs_get_device: check whether a device is present on the given drive's slot, select it
+;  and return the device number
 ; bdfs_format: erase and write header; returns Z=ok, NZ=error (A=BDFS_ERR_*).
 ; bdfs_dir_open / bdfs_dir_next: iterator for directory entries (no output).
 ;
@@ -56,7 +57,7 @@ BDFS_ERR_DIR_FULL       EQU 7   ; all 255 entry slots occupied
 BDFS_ERR_DISK_FULL      EQU 8   ; not enough free sectors for the file
 
     PUBLIC bdfs_init
-    PUBLIC bdfs_has_device
+    PUBLIC bdfs_get_device
     PUBLIC bdfs_format
     PUBLIC bdfs_dir_open
     PUBLIC bdfs_dir_next
@@ -143,21 +144,27 @@ _bgd_no_drive:
     or a
     ret
 
-; bdfs_has_device: check whether a device is present on the current drive's slot
-; Side effect: selects the slot (JEDEC ID cache populated for flash_get_device_id)
-; in:  — (uses BDFS_DRIVE)
-; out: Z=device present
-;      NZ=no device, A=BDFS_ERR_NO_DRIVE or BDFS_ERR_NO_DEVICE
+; bdfs_get_device: check whether a device is present on the given drive's slot,
+; select the slot (JEDEC ID cache populated for flash_get_device_id)
+; in:   A = drive letter ('A'-'F')
+; out:  Z=device present, A = device number (slot 1-6)
+;       NZ=no device, A=BDFS_ERR_NO_DEVICE
 ; destroys: AF
-bdfs_has_device:
-    call bdfs_get_drive
-    ret nz                          ; NZ = no drive, A = BDFS_ERR_NO_DRIVE
-    sub 'A'-1
+bdfs_get_device:
+    push bc
+    sub 'A'-1                       ; A = device number (slot 1-6)
+    ld b, a                         ; stash device number
     call flash_select_slot
     call flash_has_device
-    ret z                           ; Z = device present
+    jr nz, _bgdev_no_device
+    ld a, b                         ; restore device number
+    cp a                            ; Z set, A = device number
+    jr _bgdev_exit
+_bgdev_no_device:
     ld a, BDFS_ERR_NO_DEVICE
-    or a
+    or a                            ; NZ set
+_bgdev_exit:
+    pop bc
     ret
 
 ; ---- bdfs_format -----------------------------------------------------------

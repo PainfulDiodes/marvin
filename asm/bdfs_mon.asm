@@ -20,7 +20,7 @@
     EXTERN con_getchar
     EXTERN con_putchar_hex
     EXTERN con_putchar_dec
-    EXTERN bdfs_has_device
+    EXTERN bdfs_get_device
     EXTERN bdfs_format
     EXTERN bdfs_dir_open
     EXTERN bdfs_dir_next
@@ -120,16 +120,20 @@ _bmcd_bad:
 ; destroys: AF, BC, DE, HL
 bdfs_mon_format:
     push hl                         ; save vol name ptr
-    call bdfs_has_device
+    call bdfs_get_drive
+    jr nz, _bmf_no_drive
+    call bdfs_get_device
     jr z, _bmf_has_device
     pop hl                          ; discard vol name ptr
-    cp BDFS_ERR_NO_DRIVE
-    ld hl, BDFS_NO_DRIVE_MSG
-    jr z, _bmf_pre_error
     ld hl, _msg_no_device
-_bmf_pre_error:
     call con_puts
-    or a                            ; NZ (A = BDFS_ERR_*)
+    or a                            ; NZ (A = BDFS_ERR_NO_DEVICE)
+    ret
+_bmf_no_drive:
+    pop hl                          ; discard vol name ptr
+    ld hl, BDFS_NO_DRIVE_MSG
+    call con_puts
+    or a                            ; NZ (A = BDFS_ERR_NO_DRIVE)
     ret
 
 _bmf_has_device:
