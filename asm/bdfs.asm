@@ -509,6 +509,48 @@ _scan_dir_entry_exit:
     or a
     ret
 
+; ---- _bdfs_check_device_full -----------------------------------------------
+
+; _bdfs_check_device_full: check whether BC bytes fit in remaining device space
+; in:  BC = file length in bytes
+; out: Z=ok, B = sectors needed; NZ+A=BDFS_ERR_DISK_FULL
+; destroys: AF, B
+_bdfs_check_device_full:
+    push de
+    push hl
+    ld h, b
+    ld l, c                         ; HL = length
+    call flash_bytes_to_sectors     ; A = sectors_needed
+    ld b, a                         ; B = sectors_needed
+    ld hl, (_NEXT_FREE_SECTOR)
+    ld d, 0
+    ld e, a
+    add hl, de                      ; HL = next_free_sector + sectors_needed
+    push hl
+    call flash_get_sector_count     ; HL = total sector count
+    ex de, hl                       ; DE = total
+    pop hl                          ; HL = next_free + needed
+    ; full if HL > DE (strictly greater than)
+    ld a, h
+    cp d
+    jr c, _check_device_full_ok     ; HL < DE: ok
+    jr nz, _check_device_full_fail  ; H > D: full
+    ld a, l
+    cp e
+    jr c, _check_device_full_ok     ; HL < DE (high byte equal): ok
+    jr z, _check_device_full_ok     ; HL = DE: exactly fills device, ok
+_check_device_full_fail:
+    pop hl
+    pop de
+    ld a, BDFS_ERR_DISK_FULL
+    or a                            ; NZ
+    ret
+_check_device_full_ok:
+    pop hl
+    pop de
+    xor a                           ; Z; B = sectors_needed
+    ret
+
 ; ---- bdfs_file_write -------------------------------------------------------
 
 ; bdfs_file_write: write a file to the current drive (steps 1-5: verify format, scan,
@@ -566,7 +608,7 @@ _bfw_scan_found_empty:
     pop hl
     ld (_FREE_ENTRY_OFFSET), hl
 
-; --- Step 3: disk-full check ------------------------------------------------
+; --- Step 3: device-full check ----------------------------------------------
 
 _bfw_step3:
     pop hl                          ; discard filename
@@ -574,42 +616,16 @@ _bfw_step3:
     pop bc                          ; BC = length
     push de                         ; re-save source
     push bc                         ; re-save length
-
-    ld h, b
-    ld l, c                         ; HL = length
-    call flash_bytes_to_sectors     ; A = sectors_needed
-    push af                         ; save sectors_needed
-
-    ld hl, (_NEXT_FREE_SECTOR)
-    ld d, 0
-    ld e, a
-    add hl, de                      ; HL = next_free_sector + sectors_needed
-    push hl
-    call flash_get_sector_count     ; HL = total sector count
-    ex de, hl                       ; DE = total
-    pop hl                          ; HL = next_free + needed
-
-    ; disk full if HL > DE (strictly greater than)
-    ld a, h
-    cp d
-    jr c, _bfw_step4             ; HL < DE: ok
-    jr nz, _bfw_disk_full           ; H > D: disk full
-    ld a, l
-    cp e
-    jr c, _bfw_step4             ; HL < DE (low byte, high equal): ok
-    jr z, _bfw_step4             ; HL = DE: exactly fills device, ok
-_bfw_disk_full:
-    pop af                          ; discard sectors_needed
+    call _bdfs_check_device_full    ; Z=ok B=sectors_needed, NZ+A=BDFS_ERR_DISK_FULL
+    jr z, _bfw_step4
     pop bc                          ; discard length
     pop de                          ; discard source
-    ld a, BDFS_ERR_DISK_FULL
-    or a
+    or a                            ; NZ (A = BDFS_ERR_DISK_FULL)
     ret
 
 ; --- Step 4: erase data sectors ---------------------------------------------
 _bfw_step4:
-    pop af                          ; A = sectors_needed
-    ld b, a                         ; B = sectors_needed (loop count)
+    ; B = sectors_needed from _bdfs_check_device_full
     ld ix, (_NEXT_FREE_SECTOR)
 _bfw_erase_loop:
     push ix                         ; IX => HL
