@@ -366,24 +366,24 @@ bdfs_file_write:
     push bc                         ; save length
     push de                         ; save source
     call _file_write_verify_format  ; destroys AF
-    jr nz, _bfw_exit
+    jr nz, _file_write_error
     call _file_write_scan_dir       ; destroys AF, B, IX
-    jr nz, _bfw_exit
+    jr nz, _file_write_error
     pop de                          ; source — pass to device check
     pop bc                          ; length — pass to device check
-    push bc                         ; re-save
-    push de
+    push bc                         ; re-save length
+    push de                         ; re-save source
     call _file_write_device_full_check  ; BC = length; Z=ok B=sectors_needed, NZ+A=err
-    jr nz, _bfw_exit
+    jr nz, _file_write_error
     call _file_write_erase_sectors  ; B = sectors_needed; Z=ok, NZ+A=err
-    jr nz, _bfw_exit
+    jr nz, _file_write_error
     pop de                          ; DE = source
     pop bc                          ; BC = length
     call _file_write_write_pages    ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
     ret
-_bfw_exit:
-    pop bc
-    pop de
+_file_write_error:
+    pop de                          ; discard source
+    pop bc                          ; discard length
     or a                            ; NZ (A = error code)
     ret
 
