@@ -136,10 +136,10 @@ bdfs_set_drive:
 bdfs_get_drive:
     ld a, (BDFS_DRIVE)
     or a
-    jr z, _bgd_no_drive
+    jr z, _get_drive_no_drive
     cp a                            ; Z set, A = drive letter unchanged
     ret
-_bgd_no_drive:
+_get_drive_no_drive:
     ld a, BDFS_ERR_NO_DRIVE
     or a
     ret
