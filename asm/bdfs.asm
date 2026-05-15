@@ -436,8 +436,9 @@ _parse_filename_exit:
 
 ; ---- bdfs_file_write -------------------------------------------------------
 
-; bdfs_file_write: write a file to the current drive (steps 1-5: validate, scan,
+; bdfs_file_write: write a file to the current drive (steps 1-5: verify format, scan,
 ;                  disk-full check, erase, write pages; directory entry pending)
+; assumes bdfs_select_drive has been called
 ; in:  HL = filename (null-terminated "NAME.EXT", uppercase)
 ;      DE = source address in RAM
 ;      BC = length in bytes
@@ -448,28 +449,8 @@ bdfs_file_write:
     push de                         ; save source
     push hl                         ; save filename
 
-; --- Step 1: validate drive, device, format ---------------------------------
+; --- Step 1: verify format --------------------------------------------------
 
-    call bdfs_get_drive
-    jr nz, _bfw_no_drive
-    sub 'A'-1
-    call flash_select_slot
-    call flash_has_device
-    jr z, _bfw_has_device
-    pop hl
-    pop de
-    pop bc
-    ld a, BDFS_ERR_NO_DEVICE
-    or a
-    ret
-_bfw_no_drive:
-    pop hl
-    pop de
-    pop bc
-    or a                            ; A = BDFS_ERR_NO_DRIVE, ensure NZ
-    ret
-
-_bfw_has_device:
     xor a
     ld hl, 0x0000
     ld de, BDFS_HDR_BUF
