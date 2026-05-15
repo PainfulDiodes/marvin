@@ -281,9 +281,8 @@ _fpp_loop:
 ; flash_select_slot: select active cartridge slot - defined in W25Q_CS - and cache the device JEDEC ID
 ; in:  A = slot number (1-6)
 ; out: —  (JEDEC ID cached in W25Q_ID_MFR, W25Q_ID_TYPE, W25Q_ID_CAP)
-; destroys: AF
+; destroys: AF, BC
 flash_select_slot:
-    push bc
     inc a                       ; A = slot + 1 (bit position of CS line)
     ld b, a                     ; B = shift count
     ld a, 1
@@ -298,7 +297,6 @@ _fss_loop:
     ld (W25Q_ID_TYPE), a
     ld a, c
     ld (W25Q_ID_CAP), a
-    pop bc
     ret
 
 ; flash_get_device_name: return name string for the cached device
