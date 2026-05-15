@@ -281,15 +281,14 @@ bdfs_dir_open:
     push bc
     push de
     call bdfs_get_drive
-    jp nz, _bdo_exit                ; A = BDFS_ERR_NO_DRIVE from bdfs_get_drive
+    jp nz, _dir_open_exit                ; A = BDFS_ERR_NO_DRIVE from bdfs_get_drive
     sub 'A'-1
     call flash_select_slot
     call flash_has_device
-    jr z, _bdo_has_device
+    jr z, _dir_open_has_device
     ld a, BDFS_ERR_NO_DEVICE
-    jp _bdo_exit
-
-_bdo_has_device:
+    jp _dir_open_exit
+_dir_open_has_device:
     xor a                           ; addr[23:16] = 0x00
     ld hl, 0x0000                   ; addr[15:0]
     ld de, BDFS_HDR_BUF
@@ -297,10 +296,10 @@ _bdo_has_device:
     call flash_read
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
-    jr nz, _bdo_not_formatted
+    jr nz, _dir_open_not_formatted
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
-    jr nz, _bdo_not_formatted
+    jr nz, _dir_open_not_formatted
     ; initialise iterator state
     ld hl, BDFS_HDR_SIZE
     ld (_DIR_SCAN_OFST), hl
@@ -308,12 +307,10 @@ _bdo_has_device:
     ld (_ACTIVE_COUNT), a
     ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
     xor a                           ; Z set, A=0
-    jr _bdo_exit
-
-_bdo_not_formatted:
+    jr _dir_open_exit
+_dir_open_not_formatted:
     ld a, BDFS_ERR_NOT_FORMATTED
-
-_bdo_exit:
+_dir_open_exit:
     pop de
     pop bc
     or a                            ; A=0 on success (no return value), non-zero = error code → NZ
@@ -337,7 +334,7 @@ bdfs_dir_next:
     ; empty entry signals end of directory
     ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
     cp BDFS_ENT_EMPTY
-    jr z, _bdn_done
+    jr z, _dir_next_done
     ; advance iterator to next entry
     ld hl, (_DIR_SCAN_OFST)
     ld bc, BDFS_ENT_SIZE
@@ -346,25 +343,23 @@ bdfs_dir_next:
     ; increment active count only for non-deleted entries
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
-    jr nz, _bdn_return              ; deleted: skip count increment
+    jr nz, _dir_next_return              ; deleted: skip count increment
     ld a, (_ACTIVE_COUNT)
     inc a
     ld (_ACTIVE_COUNT), a
-_bdn_return:
+_dir_next_return:
     ld hl, BDFS_ENT_BUF
     xor a                           ; Z set, A=0
-
-_bdn_exit:
+_dir_next_exit:
     pop de
     pop bc
     ret                             ; flags set by caller: Z=ok, NZ=done
-
-_bdn_done:
+_dir_next_done:
     ld a, (_ACTIVE_COUNT)
     ld b, a                         ; save count in B
     inc a                           ; set NZ (count 0-254 → 1-255, never wraps)
     ld a, b                         ; restore count; flags unchanged
-    jr _bdn_exit
+    jr _dir_next_exit
 
 ; ---- _bdfs_parse_filename --------------------------------------------------
 
