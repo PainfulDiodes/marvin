@@ -157,6 +157,7 @@ bdfs_get_device:
     call flash_select_slot
     call flash_has_device
     jr nz, _bgdev_no_device
+    ; has device
     ld a, b                         ; restore device number
     cp a                            ; Z set, A = device number
     jr _bgdev_exit
