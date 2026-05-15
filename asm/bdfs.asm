@@ -434,6 +434,38 @@ _parse_filename_exit:
     pop af
     ret
 
+; ---- _bdfs_verify_format ---------------------------------------------------
+
+; _bdfs_verify_format: read sector 0 header and verify BDFS magic bytes
+; in:  —
+; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
+; destroys: AF
+_bdfs_verify_format:
+    push bc
+    push de
+    push hl
+    xor a
+    ld hl, 0x0000
+    ld de, BDFS_HDR_BUF
+    ld bc, BDFS_HDR_SIZE
+    call flash_read
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
+    cp BDFS_MAGIC_0
+    jr nz, _verify_format_fail
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
+    cp BDFS_MAGIC_1
+    jr nz, _verify_format_fail
+    xor a                           ; Z set, A=0
+    jr _verify_format_exit
+_verify_format_fail:
+    ld a, BDFS_ERR_NOT_FORMATTED
+_verify_format_exit:
+    pop hl
+    pop de
+    pop bc
+    or a
+    ret
+
 ; ---- bdfs_file_write -------------------------------------------------------
 
 ; bdfs_file_write: write a file to the current drive (steps 1-5: verify format, scan,
@@ -451,23 +483,13 @@ bdfs_file_write:
 
 ; --- Step 1: verify format --------------------------------------------------
 
-    xor a
-    ld hl, 0x0000
-    ld de, BDFS_HDR_BUF
-    ld bc, BDFS_HDR_SIZE
-    call flash_read
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
-    cp BDFS_MAGIC_0
-    jr nz, _bfw_not_formatted
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
-    cp BDFS_MAGIC_1
+    call _bdfs_verify_format
     jr z, _bfw_step2
 _bfw_not_formatted:
     pop hl
     pop de
     pop bc
-    ld a, BDFS_ERR_NOT_FORMATTED
-    or a
+    or a                            ; A = BDFS_ERR_NOT_FORMATTED, NZ
     ret
 
 ; --- Step 2: directory scan -------------------------------------------------
