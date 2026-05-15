@@ -171,13 +171,25 @@ _bmf_error:
 ; out: — (errors are already printed)
 ; destroys: AF, BC, DE, HL
 bdfs_mon_dir:
+    call bdfs_get_drive
+    jr nz, _bmd_no_drive
+    call bdfs_select_drive
+    jr z, _bmd_selected
+    ld hl, _msg_no_device
+    call con_puts
+    ret
+_bmd_no_drive:
+    ld hl, BDFS_NO_DRIVE_MSG
+    call con_puts
+    ret
+_bmd_selected:
     call bdfs_dir_open
     jr z, _bmd_opened
     call _dir_error
     ret
 
 _bmd_opened:
-    ; HL = vol name ptr from bdfs_dir_open; slot still selected from that call
+    ; HL = vol name ptr from bdfs_dir_open
     call _print_device_info         ; preserves HL
     call con_puts                   ; print volume name (HL still points to it)
     ld a, CHAR_LF
