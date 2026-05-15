@@ -353,7 +353,6 @@ _dir_next_exit:
     or a
     ret
 
-
 ; ---- bdfs_file_write -------------------------------------------------------
 
 ; bdfs_file_write: write a file to the current drive 
@@ -407,9 +406,6 @@ _file_write_pages:
     call _file_write_write_pages    ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
     ret
 
-
-; ---- _file_write_write_pages -----------------------------------------------
-
 ; _file_write_write_pages: write BC bytes from DE to flash starting at _NEXT_FREE_SECTOR
 ; in:  BC = length, DE = source
 ; out: Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
@@ -453,8 +449,6 @@ _write_pages_fail:
     or a
     ret
 
-; ---- _file_write_verify_format ---------------------------------------------------
-
 ; _file_write_verify_format: read sector 0 header and verify BDFS magic bytes
 ; in:  —
 ; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
@@ -484,8 +478,6 @@ _file_write_verify_format_exit:
     pop bc
     or a
     ret
-
-; ---- _file_write_scan_dir -------------------------------------------------
 
 ; _file_write_scan_dir: scan the directory to locate the first empty slot and last active sector
 ; in:  —
@@ -519,8 +511,6 @@ _scan_dir_full:
     ld a, BDFS_ERR_DIR_FULL
     or a                            ; NZ
     ret
-
-; ---- _file_write_scan_dir_entry --------------------------------------------------
 
 ; _file_write_scan_dir_entry: read one directory entry at IX and update scan state
 ; in:  IX = flash byte offset of entry to read
@@ -563,9 +553,6 @@ _file_write_scan_dir_entry_exit:
     or a
     ret
 
-
-; ---- _file_write_device_full_check -----------------------------------------------
-
 ; _file_write_device_full_check: check whether BC bytes fit in remaining device space
 ; in:  BC = file length in bytes
 ; out: Z=ok, B = sectors needed; NZ+A=BDFS_ERR_DISK_FULL
@@ -606,10 +593,6 @@ _file_write_check_device_full_ok:
     xor a                           ; Z; B = sectors_needed
     ret
 
-
-
-; ---- _file_write_erase_sectors --------------------------------------------
-
 ; _file_write_erase_sectors: erase B sectors starting from _NEXT_FREE_SECTOR
 ; in:  B = sector count
 ; out: Z=ok, NZ+A=BDFS_ERR_ERASE_FAIL
@@ -629,6 +612,7 @@ _erase_sectors_fail:
     ld a, BDFS_ERR_ERASE_FAIL
     or a                            ; NZ
     ret
+
 
 ; ---- _parse_filename --------------------------------------------------
 
