@@ -367,52 +367,32 @@ bdfs_file_write:
     push bc                         ; save length
     push de                         ; save source
     push hl                         ; save filename
-    ; verify device is formatted
     call _file_write_verify_format
-    jr z, _file_write_scan_dir
-    ; device not formatted
+    jr z, _file_write_check_directory
     pop hl
     pop de
     pop bc
     or a                            ; A = BDFS_ERR_NOT_FORMATTED, NZ
     ret
-    ; scan directory to find:
-    ;   _FREE_ENTRY_OFFSET = flash byte address of first empty directory slot
-    ;   _NEXT_FREE_SECTOR  = sector number after the last active file
-    ; IX = scan_offset (flash byte address of current entry)
-    ; B  = entries scanned (up to 255)
-_file_write_scan_dir:
-    ld hl, 0x0000
-    ld (_FREE_ENTRY_OFFSET), hl     ; = 0 (not yet found)
-    ld hl, BDFS_DATA_START_SECTOR
-    ld (_NEXT_FREE_SECTOR), hl      ; = first data sector
-    ld ix, BDFS_HDR_SIZE            ; scan_offset = first entry
-    ld b, 0                         ; entry count
-_file_write_scan_dir_loop:
-    call _file_write_scan_dir_entry       ; Z=occupied, NZ=empty
-    jr nz, _file_write_scan_dir_empty
-    ld de, BDFS_ENT_SIZE
-    add ix, de                      ; advance scan_offset
-    inc b                           ; entry count
-    ld a, b
-    cp _MAX_ENTRIES                 ; directory sector full
-    jp z, _file_write_scan_dir_full
-    jr _file_write_scan_dir_loop
-_file_write_scan_dir_empty:
-    push ix
-    pop hl
-    ld (_FREE_ENTRY_OFFSET), hl
-; device-full check 
-    pop hl                              ; discard filename
-    pop de                              ; DE = source
-    pop bc                              ; BC = length
-    push de                             ; re-save source
-    push bc                             ; re-save length
+_file_write_check_directory:
+    call _file_write_scan_dir       ; Z=ok, NZ+A=BDFS_ERR_DIR_FULL
+    jr z, _file_write_check_device
+    pop hl                          ; discard filename
+    pop de                          ; discard source
+    pop bc                          ; discard length
+    or a                            ; NZ (A = BDFS_ERR_DIR_FULL)
+    ret
+_file_write_check_device:
+    pop hl                          ; discard filename
+    pop de                          ; DE = source
+    pop bc                          ; BC = length
+    push de                         ; re-save source
+    push bc                         ; re-save length
     call _file_write_device_full_check  ; Z=ok B=sectors_needed, NZ+A=BDFS_ERR_DISK_FULL
     jr z, _bfw_step4
-    pop bc                              ; discard length
-    pop de                              ; discard source
-    or a                                ; NZ (A = BDFS_ERR_DISK_FULL)
+    pop bc                          ; discard length
+    pop de                          ; discard source
+    or a                            ; NZ (A = BDFS_ERR_DISK_FULL)
     ret
 
 ; --- Step 4: erase data sectors ---------------------------------------------
@@ -477,14 +457,6 @@ _bfw_write_fail:
     or a
     ret
 
-_file_write_scan_dir_full:
-    pop hl                          ; discard filename
-    pop de                          ; discard source
-    pop bc                          ; discard length
-    ld a, BDFS_ERR_DIR_FULL
-    or a
-    ret
-
 _bfw_erase_fail:
     pop bc                          ; saved length
     pop de                          ; saved source
@@ -523,6 +495,41 @@ _file_write_verify_format_exit:
     pop de
     pop bc
     or a
+    ret
+
+; ---- _file_write_scan_dir -------------------------------------------------
+
+; _file_write_scan_dir: scan the directory to locate the first empty slot and last active sector
+; in:  —
+; out: Z=ok; _FREE_ENTRY_OFFSET = first empty slot, _NEXT_FREE_SECTOR = first free sector
+;      NZ+A=BDFS_ERR_DIR_FULL (all 255 entry slots occupied)
+; destroys: AF, B, IX
+_file_write_scan_dir:
+    ld hl, 0x0000
+    ld (_FREE_ENTRY_OFFSET), hl     ; = 0 (not yet found)
+    ld hl, BDFS_DATA_START_SECTOR
+    ld (_NEXT_FREE_SECTOR), hl      ; = first data sector
+    ld ix, BDFS_HDR_SIZE            ; scan_offset = first entry
+    ld b, 0                         ; entry count
+_scan_dir_loop:
+    call _file_write_scan_dir_entry ; Z=occupied, NZ=empty
+    jr nz, _scan_dir_found_empty
+    ld de, BDFS_ENT_SIZE
+    add ix, de                      ; advance scan_offset
+    inc b                           ; entry count
+    ld a, b
+    cp _MAX_ENTRIES                 ; directory sector full
+    jr z, _scan_dir_full
+    jr _scan_dir_loop
+_scan_dir_found_empty:
+    push ix
+    pop hl
+    ld (_FREE_ENTRY_OFFSET), hl
+    xor a                           ; Z: ok
+    ret
+_scan_dir_full:
+    ld a, BDFS_ERR_DIR_FULL
+    or a                            ; NZ
     ret
 
 ; ---- _file_write_scan_dir_entry --------------------------------------------------
