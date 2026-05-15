@@ -356,10 +356,9 @@ _dir_next_exit:
 
 ; ---- bdfs_file_write -------------------------------------------------------
 
-; bdfs_file_write: write a file to the current drive (steps 1-5: verify format, scan,
-;                  disk-full check, erase, write pages; directory entry pending)
+; bdfs_file_write: write a file to the current drive 
 ; assumes bdfs_select_drive has been called
-; in:  HL = filename (null-terminated "NAME.EXT", uppercase)
+; in:  HL = filename (null-terminated "NAME.EXT")
 ;      DE = source address in RAM
 ;      BC = length in bytes
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
@@ -368,9 +367,7 @@ bdfs_file_write:
     push bc                         ; save length
     push de                         ; save source
     push hl                         ; save filename
-
-; --- Step 1: verify format --------------------------------------------------
-
+    ; verify device is formatted
     call _file_write_verify_format
     jr z, _file_write_scan_dir
     ; device not formatted
@@ -379,16 +376,11 @@ bdfs_file_write:
     pop bc
     or a                            ; A = BDFS_ERR_NOT_FORMATTED, NZ
     ret
-
-; --- Step 2: directory scan -------------------------------------------------
-;
-; Scans entries to find:
-;   _FREE_ENTRY_OFFSET = flash byte address of first empty directory slot
-;   _NEXT_FREE_SECTOR  = sector number after the last active file
-;
-; IX = scan_offset (flash byte address of current entry)
-; B  = entries scanned (up to 255)
-
+    ; scan directory to find:
+    ;   _FREE_ENTRY_OFFSET = flash byte address of first empty directory slot
+    ;   _NEXT_FREE_SECTOR  = sector number after the last active file
+    ; IX = scan_offset (flash byte address of current entry)
+    ; B  = entries scanned (up to 255)
 _file_write_scan_dir:
     ld hl, 0x0000
     ld (_FREE_ENTRY_OFFSET), hl     ; = 0 (not yet found)
@@ -410,20 +402,17 @@ _file_write_scan_dir_empty:
     push ix
     pop hl
     ld (_FREE_ENTRY_OFFSET), hl
-
-; --- Step 3: device-full check ----------------------------------------------
-
-_bfw_step3:
-    pop hl                          ; discard filename
-    pop de                          ; DE = source
-    pop bc                          ; BC = length
-    push de                         ; re-save source
-    push bc                         ; re-save length
-    call _file_write_device_full_check    ; Z=ok B=sectors_needed, NZ+A=BDFS_ERR_DISK_FULL
+; device-full check 
+    pop hl                              ; discard filename
+    pop de                              ; DE = source
+    pop bc                              ; BC = length
+    push de                             ; re-save source
+    push bc                             ; re-save length
+    call _file_write_device_full_check  ; Z=ok B=sectors_needed, NZ+A=BDFS_ERR_DISK_FULL
     jr z, _bfw_step4
-    pop bc                          ; discard length
-    pop de                          ; discard source
-    or a                            ; NZ (A = BDFS_ERR_DISK_FULL)
+    pop bc                              ; discard length
+    pop de                              ; discard source
+    or a                                ; NZ (A = BDFS_ERR_DISK_FULL)
     ret
 
 ; --- Step 4: erase data sectors ---------------------------------------------
