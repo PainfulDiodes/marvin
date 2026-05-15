@@ -53,7 +53,7 @@ _prompt:
     ld hl,CMD_BUFFER
     IFDEF INCLUDE_BDFS
     call bdfs_get_drive
-    jr z, _prompt_no_drive
+    jr nz, _prompt_no_drive
     call con_putchar            ; drive letter
 _prompt_no_drive:
     ENDIF

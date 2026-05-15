@@ -50,7 +50,7 @@ _bmcf_got_arg:
     push hl                          ; save name pointer
 
     call bdfs_get_drive
-    jr nz, _bmcf_confirm
+    jr z, _bmcf_confirm
     pop hl                           ; discard name ptr
     ld hl, BDFS_NO_DRIVE_MSG
     call con_puts

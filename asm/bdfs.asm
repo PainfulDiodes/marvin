@@ -129,10 +129,17 @@ bdfs_set_drive:
 
 ; bdfs_get_drive: return the current drive letter
 ; in:  —
-; out: A = drive letter ('A'-'F'), or 0 if no drive has been selected (Z/NZ flag set accordingly)
+; out: Z=ok, A = drive letter ('A'-'F')
+;      NZ=no drive, A=BDFS_ERR_NO_DRIVE
 ; destroys: AF
 bdfs_get_drive:
     ld a, (BDFS_DRIVE)
+    or a
+    jr z, _bgd_no_drive
+    cp a                            ; Z set, A = drive letter unchanged
+    ret
+_bgd_no_drive:
+    ld a, BDFS_ERR_NO_DRIVE
     or a
     ret
 
@@ -144,15 +151,11 @@ bdfs_get_drive:
 ; destroys: AF
 bdfs_has_device:
     call bdfs_get_drive
-    jr nz, _bhd_got_drive
-    ld a, BDFS_ERR_NO_DRIVE
-    or a
-    ret
-_bhd_got_drive:
+    ret nz                          ; NZ = no drive, A = BDFS_ERR_NO_DRIVE
     sub 'A'-1
     call flash_select_slot
     call flash_has_device
-    ret z                            ; Z = device present
+    ret z                           ; Z = device present
     ld a, BDFS_ERR_NO_DEVICE
     or a
     ret
@@ -169,15 +172,7 @@ bdfs_format:
     push de
     push hl
     call bdfs_get_drive
-    jr nz, _bdfs_fmt_got_drive
-    pop hl
-    pop de
-    pop bc
-    ld a, BDFS_ERR_NO_DRIVE
-    or a
-    ret
-
-_bdfs_fmt_got_drive:
+    jr nz, _bdfs_fmt_no_drive
     ld (_FMT_NAME_PTR), hl          ; stash name ptr across erase
     sub 'A'-1                       ; slot 1-6
     call flash_select_slot
@@ -188,6 +183,12 @@ _bdfs_fmt_got_drive:
     pop bc
     ld a, BDFS_ERR_NO_DEVICE
     or a
+    ret
+_bdfs_fmt_no_drive:
+    pop hl
+    pop de
+    pop bc
+    or a                            ; A = BDFS_ERR_NO_DRIVE, ensure NZ
     ret
 
 _bdfs_fmt_has_device:
@@ -308,14 +309,7 @@ bdfs_dir_open:
     push bc
     push de
     call bdfs_get_drive
-    jr nz, _bdo_got_drive
-    pop de
-    pop bc
-    ld a, BDFS_ERR_NO_DRIVE
-    or a
-    ret
-
-_bdo_got_drive:
+    jr nz, _bdo_no_drive
     sub 'A'-1
     call flash_select_slot
     call flash_has_device
@@ -324,6 +318,11 @@ _bdo_got_drive:
     pop bc
     ld a, BDFS_ERR_NO_DEVICE
     or a
+    ret
+_bdo_no_drive:
+    pop de
+    pop bc
+    or a                            ; A = BDFS_ERR_NO_DRIVE, ensure NZ
     ret
 
 _bdo_has_device:
@@ -495,15 +494,7 @@ bdfs_file_write:
 ; --- Step 1: validate drive, device, format ---------------------------------
 
     call bdfs_get_drive
-    jr nz, _bfw_got_drive
-    pop hl
-    pop de
-    pop bc
-    ld a, BDFS_ERR_NO_DRIVE
-    or a
-    ret
-
-_bfw_got_drive:
+    jr nz, _bfw_no_drive
     sub 'A'-1
     call flash_select_slot
     call flash_has_device
@@ -513,6 +504,12 @@ _bfw_got_drive:
     pop bc
     ld a, BDFS_ERR_NO_DEVICE
     or a
+    ret
+_bfw_no_drive:
+    pop hl
+    pop de
+    pop bc
+    or a                            ; A = BDFS_ERR_NO_DRIVE, ensure NZ
     ret
 
 _bfw_has_device:
