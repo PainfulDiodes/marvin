@@ -396,62 +396,62 @@ _file_write_check_device:
     ret
 _file_write_erase:
     call _file_write_erase_sectors  ; B=sectors_needed; Z=ok, NZ+A=BDFS_ERR_ERASE_FAIL
-    jr z, _bfw_step5
+    jr z, _file_write_pages
     pop bc                          ; discard length
     pop de                          ; discard source
     or a                            ; NZ (A = BDFS_ERR_ERASE_FAIL)
     ret
-
-; --- Step 5: write file data in 256-byte pages ------------------------------
-
-_bfw_step5:
-    pop bc                          ; BC = length (pushed last in step 3, so on top)
+_file_write_pages:
+    pop bc                          ; BC = length
     pop de                          ; DE = source
+    call _file_write_write_pages    ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
+    ret
 
+
+; ---- _file_write_write_pages -----------------------------------------------
+
+; _file_write_write_pages: write BC bytes from DE to flash starting at _NEXT_FREE_SECTOR
+; in:  BC = length, DE = source
+; out: Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
+; destroys: AF, BC, DE, HL
+_file_write_write_pages:
     ld hl, (_NEXT_FREE_SECTOR)
     call flash_sector_to_addr       ; A = addr[23:16], HL = addr[15:0]
     ld (_PAGE_ADDR_BANK), a         ; save addr[23:16] for use across page_program calls
-
-_bfw_page_loop:
+_write_pages_loop:
     ld a, b
     or c
-    jr z, _bfw_write_ok             ; BC = 0: done
-
+    jr z, _write_pages_ok           ; BC = 0: done
     ld a, b
     or a
-    jr z, _bfw_partial_page         ; B = 0: fewer than 256 bytes remain
-
+    jr z, _write_pages_partial      ; B = 0: fewer than 256 bytes remain
     ; full 256-byte page
     ld a, (_PAGE_ADDR_BANK)         ; A = addr[23:16]
     push bc                         ; save remaining count
     ld bc, _PAGE_SIZE
     call flash_page_program         ; A:HL=addr, DE=src, BC=_PAGE_SIZE → Z=ok NZ=timeout; preserves HL, BC; DE advances
     pop bc                          ; restore remaining count
-    jr nz, _bfw_write_fail
+    jr nz, _write_pages_fail
     inc h                           ; addr[15:8]++: advance to next page
-    jr nz, _bfw_page_inc_ok
+    jr nz, _write_pages_inc_ok
     ld a, (_PAGE_ADDR_BANK)         ; H wrapped: propagate carry into addr[23:16]
     inc a
     ld (_PAGE_ADDR_BANK), a
-_bfw_page_inc_ok:
-dec b                               ; remaining -= 256
-    jr _bfw_page_loop
-
-_bfw_partial_page:
+_write_pages_inc_ok:
+    dec b                           ; remaining -= 256
+    jr _write_pages_loop
+_write_pages_partial:
     ; B = 0, C = remaining bytes (< 256); write and finish
     ld a, (_PAGE_ADDR_BANK)         ; A = addr[23:16]
     call flash_page_program         ; A:HL=addr, DE=src, BC=C bytes
-    jr nz, _bfw_write_fail
-
-_bfw_write_ok:
+    jr nz, _write_pages_fail
+_write_pages_ok:
     xor a                           ; Z set, A = 0
     ret
-
-_bfw_write_fail:
+_write_pages_fail:
     ld a, BDFS_ERR_WRITE_FAIL
     or a
     ret
-
 
 ; ---- _file_write_verify_format ---------------------------------------------------
 
