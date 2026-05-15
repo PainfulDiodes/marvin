@@ -20,7 +20,7 @@
     EXTERN con_getchar
     EXTERN con_putchar_hex
     EXTERN con_putchar_dec
-    EXTERN bdfs_get_device
+    EXTERN bdfs_select_drive
     EXTERN bdfs_format
     EXTERN bdfs_dir_open
     EXTERN bdfs_dir_next
@@ -122,7 +122,7 @@ bdfs_mon_format:
     push hl                         ; save vol name ptr
     call bdfs_get_drive
     jr nz, _bmf_no_drive
-    call bdfs_get_device
+    call bdfs_select_drive
     jr z, _bmf_has_device
     pop hl                          ; discard vol name ptr
     ld hl, _msg_no_device
