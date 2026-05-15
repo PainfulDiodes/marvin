@@ -275,22 +275,14 @@ _format_exit:
 ; ---- bdfs_dir_open ---------------------------------------------------------
 
 ; bdfs_dir_open: prepare to iterate the current drive's directory
+; assumes bdfs_select_drive has been called
 ; in:  —
 ; out: Z=ok, HL = pointer to null-terminated volume name (in BDFS_HDR_BUF)
-;      NZ=error, A=BDFS_ERR_* (NO_DRIVE / NO_DEVICE / NOT_FORMATTED)
+;      NZ=error, A=BDFS_ERR_NOT_FORMATTED
 ; destroys: AF, HL
 bdfs_dir_open:
     push bc
     push de
-    call bdfs_get_drive
-    jp nz, _dir_open_exit                ; A = BDFS_ERR_NO_DRIVE from bdfs_get_drive
-    sub 'A'-1
-    call flash_select_slot
-    call flash_has_device
-    jr z, _dir_open_has_device
-    ld a, BDFS_ERR_NO_DEVICE
-    jp _dir_open_exit
-_dir_open_has_device:
     xor a                           ; addr[23:16] = 0x00
     ld hl, 0x0000                   ; addr[15:0]
     ld de, BDFS_HDR_BUF
