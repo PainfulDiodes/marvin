@@ -389,23 +389,18 @@ _file_write_check_device:
     push de                         ; re-save source
     push bc                         ; re-save length
     call _file_write_device_full_check  ; Z=ok B=sectors_needed, NZ+A=BDFS_ERR_DISK_FULL
-    jr z, _bfw_step4
+    jr z, _file_write_erase
     pop bc                          ; discard length
     pop de                          ; discard source
     or a                            ; NZ (A = BDFS_ERR_DISK_FULL)
     ret
-
-; --- Step 4: erase data sectors ---------------------------------------------
-_bfw_step4:
-    ; B = sectors_needed from _file_write_device_full_check
-    ld ix, (_NEXT_FREE_SECTOR)
-_bfw_erase_loop:
-    push ix                         ; IX => HL
-    pop hl                          ; = current sector number
-    call flash_sector_erase         ; Z=ok, NZ=timeout
-    jr nz, _bfw_erase_fail
-    inc ix                          ; next sector
-    djnz _bfw_erase_loop
+_file_write_erase:
+    call _file_write_erase_sectors  ; B=sectors_needed; Z=ok, NZ+A=BDFS_ERR_ERASE_FAIL
+    jr z, _bfw_step5
+    pop bc                          ; discard length
+    pop de                          ; discard source
+    or a                            ; NZ (A = BDFS_ERR_ERASE_FAIL)
+    ret
 
 ; --- Step 5: write file data in 256-byte pages ------------------------------
 
@@ -454,13 +449,6 @@ _bfw_write_ok:
 
 _bfw_write_fail:
     ld a, BDFS_ERR_WRITE_FAIL
-    or a
-    ret
-
-_bfw_erase_fail:
-    pop bc                          ; saved length
-    pop de                          ; saved source
-    ld a, BDFS_ERR_ERASE_FAIL
     or a
     ret
 
@@ -619,6 +607,28 @@ _file_write_check_device_full_ok:
     ret
 
 
+
+; ---- _file_write_erase_sectors --------------------------------------------
+
+; _file_write_erase_sectors: erase B sectors starting from _NEXT_FREE_SECTOR
+; in:  B = sector count
+; out: Z=ok, NZ+A=BDFS_ERR_ERASE_FAIL
+; destroys: AF, B, IX
+_file_write_erase_sectors:
+    ld ix, (_NEXT_FREE_SECTOR)
+_erase_sectors_loop:
+    push ix
+    pop hl                          ; HL = current sector number
+    call flash_sector_erase         ; Z=ok, NZ=timeout
+    jr nz, _erase_sectors_fail
+    inc ix                          ; next sector
+    djnz _erase_sectors_loop
+    xor a                           ; Z: ok
+    ret
+_erase_sectors_fail:
+    ld a, BDFS_ERR_ERASE_FAIL
+    or a                            ; NZ
+    ret
 
 ; ---- _parse_filename --------------------------------------------------
 
