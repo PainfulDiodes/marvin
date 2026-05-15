@@ -466,6 +466,49 @@ _verify_format_exit:
     or a
     ret
 
+; ---- _bdfs_scan_dir_entry --------------------------------------------------
+
+; _bdfs_scan_dir_entry: read one directory entry at IX and update scan state
+; in:  IX = flash byte offset of entry to read
+; out: Z = empty entry (end of directory), NZ = occupied (active or deleted)
+;      _NEXT_FREE_SECTOR updated if entry is active
+; destroys: AF
+_bdfs_scan_dir_entry:
+    push bc
+    push de
+    push hl
+    push ix
+    pop hl                          ; HL = scan offset (flash address)
+    xor a                           ; addr[23:16] = 0
+    ld de, BDFS_ENT_BUF
+    ld bc, BDFS_ENT_SIZE
+    call flash_read
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
+    cp BDFS_ENT_EMPTY
+    jr z, _scan_dir_entry_empty
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
+    bit BDFS_FLAG_DELETED_BIT, a
+    jr nz, _scan_dir_entry_done     ; deleted: skip sector update
+    ; active: end_sector = start_sector + num_sectors
+    ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
+    call flash_bytes_to_sectors     ; A = num sectors
+    ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
+    ld d, 0
+    ld e, a
+    add hl, de                      ; HL = end_sector
+    ld (_NEXT_FREE_SECTOR), hl      ; always ascending: last active entry wins
+_scan_dir_entry_done:
+    ld a, 1                         ; NZ: occupied
+    jr _scan_dir_entry_exit
+_scan_dir_entry_empty:
+    xor a                           ; Z: empty slot
+_scan_dir_entry_exit:
+    pop hl
+    pop de
+    pop bc
+    or a
+    ret
+
 ; ---- bdfs_file_write -------------------------------------------------------
 
 ; bdfs_file_write: write a file to the current drive (steps 1-5: verify format, scan,
@@ -508,36 +551,9 @@ _bfw_step2:
     ld (_NEXT_FREE_SECTOR), hl      ; = first data sector
     ld ix, BDFS_HDR_SIZE            ; scan_offset = first entry
     ld b, 0                         ; entry count
-
 _bfw_scan_loop:
-    push ix                         ; IX => HL = scan_offset
-    pop hl                          ; lower 16 bits of address
-    xor a                           ; zero A = top 8 bits address
-    push bc                         ; save B = entry count across flash_read
-    ld de, BDFS_ENT_BUF             ; destination
-    ld bc, BDFS_ENT_SIZE            ; byte count
-    call flash_read                 ; load into entry buffer
-    pop bc                          ; restore B = entry count
-
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET) ; first char of file name in entry buffer
-    cp BDFS_ENT_EMPTY
-    jr z, _bfw_scan_found_empty_entry
-
-    ; check flags: skip deleted entries (don't update next_free_sector)
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
-    bit BDFS_FLAG_DELETED_BIT, a
-    jr nz, _bfw_scan_next
-
-    ; active entry: end_sector = start_sector + num_sectors
-    ld hl, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET) ; file length bytes
-    call flash_bytes_to_sectors     ; A = num sectors
-    ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
-    ld d, 0
-    ld e, a
-    add hl, de                      ; HL = end_sector
-    ld (_NEXT_FREE_SECTOR), hl      ; always ascending: last active entry wins
-
-_bfw_scan_next:
+    call _bdfs_scan_dir_entry       ; Z=empty, NZ=occupied
+    jr z, _bfw_scan_found_empty
     ld de, BDFS_ENT_SIZE
     add ix, de                      ; advance scan_offset
     inc b                           ; entry count
@@ -545,8 +561,7 @@ _bfw_scan_next:
     cp _MAX_ENTRIES                 ; directory sector full
     jp z, _bfw_dir_full
     jr _bfw_scan_loop
-
-_bfw_scan_found_empty_entry:
+_bfw_scan_found_empty:
     push ix
     pop hl
     ld (_FREE_ENTRY_OFFSET), hl
