@@ -365,45 +365,26 @@ _dir_next_exit:
 bdfs_file_write:
     push bc                         ; save length
     push de                         ; save source
-    push hl                         ; save filename
-    call _file_write_verify_format
-    jr z, _file_write_check_directory
-    pop hl
-    pop de
-    pop bc
-    or a                            ; A = BDFS_ERR_NOT_FORMATTED, NZ
-    ret
-_file_write_check_directory:
-    call _file_write_scan_dir       ; Z=ok, NZ+A=BDFS_ERR_DIR_FULL
-    jr z, _file_write_check_device
-    pop hl                          ; discard filename
-    pop de                          ; discard source
-    pop bc                          ; discard length
-    or a                            ; NZ (A = BDFS_ERR_DIR_FULL)
-    ret
-_file_write_check_device:
-    pop hl                          ; discard filename
+    call _file_write_verify_format  ; destroys AF
+    jr nz, _bfw_exit
+    call _file_write_scan_dir       ; destroys AF, B, IX
+    jr nz, _bfw_exit
+    pop de                          ; source — pass to device check
+    pop bc                          ; length — pass to device check
+    push bc                         ; re-save
+    push de
+    call _file_write_device_full_check  ; BC = length; Z=ok B=sectors_needed, NZ+A=err
+    jr nz, _bfw_exit
+    call _file_write_erase_sectors  ; B = sectors_needed; Z=ok, NZ+A=err
+    jr nz, _bfw_exit
     pop de                          ; DE = source
     pop bc                          ; BC = length
-    push de                         ; re-save source
-    push bc                         ; re-save length
-    call _file_write_device_full_check  ; Z=ok B=sectors_needed, NZ+A=BDFS_ERR_DISK_FULL
-    jr z, _file_write_erase
-    pop bc                          ; discard length
-    pop de                          ; discard source
-    or a                            ; NZ (A = BDFS_ERR_DISK_FULL)
-    ret
-_file_write_erase:
-    call _file_write_erase_sectors  ; B=sectors_needed; Z=ok, NZ+A=BDFS_ERR_ERASE_FAIL
-    jr z, _file_write_pages
-    pop bc                          ; discard length
-    pop de                          ; discard source
-    or a                            ; NZ (A = BDFS_ERR_ERASE_FAIL)
-    ret
-_file_write_pages:
-    pop bc                          ; BC = length
-    pop de                          ; DE = source
     call _file_write_write_pages    ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
+    ret
+_bfw_exit:
+    pop bc
+    pop de
+    or a                            ; NZ (A = error code)
     ret
 
 ; _file_write_write_pages: write BC bytes from DE to flash starting at _NEXT_FREE_SECTOR
