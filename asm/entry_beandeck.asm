@@ -43,6 +43,21 @@
     EXTERN flash_sector_erase   ; w25q.asm - erase 4KB sector
     EXTERN flash_select_slot    ; w25q.asm - select active cartridge slot
     EXTERN flash_read_jedec_id  ; w25q.asm - read JEDEC ID from current slot
+    EXTERN flash_has_device     ; w25q.asm - check device present
+    EXTERN flash_get_device_id  ; w25q.asm - get cached JEDEC ID
+    EXTERN flash_get_device_name ; w25q.asm - get device name string
+    EXTERN flash_get_capacity_mb ; w25q.asm - get capacity in MB
+    EXTERN flash_get_sector_count ; w25q.asm - get total sector count
+    EXTERN flash_bytes_to_sectors ; w25q.asm - byte count to sector count
+    EXTERN flash_sector_to_addr ; w25q.asm - sector number to 24-bit address
+    EXTERN bdfs_init            ; bdfs.asm - initialise BDFS RAM state
+    EXTERN bdfs_set_drive       ; bdfs.asm - set active drive letter
+    EXTERN bdfs_get_drive       ; bdfs.asm - get active drive letter
+    EXTERN bdfs_select_drive    ; bdfs.asm - select drive slot and verify device
+    EXTERN bdfs_format          ; bdfs.asm - erase and write directory header
+    EXTERN bdfs_dir_open        ; bdfs.asm - prepare directory iterator
+    EXTERN bdfs_dir_next        ; bdfs.asm - read next directory entry
+    EXTERN bdfs_file_write      ; bdfs.asm - write file to current drive
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     EXTERN STACK
@@ -111,6 +126,21 @@ ALIGN 0x0040
     jp flash_sector_erase            ; 0x0091 - flash sector erase (HL=sector number)
     jp flash_select_slot             ; 0x0094 - select flash slot (A=slot 1-6)
     jp flash_read_jedec_id           ; 0x0097 - read JEDEC ID (out: A=mfr B=type C=cap)
+    jp flash_has_device              ; 0x009A - check device present (out: Z=present NZ=none)
+    jp flash_get_device_id           ; 0x009D - get cached JEDEC ID (out: A=mfr B=type C=cap)
+    jp flash_get_device_name         ; 0x00A0 - get device name string (out: HL=ptr)
+    jp flash_get_capacity_mb         ; 0x00A3 - get capacity in MB (out: A=MB)
+    jp flash_get_sector_count        ; 0x00A6 - get total sector count (out: HL=count)
+    jp flash_bytes_to_sectors        ; 0x00A9 - bytes to sectors ceiling (in: HL=bytes out: A=sectors)
+    jp flash_sector_to_addr          ; 0x00AC - sector to 24-bit addr (in: HL=sector out: A=addr[23:16] HL=addr[15:0])
+    jp bdfs_init                     ; 0x00AF - initialise BDFS RAM state
+    jp bdfs_set_drive                ; 0x00B2 - set active drive (in: A=drive letter)
+    jp bdfs_get_drive                ; 0x00B5 - get active drive (out: Z=ok A=drive; NZ A=err)
+    jp bdfs_select_drive             ; 0x00B8 - select drive slot and verify (in: A=drive letter out: Z=ok NZ=err)
+    jp bdfs_format                   ; 0x00BB - format drive (in: HL=vol name out: Z=ok NZ=err)
+    jp bdfs_dir_open                 ; 0x00BE - open directory iterator (out: Z=ok HL=vol name; NZ=err)
+    jp bdfs_dir_next                 ; 0x00C1 - next directory entry (out: Z=ok HL=entry; NZ=err C=active count)
+    jp bdfs_file_write               ; 0x00C4 - write file (in: HL=filename DE=src BC=len out: Z=ok NZ=err)
 _stub:
     ret
 ;
