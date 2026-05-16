@@ -23,10 +23,10 @@
     IFDEF INCLUDE_BDFS
     EXTERN bdfs_init
     EXTERN bdfs_get_drive
-    EXTERN bdfs_mon_cmd_format
-    EXTERN bdfs_mon_cmd_dir
-    EXTERN bdfs_mon_cmd_drive
-    EXTERN bdfs_mon_cmd_save
+    EXTERN bdfs_mon_format
+    EXTERN bdfs_mon_dir
+    EXTERN bdfs_mon_drive
+    EXTERN bdfs_mon_save
     EXTERN BDFS_HELP_MSG
     ENDIF
 
@@ -354,25 +354,25 @@ _cmd_load_end:
 ; FORMAT
 ; f [name] = format current drive (select with @A-@F first); prompts for confirmation
 _cmd_format:
-    call bdfs_mon_cmd_format
+    call bdfs_mon_format
     jp _prompt
 
 ; DIR
 ; d = list directory of current drive (select with @A-@F first)
 _cmd_dir:
-    call bdfs_mon_cmd_dir
+    call bdfs_mon_dir
     jp _prompt
 
 ; DRIVE SELECT
 ; @A-@F or @a-@f = select drive A-F
 _cmd_drive:
-    call bdfs_mon_cmd_drive
+    call bdfs_mon_drive
     jp _prompt
 
 ; SAVE
 ; s <name.ext> <addr> <len> = save RAM block to file on current drive
 _cmd_save:
-    call bdfs_mon_cmd_save
+    call bdfs_mon_save
     jp _prompt
 
     ENDIF
