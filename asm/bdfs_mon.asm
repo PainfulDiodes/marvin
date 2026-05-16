@@ -8,12 +8,11 @@
     INCLUDE "asm/chars.inc"
     INCLUDE "asm/bdfs.inc"
 
-    PUBLIC bdfs_mon_cmd_format
-    PUBLIC bdfs_mon_cmd_dir
-    PUBLIC bdfs_mon_cmd_drive
-    PUBLIC bdfs_mon_cmd_save
     PUBLIC bdfs_mon_format
     PUBLIC bdfs_mon_dir
+    PUBLIC bdfs_mon_drive
+    PUBLIC bdfs_mon_save
+
     PUBLIC BDFS_NO_DRIVE_MSG
 
     EXTERN con_puts
@@ -36,36 +35,31 @@
     EXTERN flash_get_device_name
     EXTERN flash_get_capacity_mb
 
-; ---- monitor command handlers ----------------------------------------------
-
-; bdfs_mon_cmd_format: 'f' command — confirm and format the current drive
+; bdfs_mon_format: 'f' command — confirm and format the current drive
 ; in:  HL = pointer into CMD_BUFFER past 'f' (optional volume name arg follows)
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL
-bdfs_mon_cmd_format:
-_bmcf_skip_sp:
+bdfs_mon_format:
+_format_skip_space:
     ld a, (hl)
     cp ' '
-    jr nz, _bmcf_got_arg
+    jr nz, _format_got_arg
     inc hl
-    jr _bmcf_skip_sp
-_bmcf_got_arg:
+    jr _format_skip_space
+_format_got_arg:
     push hl                          ; save name pointer
-
     call bdfs_get_drive
-    jr z, _bmcf_confirm
+    jr z, _format_confirm
     pop hl                           ; discard name ptr
-    ld hl, BDFS_NO_DRIVE_MSG
-    call con_puts
+    call _error                      ; A = BDFS_ERR_NO_DRIVE from bdfs_get_drive
     ret
-
-_bmcf_confirm:
+_format_confirm:
     ld b, a                          ; save drive letter
-    ld hl, _msg_fmt_confirm_pre
+    ld hl, _MSG_FORMAT_CONF_PRE
     call con_puts                    ; "Format "
     ld a, b
     call con_putchar                 ; drive letter
-    ld hl, _msg_fmt_confirm_post
+    ld hl, _MSG_FORMAT_CONF_POST
     call con_puts                    ; "? y/n "
     call con_getchar
     ld b, a                          ; save response before echo clobbers A
@@ -74,33 +68,58 @@ _bmcf_confirm:
     call con_putchar
     ld a, b
     cp 'y'
-    jr z, _bmcf_confirmed
+    jr z, _format_confirmed
     pop hl                           ; discard name ptr: user declined
     ret
-
-_bmcf_confirmed:
+_format_confirmed:
     pop hl                           ; restore name pointer
     ld a, (hl)
     or a
-    jr nz, _bmcf_run
+    jr nz, _format_execute
     ld hl, 0                         ; no name arg: use default
-_bmcf_run:
-    call bdfs_mon_format
+_format_execute:
+    push hl                          ; save vol name ptr
+    call bdfs_get_drive              ; A = drive letter (already confirmed valid above)
+    call bdfs_select_drive
+    jr z, _format_has_device
+    pop hl                           ; discard vol name ptr
+    call _error                      ; A = BDFS_ERR_NO_DEVICE from bdfs_select_drive
+    ret
+_format_has_device:
+    ld hl, _MSG_FORMAT_PRE
+    call con_puts                    ; "Formatting drive "
+    ld a, (BDFS_DRIVE)
+    call con_putchar
+    ld a, CHAR_LF
+    call con_putchar
+    call _print_device_info          ; preserves HL
+    pop hl                           ; restore vol name ptr
+    call bdfs_format
+    jr z, _format_completed
+    call _error
+    ret
+_format_completed:
+    ld hl, _MSG_FORMAT_OK
+    call con_puts
+    ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
+    call con_puts
+    ld a, CHAR_LF
+    call con_putchar
     ret
 
-; bdfs_mon_cmd_dir: 'd' command — list current drive directory
+; bdfs_mon_dir: 'd' command — list current drive directory
 ; in:  —
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL
-bdfs_mon_cmd_dir:
-    call bdfs_mon_dir
+bdfs_mon_dir:
+    call _mon_dir
     ret
 
-; bdfs_mon_cmd_drive: '@' command — select drive A-F
+; bdfs_mon_drive: '@' command — select drive A-F
 ; in:  HL = pointer to drive letter char in CMD_BUFFER
 ; out: — (error message printed on invalid input)
 ; destroys: AF
-bdfs_mon_cmd_drive:
+bdfs_mon_drive:
     ld a, (hl)
     and 0dfh                         ; fold lowercase to uppercase
     cp 'A'
@@ -111,17 +130,17 @@ bdfs_mon_cmd_drive:
     ret
 
 _bmcd_bad:
-    ld hl, _msg_bad_drive
+    ld hl, _MSG_BAD_DRIVE
     call con_puts
     ret
 
-; bdfs_mon_cmd_save: 's' command — save a region of RAM to the current drive as a named file
+; bdfs_mon_save: 's' command — save a region of RAM to the current drive as a named file
 ; in:  HL = pointer past 's' in CMD_BUFFER
 ; Syntax:  s <name.ext> <hex-address> <hex-length>
 ; Example: s HELLO.BAS 8000 0400
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL, IX
-bdfs_mon_cmd_save:
+bdfs_mon_save:
 _bms_skip_sp:
     ld a, (hl)
     cp ' '
@@ -177,92 +196,40 @@ _bms_has_drive:
     call bdfs_select_drive
     jr z, _bms_has_device
     pop hl                          ; discard filename ptr
-    ld hl, _msg_no_device
+    ld hl, _MSG_NO_DEVICE
     call con_puts
     ret
 _bms_has_device:
     pop hl                          ; HL = filename ptr
     call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error
     jr nz, _bms_write_error
-    ld hl, _msg_saved
+    ld hl, _MSG_SAVED
     call con_puts                   ; "Saved "
     call _print_entry_name          ; print filename from BDFS_ENT_BUF
     ld a, CHAR_LF
     call con_putchar
     ret
 _bms_write_error:
-    call _save_error
+    call _error
     ret
 _bms_bad_args_pop:
     pop hl                          ; discard filename ptr
-    ld hl, _msg_save_usage
+    ld hl, _MSG_SAVE_USAGE
     call con_puts
     ret
 
-; ---- bdfs_mon_format -------------------------------------------------------
+; ---- _mon_dir ----------------------------------------------------------
 
-; bdfs_mon_format: format the current drive with console feedback
-; in:  HL = volume name string (null-terminated, max 11 chars), or 0 for default
-; out: Z=ok, NZ=error (A=BDFS_ERR_*; errors are already printed)
-; destroys: AF, BC, DE, HL
-bdfs_mon_format:
-    push hl                         ; save vol name ptr
-    call bdfs_get_drive
-    jr nz, _bmf_no_drive
-    call bdfs_select_drive
-    jr z, _bmf_has_device
-    pop hl                          ; discard vol name ptr
-    ld hl, _msg_no_device
-    call con_puts
-    or a                            ; NZ (A = BDFS_ERR_NO_DEVICE)
-    ret
-_bmf_no_drive:
-    pop hl                          ; discard vol name ptr
-    ld hl, BDFS_NO_DRIVE_MSG
-    call con_puts
-    or a                            ; NZ (A = BDFS_ERR_NO_DRIVE)
-    ret
-
-_bmf_has_device:
-    ld hl, _msg_fmt_pre
-    call con_puts                   ; "Formatting drive "
-    ld a, (BDFS_DRIVE)
-    call con_putchar
-    ld a, CHAR_LF
-    call con_putchar
-    call _print_device_info         ; preserves HL
-    pop hl                          ; restore vol name ptr
-    call bdfs_format
-    jr nz, _bmf_error
-    ; success: "Format ok - <volname>\n"
-    ld hl, _msg_fmt_ok
-    call con_puts
-    ld hl, BDFS_HDR_BUF + BDFS_HDR_VOL_NAME_OFFSET
-    call con_puts
-    ld a, CHAR_LF
-    call con_putchar
-    xor a                           ; Z
-    ret
-
-_bmf_error:
-    ld b, a                         ; save error code across _format_error call
-    call _format_error
-    ld a, b
-    or a                            ; NZ (all error codes are non-zero)
-    ret
-
-; ---- bdfs_mon_dir ----------------------------------------------------------
-
-; bdfs_mon_dir: list the current drive directory to the console
+; _mon_dir: list the current drive directory to the console
 ; in:  —
 ; out: — (errors are already printed)
 ; destroys: AF, BC, DE, HL
-bdfs_mon_dir:
+_mon_dir:
     call bdfs_get_drive
     jr nz, _bmd_no_drive
     call bdfs_select_drive
     jr z, _bmd_selected
-    ld hl, _msg_no_device
+    ld hl, _MSG_NO_DEVICE
     call con_puts
     ret
 _bmd_no_drive:
@@ -272,7 +239,7 @@ _bmd_no_drive:
 _bmd_selected:
     call bdfs_dir_open
     jr z, _bmd_opened
-    call _dir_error
+    call _error
     ret
 
 _bmd_opened:
@@ -290,7 +257,7 @@ _bmd_scan:
     bit BDFS_FLAG_DELETED_BIT, a
     jr nz, _bmd_deleted
     ; active entry
-    ld hl, _msg_indent
+    ld hl, _MSG_INDENT
     call con_puts                   ; "  "
     call _print_entry_name
     ld a, CHAR_LF
@@ -298,7 +265,7 @@ _bmd_scan:
     jr _bmd_scan
 
 _bmd_deleted:
-    ld hl, _msg_deleted
+    ld hl, _MSG_DELETED
     call con_puts                   ; "  (deleted) "
     call _print_entry_name
     ld a, CHAR_LF
@@ -308,7 +275,7 @@ _bmd_deleted:
 _bmd_done:
     ld a, c
     call con_putchar_dec          ; C = active entry count from bdfs_dir_next
-    ld hl, _msg_files
+    ld hl, _MSG_FILES
     call con_puts                   ; " file(s)\n"
     ret
 
@@ -382,7 +349,7 @@ _print_device_info:
     call con_putchar
     call flash_get_capacity_mb      ; A = MB
     call con_putchar_dec
-    ld hl, _msg_mb
+    ld hl, _MSG_MB
     call con_puts
     pop hl
     pop de
@@ -390,85 +357,59 @@ _print_device_info:
     pop af
     ret
 
-; _format_error: print error message for a bdfs_format failure
+; _error: print error message for any BDFS_ERR_* code
 ; in:  A = BDFS_ERR_* code
 ; destroys: AF, BC, DE, HL
-_format_error:
-    cp BDFS_ERR_VERIFY_FAIL
-    ld hl, _msg_fmt_magic_fail
-    jr z, _fe_print
-    cp BDFS_ERR_ERASE_FAIL
-    ld hl, _msg_fmt_erase_fail
-    jr z, _fe_print
-    cp BDFS_ERR_WRITE_FAIL
-    ld hl, _msg_fmt_write_fail
-    jr z, _fe_print
-    ret                             ; no message for other codes (NO_DRIVE/NO_DEVICE handled by caller)
-_fe_print:
-    call con_puts
-    ret
-
-; _dir_error: print error message for a bdfs_dir_open failure
-; in:  A = BDFS_ERR_* code
-; destroys: AF, BC, DE, HL
-_dir_error:
+_error:
     cp BDFS_ERR_NO_DRIVE
     ld hl, BDFS_NO_DRIVE_MSG
-    jr z, _de_print
+    jr z, _bdfs_error_print
+    cp BDFS_ERR_NO_DEVICE
+    ld hl, _MSG_NO_DEVICE
+    jr z, _bdfs_error_print
     cp BDFS_ERR_NOT_FORMATTED
-    ld hl, _msg_not_formatted
-    jr z, _de_print
-    ld hl, _msg_no_device           ; default: BDFS_ERR_NO_DEVICE
-_de_print:
-    call con_puts
-    ret
-
-; _save_error: print error message for a bdfs_file_write failure
-; in:  A = BDFS_ERR_* code
-; destroys: AF, BC, DE, HL
-_save_error:
-    cp BDFS_ERR_DIR_FULL
-    ld hl, _msg_dir_full
-    jr z, _se_print
-    cp BDFS_ERR_DISK_FULL
-    ld hl, _msg_disk_full
-    jr z, _se_print
+    ld hl, _MSG_NOT_FORMATTED
+    jr z, _bdfs_error_print
     cp BDFS_ERR_ERASE_FAIL
-    ld hl, _msg_save_erase_fail
-    jr z, _se_print
+    ld hl, _MSG_ERASE_FAIL
+    jr z, _bdfs_error_print
     cp BDFS_ERR_WRITE_FAIL
-    ld hl, _msg_save_write_fail
-    jr z, _se_print
-    cp BDFS_ERR_NOT_FORMATTED
-    ld hl, _msg_not_formatted
-    jr z, _se_print
-    ld hl, _msg_no_device           ; unexpected error
-_se_print:
+    ld hl, _MSG_WRITE_FAIL
+    jr z, _bdfs_error_print
+    cp BDFS_ERR_VERIFY_FAIL
+    ld hl, _MSG_VERIFY_FAIL
+    jr z, _bdfs_error_print
+    cp BDFS_ERR_DIR_FULL
+    ld hl, _MSG_DIR_FULL
+    jr z, _bdfs_error_print
+    cp BDFS_ERR_DISK_FULL
+    ld hl, _MSG_DISK_FULL
+    jr z, _bdfs_error_print
+    ret                              ; END_OF_DIR and unknown: no message
+_bdfs_error_print:
     call con_puts
     ret
 
 ; ---- strings ---------------------------------------------------------------
 
-_msg_fmt_confirm_pre:   db "Format ", 0
-_msg_fmt_confirm_post:  db "? y/n ", 0
-_msg_bad_drive:         db "Invalid drive", CHAR_LF, 0
-_msg_fmt_pre:           db "Formatting drive ", 0
-_msg_fmt_ok:            db "Format ok - ", 0
-_msg_fmt_magic_fail:    db "Format fail (bad magic)", CHAR_LF, 0
-_msg_fmt_erase_fail:    db "Format fail (erase timeout)", CHAR_LF, 0
-_msg_fmt_write_fail:    db "Format fail (write timeout)", CHAR_LF, 0
-_msg_indent:            db "  ", 0
-_msg_deleted:           db "  (deleted) ", 0
-_msg_files:             db " file(s)", CHAR_LF, 0
-_msg_not_formatted:     db "Not formatted", CHAR_LF, 0
-_msg_mb:                db "MB", CHAR_LF, 0
-_msg_no_device:         db "No device in slot", CHAR_LF, 0
+_MSG_FORMAT_CONF_PRE:   db "Format ", 0
+_MSG_FORMAT_CONF_POST:  db "? y/n ", 0
+_MSG_BAD_DRIVE:         db "Invalid drive", CHAR_LF, 0
+_MSG_FORMAT_PRE:        db "Formatting drive ", 0
+_MSG_FORMAT_OK:         db "Format ok - ", 0
+_MSG_VERIFY_FAIL:       db "Verify fail", CHAR_LF, 0
+_MSG_ERASE_FAIL:        db "Erase fail", CHAR_LF, 0
+_MSG_WRITE_FAIL:        db "Write fail", CHAR_LF, 0
+_MSG_INDENT:            db "  ", 0
+_MSG_DELETED:           db "  (deleted) ", 0
+_MSG_FILES:             db " file(s)", CHAR_LF, 0
+_MSG_NOT_FORMATTED:     db "Not formatted", CHAR_LF, 0
+_MSG_MB:                db "MB", CHAR_LF, 0
+_MSG_NO_DEVICE:         db "No device in slot", CHAR_LF, 0
 BDFS_NO_DRIVE_MSG:      db "No drive selected", CHAR_LF, 0
-_msg_saved:             db "Saved ", 0
-_msg_save_usage:        db "s <name.ext> <addr> <len>", CHAR_LF, 0
-_msg_dir_full:          db "Directory full", CHAR_LF, 0
-_msg_disk_full:         db "Disk full", CHAR_LF, 0
-_msg_save_erase_fail:   db "Save fail (erase timeout)", CHAR_LF, 0
-_msg_save_write_fail:   db "Save fail (write timeout)", CHAR_LF, 0
+_MSG_SAVED:             db "Saved ", 0
+_MSG_SAVE_USAGE:        db "s <name.ext> <addr> <len>", CHAR_LF, 0
+_MSG_DIR_FULL:          db "Directory full", CHAR_LF, 0
+_MSG_DISK_FULL:         db "Disk full", CHAR_LF, 0
 
     ENDIF
