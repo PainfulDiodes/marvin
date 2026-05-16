@@ -40,13 +40,12 @@
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL
 bdfs_mon_format:
-_format_skip_space:
     ld a, (hl)
     cp ' '
-    jr nz, _format_got_arg
+    jr nz, _format_get_drive
     inc hl
-    jr _format_skip_space
-_format_got_arg:
+    jr bdfs_mon_format
+_format_get_drive:
     push hl                          ; save name pointer
     call bdfs_get_drive
     jr z, _format_confirm
