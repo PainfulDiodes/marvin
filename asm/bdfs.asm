@@ -363,8 +363,9 @@ _dir_next_exit:
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
 ; destroys: AF, BC, DE, HL, IX
 bdfs_file_write:
-    push bc                             ; save length
-    push de                             ; save source
+    push hl                             ; [HL]        filename
+    push bc                             ; [HL BC]     length
+    push de                             ; [HL BC DE]  source
     call _file_write_verify_format      ; destroys AF
     jr nz, _file_write_error
     call _file_write_scan_dir           ; destroys AF, B, IX
@@ -380,10 +381,12 @@ bdfs_file_write:
     pop de                              ; DE = source
     pop bc                              ; BC = length
     call _file_write_prog_pages         ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
+    pop hl                              ; discard filename (step 6c will use it)
     ret
 _file_write_error:
     pop de                              ; discard source
     pop bc                              ; discard length
+    pop hl                              ; discard filename
     or a                                ; NZ (A = error code)
     ret
 
