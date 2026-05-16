@@ -391,7 +391,18 @@ bdfs_file_write:
     ld (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET), hl ; bytes 13-14, little-endian
     xor a
     ld (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET), a   ; byte 15 = 0x00 (active)
-    ret                                 ; Z set; step 7 (directory entry write) to follow
+    ld hl, (_FREE_ENTRY_OFFSET)         ; flash byte offset of empty directory slot
+    ld de, BDFS_ENT_BUF
+    ld bc, BDFS_ENT_SIZE
+    ; A = 0: addr[23:16] = 0; directory is always in sector 0 (address < 0x010000)
+    call flash_page_program             ; Z=ok, NZ=timeout
+    jr nz, _file_write_dir_fail
+    xor a                               ; Z set, A = 0
+    ret
+_file_write_dir_fail:
+    ld a, BDFS_ERR_WRITE_FAIL
+    or a                                ; NZ
+    ret
 _file_write_pages_fail:
     pop hl                              ; discard filename
     or a                                ; NZ (A = error code)
