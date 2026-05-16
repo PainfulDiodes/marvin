@@ -367,23 +367,28 @@ bdfs_file_write:
     push bc                             ; [HL BC]     length
     push de                             ; [HL BC DE]  source
     call _file_write_verify_format      ; destroys AF
-    jr nz, _file_write_error
+    jr nz, _file_write_fail
     call _file_write_scan_dir           ; destroys AF, B, IX
-    jr nz, _file_write_error
+    jr nz, _file_write_fail
     pop de                              ; source — pass to device check
     pop bc                              ; length — pass to device check
     push bc                             ; re-save length
     push de                             ; re-save source
     call _file_write_device_full_check  ; BC = length; Z=ok B=sectors_needed, NZ+A=err
-    jr nz, _file_write_error
+    jr nz, _file_write_fail
     call _file_write_erase_sectors      ; B = sectors_needed; Z=ok, NZ+A=err
-    jr nz, _file_write_error
+    jr nz, _file_write_fail
     pop de                              ; DE = source
     pop bc                              ; BC = length
-    call _file_write_prog_pages         ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
-    pop hl                              ; discard filename (step 6c will use it)
+    call _file_write_prog_pages         ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL; preserves BC
+    jr nz, _file_write_pages_fail
+    pop hl                              ; HL = filename (step 6c); BC = length preserved
     ret
-_file_write_error:
+_file_write_pages_fail:
+    pop hl                              ; discard filename
+    or a                                ; NZ (A = error code)
+    ret
+_file_write_fail:
     pop de                              ; discard source
     pop bc                              ; discard length
     pop hl                              ; discard filename
@@ -559,8 +564,9 @@ _file_write_erase_sectors_fail:
 ; _file_write_prog_pages: write BC bytes from DE to flash starting at _NEXT_FREE_SECTOR
 ; in:  BC = length, DE = source
 ; out: Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
-; destroys: AF, BC, DE, HL
+; destroys: AF, DE, HL
 _file_write_prog_pages:
+    push bc                         ; preserve length for caller
     ld hl, (_NEXT_FREE_SECTOR)
     call flash_sector_to_addr       ; A = addr[23:16], HL = addr[15:0]
     ld (_PAGE_ADDR_BANK), a         ; save addr[23:16] for use across page_program calls
@@ -593,10 +599,12 @@ _file_write_prog_pages_partial:
     jr nz, _file_write_prog_pages_fail
 _file_write_prog_pages_ok:
     xor a                           ; Z set, A = 0
-    ret
+    jr _file_write_prog_pages_exit
 _file_write_prog_pages_fail:
     ld a, BDFS_ERR_WRITE_FAIL
-    or a
+    or a                            ; NZ
+_file_write_prog_pages_exit:
+    pop bc                          ; restore length for caller
     ret
 
 ; ---- _parse_filename --------------------------------------------------
