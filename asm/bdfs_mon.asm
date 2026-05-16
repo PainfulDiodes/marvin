@@ -11,6 +11,7 @@
     PUBLIC bdfs_mon_cmd_format
     PUBLIC bdfs_mon_cmd_dir
     PUBLIC bdfs_mon_cmd_drive
+    PUBLIC bdfs_mon_cmd_save
     PUBLIC bdfs_mon_format
     PUBLIC bdfs_mon_dir
     PUBLIC BDFS_NO_DRIVE_MSG
@@ -26,6 +27,8 @@
     EXTERN bdfs_dir_next
     EXTERN bdfs_get_drive
     EXTERN bdfs_set_drive
+    EXTERN bdfs_file_write
+    EXTERN hex_byte_val
     EXTERN BDFS_DRIVE
     EXTERN BDFS_HDR_BUF
     EXTERN BDFS_ENT_BUF
@@ -109,6 +112,90 @@ bdfs_mon_cmd_drive:
 
 _bmcd_bad:
     ld hl, _msg_bad_drive
+    call con_puts
+    ret
+
+; bdfs_mon_cmd_save: 's' command — save a region of RAM to the current drive as a named file
+; in:  HL = pointer past 's' in CMD_BUFFER
+; Syntax:  s <name.ext> <hex-address> <hex-length>
+; Example: s HELLO.BAS 8000 0400
+; out: — (all output already printed)
+; destroys: AF, BC, DE, HL, IX
+bdfs_mon_cmd_save:
+_bms_skip_sp:
+    ld a, (hl)
+    cp ' '
+    jr nz, _bms_got_filename
+    inc hl
+    jr _bms_skip_sp
+_bms_got_filename:
+    push hl                         ; [FN] save filename ptr
+_bms_scan_name:
+    ld a, (hl)
+    or a
+    jr z, _bms_bad_args_pop         ; null with no space: no args
+    cp ' '
+    jr z, _bms_name_end
+    inc hl
+    jr _bms_scan_name
+_bms_name_end:
+    ld (hl), 0                      ; null-terminate filename in CMD_BUFFER
+    inc hl
+_bms_skip_sp2:
+    ld a, (hl)
+    or a
+    jr z, _bms_bad_args_pop         ; no address argument
+    cp ' '
+    jr nz, _bms_parse_addr
+    inc hl
+    jr _bms_skip_sp2
+_bms_parse_addr:
+    call hex_byte_val               ; A = addr high byte; HL advances 2
+    ld d, a
+    call hex_byte_val               ; A = addr low byte; HL advances 2
+    ld e, a                         ; DE = source address
+_bms_skip_sp3:
+    ld a, (hl)
+    or a
+    jr z, _bms_bad_args_pop         ; no length argument
+    cp ' '
+    jr nz, _bms_parse_len
+    inc hl
+    jr _bms_skip_sp3
+_bms_parse_len:
+    call hex_byte_val               ; A = len high byte; HL advances 2
+    ld b, a
+    call hex_byte_val               ; A = len low byte; HL advances 2
+    ld c, a                         ; BC = length; DE = source; stack: [FN]
+    call bdfs_get_drive
+    jr z, _bms_has_drive
+    pop hl                          ; discard filename ptr
+    ld hl, BDFS_NO_DRIVE_MSG
+    call con_puts
+    ret
+_bms_has_drive:
+    call bdfs_select_drive
+    jr z, _bms_has_device
+    pop hl                          ; discard filename ptr
+    ld hl, _msg_no_device
+    call con_puts
+    ret
+_bms_has_device:
+    pop hl                          ; HL = filename ptr
+    call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error
+    jr nz, _bms_write_error
+    ld hl, _msg_saved
+    call con_puts                   ; "Saved "
+    call _print_entry_name          ; print filename from BDFS_ENT_BUF
+    ld a, CHAR_LF
+    call con_putchar
+    ret
+_bms_write_error:
+    call _save_error
+    ret
+_bms_bad_args_pop:
+    pop hl                          ; discard filename ptr
+    ld hl, _msg_save_usage
     call con_puts
     ret
 
@@ -336,6 +423,30 @@ _de_print:
     call con_puts
     ret
 
+; _save_error: print error message for a bdfs_file_write failure
+; in:  A = BDFS_ERR_* code
+; destroys: AF, BC, DE, HL
+_save_error:
+    cp BDFS_ERR_DIR_FULL
+    ld hl, _msg_dir_full
+    jr z, _se_print
+    cp BDFS_ERR_DISK_FULL
+    ld hl, _msg_disk_full
+    jr z, _se_print
+    cp BDFS_ERR_ERASE_FAIL
+    ld hl, _msg_save_erase_fail
+    jr z, _se_print
+    cp BDFS_ERR_WRITE_FAIL
+    ld hl, _msg_save_write_fail
+    jr z, _se_print
+    cp BDFS_ERR_NOT_FORMATTED
+    ld hl, _msg_not_formatted
+    jr z, _se_print
+    ld hl, _msg_no_device           ; unexpected error
+_se_print:
+    call con_puts
+    ret
+
 ; ---- strings ---------------------------------------------------------------
 
 _msg_fmt_confirm_pre:   db "Format ", 0
@@ -353,5 +464,11 @@ _msg_not_formatted:     db "Not formatted", CHAR_LF, 0
 _msg_mb:                db "MB", CHAR_LF, 0
 _msg_no_device:         db "No device in slot", CHAR_LF, 0
 BDFS_NO_DRIVE_MSG:      db "No drive selected", CHAR_LF, 0
+_msg_saved:             db "Saved ", 0
+_msg_save_usage:        db "s <name.ext> <addr> <len>", CHAR_LF, 0
+_msg_dir_full:          db "Directory full", CHAR_LF, 0
+_msg_disk_full:         db "Disk full", CHAR_LF, 0
+_msg_save_erase_fail:   db "Save fail (erase timeout)", CHAR_LF, 0
+_msg_save_write_fail:   db "Save fail (write timeout)", CHAR_LF, 0
 
     ENDIF

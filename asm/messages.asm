@@ -29,4 +29,5 @@ HELP_MSG:
 BDFS_HELP_MSG:
                 db "@A-F             select drive\n"
                 db "d                directory\n"
-                db "f [name]         format drive\n",0
+                db "f [name]         format drive\n"
+                db "s <n.ext> <a> <l> save to file\n",0

@@ -50,11 +50,6 @@ BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
 BDFS_ENT_SECTOR_OFFSET       EQU 11      ; 2 bytes, little-endian
 BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian (max 65535)
 
-; Error codes (additional to those shared via bdfs.inc)
-BDFS_ERR_NO_DEVICE      EQU 2
-BDFS_ERR_DIR_FULL       EQU 7   ; all 255 entry slots occupied
-BDFS_ERR_DISK_FULL      EQU 8   ; not enough free sectors for the file
-
     PUBLIC bdfs_init
     PUBLIC bdfs_select_drive
     PUBLIC bdfs_format
