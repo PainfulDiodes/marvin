@@ -83,6 +83,21 @@ ALIGN 0x0040
     jp _stub             ; 0x0091 - flash_sector_erase (not available on beanboard)
     jp _stub             ; 0x0094 - flash_select_slot (not available on beanboard)
     jp _stub             ; 0x0097 - flash_read_jedec_id (not available on beanboard)
+    jp _stub             ; 0x009A - flash_has_device (not available on beanboard)
+    jp _stub             ; 0x009D - flash_get_device_id (not available on beanboard)
+    jp _stub             ; 0x00A0 - flash_get_device_name (not available on beanboard)
+    jp _stub             ; 0x00A3 - flash_get_capacity_mb (not available on beanboard)
+    jp _stub             ; 0x00A6 - flash_get_sector_count (not available on beanboard)
+    jp _stub             ; 0x00A9 - flash_bytes_to_sectors (not available on beanboard)
+    jp _stub             ; 0x00AC - flash_sector_to_addr (not available on beanboard)
+    jp _stub             ; 0x00AF - bdfs_init (not available on beanboard)
+    jp _stub             ; 0x00B2 - bdfs_set_drive (not available on beanboard)
+    jp _stub             ; 0x00B5 - bdfs_get_drive (not available on beanboard)
+    jp _stub             ; 0x00B8 - bdfs_select_drive (not available on beanboard)
+    jp _stub             ; 0x00BB - bdfs_format (not available on beanboard)
+    jp _stub             ; 0x00BE - bdfs_dir_open (not available on beanboard)
+    jp _stub             ; 0x00C1 - bdfs_dir_next (not available on beanboard)
+    jp _stub             ; 0x00C4 - bdfs_file_write (not available on beanboard)
 _stub:
     ret
 ;
