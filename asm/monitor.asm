@@ -26,6 +26,7 @@
     EXTERN bdfs_mon_cmd_format
     EXTERN bdfs_mon_cmd_dir
     EXTERN bdfs_mon_cmd_drive
+    EXTERN bdfs_mon_cmd_save
     EXTERN BDFS_HELP_MSG
     ENDIF
 
@@ -162,6 +163,8 @@ _cmd_check:
     jp z,_cmd_dir
     cp '@'
     jp z,_cmd_drive
+    cp 's'
+    jp z,_cmd_save
     ENDIF
     cp '?'
     jp z,_cmd_help
@@ -364,6 +367,12 @@ _cmd_dir:
 ; @A-@F or @a-@f = select drive A-F
 _cmd_drive:
     call bdfs_mon_cmd_drive
+    jp _prompt
+
+; SAVE
+; s <name.ext> <addr> <len> = save RAM block to file on current drive
+_cmd_save:
+    call bdfs_mon_cmd_save
     jp _prompt
 
     ENDIF
