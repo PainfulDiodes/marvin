@@ -361,7 +361,7 @@ _dir_next_exit:
 ;      DE = source address in RAM
 ;      BC = length in bytes
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
-; destroys: AF, DE, IX
+; destroys: AF, DE, HL, IX
 bdfs_file_write:
     push hl                             ; [HL]        filename
     push bc                             ; [HL BC]     length
@@ -382,8 +382,16 @@ bdfs_file_write:
     pop bc                              ; BC = length
     call _file_write_prog_pages         ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL; preserves BC
     jr nz, _file_write_pages_fail
-    pop hl                              ; HL = filename (step 6c); BC = length preserved
-    ret
+    pop hl                              ; HL = filename; BC = original length preserved
+    call _parse_filename                ; fills BDFS_ENT_BUF bytes 0-10; preserves BC, HL
+    ld hl, (_NEXT_FREE_SECTOR)
+    ld (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET), hl ; bytes 11-12, little-endian
+    ld h, b
+    ld l, c                             ; HL = length (BC has no ld (nn),bc form)
+    ld (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET), hl ; bytes 13-14, little-endian
+    xor a
+    ld (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET), a   ; byte 15 = 0x00 (active)
+    ret                                 ; Z set; step 7 (directory entry write) to follow
 _file_write_pages_fail:
     pop hl                              ; discard filename
     or a                                ; NZ (A = error code)
