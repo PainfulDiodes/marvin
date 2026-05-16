@@ -494,7 +494,7 @@ _file_write_scan_dir_entry_exit:
 ; _file_write_device_full_check: check whether BC bytes fit in remaining device space
 ; in:  BC = file length in bytes
 ; out: Z=ok, B = sectors needed; NZ+A=BDFS_ERR_DISK_FULL
-; destroys: AF, B
+; destroys: AF
 _file_write_device_full_check:
     push de
     push hl
@@ -506,10 +506,12 @@ _file_write_device_full_check:
     ld d, 0
     ld e, a
     add hl, de                      ; HL = next_free_sector + sectors_needed
+    push bc                         ; save B = sectors_needed; flash_get_sector_count destroys BC
     push hl
     call flash_get_sector_count     ; HL = total sector count
-    ex de, hl                       ; DE = total
-    pop hl                          ; HL = next_free + needed
+    ex de, hl                       ; HJ => DE = total sector count
+    pop hl                          ; HL = next_free_sector + sectors_needed
+    pop bc                          ; restore B = sectors_needed
     ; full if HL > DE (strictly greater than)
     ld a, h
     cp d
