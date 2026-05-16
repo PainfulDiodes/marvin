@@ -363,26 +363,10 @@ _dir_next_exit:
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
 ; destroys: AF, DE, HL, IX
 bdfs_file_write:
-    push hl                             ; [HL]        filename
-    push bc                             ; [HL BC]     length
-    push de                             ; [HL BC DE]  source
-    call _file_write_verify_format      ; destroys AF
-    jr nz, _file_write_fail
-    call _file_write_scan_dir           ; destroys AF, B, IX
-    jr nz, _file_write_fail
-    pop de                              ; source — pass to device check
-    pop bc                              ; length — pass to device check
-    push bc                             ; re-save length
-    push de                             ; re-save source
-    call _file_write_device_full_check  ; BC = length; Z=ok B=sectors_needed, NZ+A=err
-    jr nz, _file_write_fail
-    call _file_write_erase_sectors      ; B = sectors_needed; Z=ok, NZ+A=err
-    jr nz, _file_write_fail
-    pop de                              ; DE = source
-    pop bc                              ; BC = length
-    call _file_write_prog_pages         ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL; preserves BC
-    jr nz, _file_write_pages_fail
-    pop hl                              ; HL = filename; BC = original length preserved
+    push hl                             ; filename — only needed for directory entry
+    call _file_write_data               ; BC=length, DE=source; preserves BC
+    jr nz, _file_write_data_fail
+    pop hl                              ; HL = filename; BC = length preserved
     call _parse_filename                ; fills BDFS_ENT_BUF bytes 0-10; preserves BC, HL
     ld hl, (_NEXT_FREE_SECTOR)
     ld (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET), hl ; bytes 11-12, little-endian
@@ -403,14 +387,38 @@ _file_write_dir_fail:
     ld a, BDFS_ERR_WRITE_FAIL
     or a                                ; NZ
     ret
-_file_write_pages_fail:
+_file_write_data_fail:
     pop hl                              ; discard filename
     or a                                ; NZ (A = error code)
     ret
-_file_write_fail:
+
+; _file_write_data: verify format, scan directory, check space, erase and write file data
+; in:  BC = length, DE = source
+; out: Z=ok; _FREE_ENTRY_OFFSET and _NEXT_FREE_SECTOR populated by scan
+;      NZ+A=BDFS_ERR_*
+; destroys: AF, DE, HL, IX
+_file_write_data:
+    push bc                             ; [BC]        length
+    push de                             ; [BC DE]     source
+    call _file_write_verify_format      ; destroys AF
+    jr nz, _file_write_data_abort
+    call _file_write_scan_dir           ; destroys AF, B, IX
+    jr nz, _file_write_data_abort
+    pop de                              ; source — pass to device check
+    pop bc                              ; length — pass to device check
+    push bc                             ; re-save length
+    push de                             ; re-save source
+    call _file_write_device_full_check  ; BC = length; Z=ok B=sectors_needed, NZ+A=err
+    jr nz, _file_write_data_abort
+    call _file_write_erase_sectors      ; B = sectors_needed; Z=ok, NZ+A=err
+    jr nz, _file_write_data_abort
+    pop de                              ; DE = source
+    pop bc                              ; BC = length
+    call _file_write_prog_pages         ; Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL; preserves BC
+    ret                                 ; Z or NZ propagated directly from prog_pages
+_file_write_data_abort:
     pop de                              ; discard source
     pop bc                              ; discard length
-    pop hl                              ; discard filename
     or a                                ; NZ (A = error code)
     ret
 
