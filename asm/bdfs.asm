@@ -355,13 +355,13 @@ _dir_next_exit:
 
 ; ---- bdfs_file_write -------------------------------------------------------
 
-; bdfs_file_write: write a file to the current drive 
+; bdfs_file_write: write a file to the current drive
 ; assumes bdfs_select_drive has been called
 ; in:  HL = filename (null-terminated "NAME.EXT")
 ;      DE = source address in RAM
 ;      BC = length in bytes
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
-; destroys: AF, BC, DE, HL, IX
+; destroys: AF, DE, IX
 bdfs_file_write:
     push hl                             ; [HL]        filename
     push bc                             ; [HL BC]     length
