@@ -22,4 +22,4 @@ HELP_MSG:
                 db ":=hex b/B=BASIC ?=help\n",0
 
 BDFS_HELP_MSG:
-                db "@A-F=drive d=dir f=fmt\n",0
+                db "@=drive d=dir f=fmt s=save\n",0
