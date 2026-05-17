@@ -300,21 +300,13 @@ _print_entry_name_part_done:
     pop af
     ret
 
-; _print_device_info: print JEDEC ID, label, and capacity e.g. "ef4015 W25Q16 2MB\n"
+; _print_device_info: print label, capacity, and JEDEC ID e.g. "W25Q16 2MB [ef4015]\n"
 ; destroys: -
 _print_device_info:
     push af
     push bc
     push de
     push hl
-    call flash_get_device_id        ; A=mfr, B=type, C=cap
-    call con_putchar_hex            ; print mfr
-    ld a, b
-    call con_putchar_hex            ; print type
-    ld a, c
-    call con_putchar_hex            ; print cap
-    ld a, ' '
-    call con_putchar
     call flash_get_device_name      ; HL = name string
     call con_puts
     ld a, ' '
@@ -322,6 +314,14 @@ _print_device_info:
     call flash_get_capacity_mb      ; A = MB
     call con_putchar_dec
     ld hl, _MSG_MB
+    call con_puts
+    call flash_get_device_id        ; A=mfr, B=type, C=cap
+    call con_putchar_hex            ; print mfr
+    ld a, b
+    call con_putchar_hex            ; print type
+    ld a, c
+    call con_putchar_hex            ; print cap
+    ld hl, _MSG_ID_CLOSE
     call con_puts
     pop hl
     pop de
@@ -349,7 +349,8 @@ _MSG_FORMAT_OK:         db "Format ok - ", 0
 _MSG_INDENT:            db "  ", 0
 _MSG_DELETED:           db "  (deleted) ", 0
 _MSG_FILES:             db " file(s)", CHAR_LF, 0
-_MSG_MB:                db "MB", CHAR_LF, 0
+_MSG_MB:                db "MB [", 0
+_MSG_ID_CLOSE:          db "]", CHAR_LF, 0
 _MSG_SAVED:             db "Saved ", 0
 _MSG_SAVE_USAGE:        db "s <name.ext> <addr> <len>", CHAR_LF, 0
 
