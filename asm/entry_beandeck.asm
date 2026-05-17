@@ -58,6 +58,7 @@
     EXTERN bdfs_dir_open        ; bdfs.asm - prepare directory iterator
     EXTERN bdfs_dir_next        ; bdfs.asm - read next directory entry
     EXTERN bdfs_file_write      ; bdfs.asm - write file to current drive
+    EXTERN bdfs_get_err_msg     ; bdfs.asm - error code to message string
     EXTERN START                ; MAIN.Z80 - BBC BASIC cold start
 ;
     EXTERN STACK
@@ -141,6 +142,7 @@ ALIGN 0x0040
     jp bdfs_dir_open                 ; 0x00BE - open directory iterator (out: Z=ok HL=vol name; NZ=err)
     jp bdfs_dir_next                 ; 0x00C1 - next directory entry (out: Z=ok HL=entry; NZ=err C=active count)
     jp bdfs_file_write               ; 0x00C4 - write file (in: HL=filename DE=src BC=len out: Z=ok NZ=err)
+    jp bdfs_get_err_msg              ; 0x00C7 - error code to message string (in: A=BDFS_ERR_* out: HL=str)
 _stub:
     ret
 ;

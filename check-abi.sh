@@ -56,6 +56,7 @@ ABI_ENTRIES=(
     "MARVIN_BDFS_DIR_OPEN                    0x00BE"
     "MARVIN_BDFS_DIR_NEXT                    0x00C1"
     "MARVIN_BDFS_FILE_WRITE                  0x00C4"
+    "MARVIN_BDFS_GET_ERR_MSG                 0x00C7"
 )
 
 TOTAL_PASS=0
