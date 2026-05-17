@@ -13,8 +13,6 @@
     PUBLIC bdfs_mon_drive
     PUBLIC bdfs_mon_save
 
-    PUBLIC BDFS_NO_DRIVE_MSG
-
     EXTERN con_puts
     EXTERN con_putchar
     EXTERN con_getchar
@@ -34,6 +32,7 @@
     EXTERN flash_get_device_id
     EXTERN flash_get_device_name
     EXTERN flash_get_capacity_mb
+    EXTERN bdfs_get_err_msg
 
 ; bdfs_mon_format: 'f' command — confirm and format the current drive
 ; in:  HL = pointer into CMD_BUFFER past 'f' (optional volume name arg follows)
@@ -339,37 +338,12 @@ _print_device_info:
 
 ; _error: print error message for any BDFS_ERR_* code
 ; in:  A = BDFS_ERR_* code
-; destroys: AF, BC, DE, HL
+; destroys: AF, HL
 _error:
-    cp BDFS_ERR_NO_DRIVE
-    ld hl, BDFS_NO_DRIVE_MSG
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_NO_DEVICE
-    ld hl, _MSG_NO_DEVICE
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_NOT_FORMATTED
-    ld hl, _MSG_NOT_FORMATTED
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_ERASE_FAIL
-    ld hl, _MSG_ERASE_FAIL
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_WRITE_FAIL
-    ld hl, _MSG_WRITE_FAIL
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_VERIFY_FAIL
-    ld hl, _MSG_VERIFY_FAIL
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_DIR_FULL
-    ld hl, _MSG_DIR_FULL
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_DISK_FULL
-    ld hl, _MSG_DISK_FULL
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_BAD_DRIVE
-    ld hl, _MSG_BAD_DRIVE
-    jr z, _bdfs_error_print
-    ret                              ; END_OF_DIR and unknown: no message
-_bdfs_error_print:
+    call bdfs_get_err_msg
+    ld a, h
+    or l
+    ret z                           ; no message for this code
     call con_puts
     ret
 
@@ -377,22 +351,13 @@ _bdfs_error_print:
 
 _MSG_FORMAT_CONF_PRE:   db "Format ", 0
 _MSG_FORMAT_CONF_POST:  db "? y/n ", 0
-_MSG_BAD_DRIVE:         db "Invalid drive", CHAR_LF, 0
 _MSG_FORMAT_PRE:        db "Formatting drive ", 0
 _MSG_FORMAT_OK:         db "Format ok - ", 0
-_MSG_VERIFY_FAIL:       db "Verify fail", CHAR_LF, 0
-_MSG_ERASE_FAIL:        db "Erase fail", CHAR_LF, 0
-_MSG_WRITE_FAIL:        db "Write fail", CHAR_LF, 0
 _MSG_INDENT:            db "  ", 0
 _MSG_DELETED:           db "  (deleted) ", 0
 _MSG_FILES:             db " file(s)", CHAR_LF, 0
-_MSG_NOT_FORMATTED:     db "Not formatted", CHAR_LF, 0
 _MSG_MB:                db "MB", CHAR_LF, 0
-_MSG_NO_DEVICE:         db "No device in slot", CHAR_LF, 0
-BDFS_NO_DRIVE_MSG:      db "No drive selected", CHAR_LF, 0
 _MSG_SAVED:             db "Saved ", 0
 _MSG_SAVE_USAGE:        db "s <name.ext> <addr> <len>", CHAR_LF, 0
-_MSG_DIR_FULL:          db "Directory full", CHAR_LF, 0
-_MSG_DISK_FULL:         db "Disk full", CHAR_LF, 0
 
     ENDIF

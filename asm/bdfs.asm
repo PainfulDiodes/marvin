@@ -21,6 +21,7 @@
 ;   Directory   : sector 0; file data starts at sector 1 (BDFS_DATA_START_SECTOR)
 
     INCLUDE "asm/bdfs.inc"
+    INCLUDE "asm/chars.inc"
 
 ; Magic bytes - used on the directory sector to indicate a formatted drive
 BDFS_MAGIC_0            EQU 0xBD
@@ -50,6 +51,7 @@ BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
 BDFS_ENT_SECTOR_OFFSET       EQU 11      ; 2 bytes, little-endian
 BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian (max 65535)
 
+    PUBLIC bdfs_get_err_msg
     PUBLIC bdfs_init
     PUBLIC bdfs_select_drive
     PUBLIC bdfs_format
@@ -710,7 +712,55 @@ _parse_filename_exit:
     pop af
     ret
 
+; ---- bdfs_get_err_msg -----------------------------------------------------------
+
+; bdfs_get_err_msg: return pointer to error message string for a BDFS_ERR_* code
+; in:  A = BDFS_ERR_* code
+; out: HL = pointer to null-terminated message string, or 0 if no message for this code
+; destroys: AF, HL
+bdfs_get_err_msg:
+    cp BDFS_ERR_NO_DRIVE
+    ld hl, _MSG_NO_DRIVE
+    jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_NO_DEVICE
+    ld hl, _MSG_NO_DEVICE
+    jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_NOT_FORMATTED
+    ld hl, _MSG_NOT_FORMATTED
+    jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_ERASE_FAIL
+    ld hl, _MSG_ERASE_FAIL
+    jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_WRITE_FAIL
+    ld hl, _MSG_WRITE_FAIL
+    jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_VERIFY_FAIL
+    ld hl, _MSG_VERIFY_FAIL
+    jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_DIR_FULL
+    ld hl, _MSG_DIR_FULL
+    jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_DISK_FULL
+    ld hl, _MSG_DISK_FULL
+    jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_BAD_DRIVE
+    ld hl, _MSG_BAD_DRIVE
+    jr z, _bdfs_get_err_msg_ret
+    ld hl, 0                          ; unknown code: no message
+_bdfs_get_err_msg_ret:
+    ret
+
 ; ---- strings ---------------------------------------------------------------
+
+_MSG_NO_DRIVE:          db "No drive selected", CHAR_LF, 0
+_MSG_NO_DEVICE:         db "No device in slot", CHAR_LF, 0
+_MSG_NOT_FORMATTED:     db "Not formatted", CHAR_LF, 0
+_MSG_ERASE_FAIL:        db "Erase fail", CHAR_LF, 0
+_MSG_WRITE_FAIL:        db "Write fail", CHAR_LF, 0
+_MSG_VERIFY_FAIL:       db "Verify fail", CHAR_LF, 0
+_MSG_DIR_FULL:          db "Directory full", CHAR_LF, 0
+_MSG_DISK_FULL:         db "Disk full", CHAR_LF, 0
+_MSG_BAD_DRIVE:         db "Invalid drive", CHAR_LF, 0
 
 _BDFS_DEFAULT_PREFIX:       db "BDFS-"
 _BDFS_DEFAULT_PREFIX_LEN    equ $ - _BDFS_DEFAULT_PREFIX
