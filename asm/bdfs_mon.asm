@@ -180,6 +180,8 @@ bdfs_mon_drive:
 ; destroys: AF, BC, DE, HL, IX
 bdfs_mon_save:
     ld a, (hl)
+    or a
+    jp z, _save_bad_usage           ; null before any filename
     cp ' '
     jr nz, _save_got_filename
     inc hl
@@ -189,7 +191,7 @@ _save_got_filename:
 _save_scan_name:
     ld a, (hl)
     or a
-    jp z, _save_bad_usage         ; null with no space: no args
+    jr z, _save_default_addr      ; null with no space: filename only, use defaults
     cp ' '
     jr z, _save_name_end
     inc hl
@@ -244,8 +246,12 @@ _save_select_drive:
     ret
 _save_excute:
     pop hl                          ; HL = filename ptr
-    call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error; preserves BC, DE
+    push de                         ; save source addr for confirmation
+    push bc                         ; save length for confirmation
+    call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error
     jr z, _save_done
+    pop bc                          ; discard saved values on error
+    pop de
     call _error
     ret
 _save_done:
@@ -270,7 +276,6 @@ _save_done:
     call con_putchar
     ret
 _save_bad_usage:
-    pop hl                          ; discard filename ptr
     ld hl, _MSG_SAVE_USAGE
     call con_puts
     ret

@@ -369,9 +369,8 @@ _dir_next_exit:
 ;      DE = source address in RAM
 ;      BC = length in bytes
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
-; destroys: AF, HL, IX
+; destroys: AF, BC, DE, HL, IX
 bdfs_file_write:
-    push de                             ; preserve source addr for caller
     push hl                             ; filename — only needed for directory entry
     call _file_write_data               ; BC=length, DE=source; preserves BC
     jr nz, _file_write_data_fail
@@ -391,16 +390,13 @@ bdfs_file_write:
     call flash_page_program             ; Z=ok, NZ=timeout
     jr nz, _file_write_dir_fail
     xor a                               ; Z set, A = 0
-    pop de                              ; restore source addr
     ret
 _file_write_dir_fail:
     ld a, BDFS_ERR_WRITE_FAIL
-    pop de                              ; restore source addr
     or a                                ; NZ
     ret
 _file_write_data_fail:
     pop hl                              ; discard filename
-    pop de                              ; restore source addr
     or a                                ; NZ (A = error code)
     ret
 
