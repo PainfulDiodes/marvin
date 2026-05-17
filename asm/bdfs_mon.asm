@@ -189,7 +189,7 @@ _save_got_filename:
 _save_scan_name:
     ld a, (hl)
     or a
-    jr z, _save_bad_usage         ; null with no space: no args
+    jp z, _save_bad_usage         ; null with no space: no args
     cp ' '
     jr z, _save_name_end
     inc hl
@@ -244,14 +244,28 @@ _save_select_drive:
     ret
 _save_excute:
     pop hl                          ; HL = filename ptr
-    call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error
+    call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error; preserves BC, DE
     jr z, _save_done
     call _error
     ret
 _save_done:
+    pop bc                          ; BC = length used
+    pop de                          ; DE = source addr used
     ld hl, _MSG_SAVED
     call con_puts                   ; "Saved "
     call _print_entry_name          ; print filename from BDFS_ENT_BUF
+    ld a, ' '
+    call con_putchar
+    ld a, d
+    call con_putchar_hex            ; source addr high byte
+    ld a, e
+    call con_putchar_hex            ; source addr low byte
+    ld a, ' '
+    call con_putchar
+    ld a, b
+    call con_putchar_hex            ; length high byte
+    ld a, c
+    call con_putchar_hex            ; length low byte
     ld a, CHAR_LF
     call con_putchar
     ret
