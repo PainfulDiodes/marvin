@@ -33,6 +33,8 @@
     EXTERN flash_get_device_name
     EXTERN flash_get_capacity_mb
     EXTERN bdfs_get_err_msg
+    EXTERN RAMSTART
+    EXTERN BDFS_SECTOR_SIZE
 
 ; bdfs_mon_format: 'f' command — confirm and format the current drive
 ; in:  HL = pointer into CMD_BUFFER past 'f' (optional volume name arg follows)
@@ -170,9 +172,10 @@ bdfs_mon_drive:
     ret
 
 ; bdfs_mon_save: 's' command — save a region of RAM to the current drive as a named file
-; in:  HL = pointer to CMD_BUFFER 
-; Syntax:  s <name.ext> <hex-address> <hex-length>
+; in:  HL = pointer to CMD_BUFFER
+; Syntax:  s <name.ext> [<hex-address> [<hex-length>]]
 ; Example: s HELLO.BAS 8000 0400
+; Defaults: address=RAMSTART (8000), length=BDFS_SECTOR_SIZE (1000)
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL, IX
 bdfs_mon_save:
@@ -197,11 +200,15 @@ _save_name_end:
 _save_find_addr_arg:
     ld a, (hl)
     or a
-    jr z, _save_bad_usage           ; no address argument
+    jr z, _save_default_addr        ; no address — use RAMSTART
     cp ' '
     jr nz, _save_parse_addr_arg
     inc hl
     jr _save_find_addr_arg
+_save_default_addr:
+    ld de, RAMSTART
+    ld bc, BDFS_SECTOR_SIZE
+    jr _save_get_drive
 _save_parse_addr_arg:
     call hex_byte_val               ; A = addr high byte; HL advances 2
     ld d, a
@@ -210,17 +217,20 @@ _save_parse_addr_arg:
 _save_find_len_arg:
     ld a, (hl)
     or a
-    jr z, _save_bad_usage           ; no length argument
+    jr z, _save_default_len         ; no length — use sector size
     cp ' '
     jr nz, _save_parse_len_arg
     inc hl
     jr _save_find_len_arg
+_save_default_len:
+    ld bc, BDFS_SECTOR_SIZE
+    jr _save_get_drive
 _save_parse_len_arg:
     call hex_byte_val               ; A = len high byte; HL advances 2
     ld b, a
     call hex_byte_val               ; A = len low byte; HL advances 2
     ld c, a                         ; BC = length; DE = source; stack: [FN]
-    ; get drive
+_save_get_drive:
     call bdfs_get_drive
     jr z, _save_select_drive
     pop hl                          ; discard filename ptr
@@ -352,6 +362,6 @@ _MSG_FILES:             db " file(s)", CHAR_LF, 0
 _MSG_MB:                db "MB [", 0
 _MSG_ID_CLOSE:          db "]", CHAR_LF, 0
 _MSG_SAVED:             db "Saved ", 0
-_MSG_SAVE_USAGE:        db "s <name.ext> <addr> <len>", CHAR_LF, 0
+_MSG_SAVE_USAGE:        db "s <name.ext> [<addr> [<len>]]", CHAR_LF, 0
 
     ENDIF
