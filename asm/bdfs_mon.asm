@@ -167,15 +167,14 @@ bdfs_mon_drive:
     ld a, (hl)
     and 0dfh                         ; fold lowercase to uppercase
     cp 'A'
-    jr c, _bmcd_bad
+    jr c, _drive_bad
     cp 'G'
-    jr nc, _bmcd_bad
+    jr nc, _drive_bad
     call bdfs_set_drive
     ret
-
-_bmcd_bad:
-    ld hl, _MSG_BAD_DRIVE
-    call con_puts
+_drive_bad:
+    ld a, BDFS_ERR_BAD_DRIVE
+    call _error
     ret
 
 ; bdfs_mon_save: 's' command — save a region of RAM to the current drive as a named file
@@ -367,6 +366,9 @@ _error:
     jr z, _bdfs_error_print
     cp BDFS_ERR_DISK_FULL
     ld hl, _MSG_DISK_FULL
+    jr z, _bdfs_error_print
+    cp BDFS_ERR_BAD_DRIVE
+    ld hl, _MSG_BAD_DRIVE
     jr z, _bdfs_error_print
     ret                              ; END_OF_DIR and unknown: no message
 _bdfs_error_print:
