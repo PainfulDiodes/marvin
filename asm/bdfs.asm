@@ -64,6 +64,7 @@ BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian (max 65535)
     PUBLIC BDFS_DRIVE
     PUBLIC BDFS_HDR_BUF
     PUBLIC BDFS_ENT_BUF
+    PUBLIC BDFS_SECTOR_SIZE
 
     EXTERN flash_select_slot
     EXTERN flash_has_device
@@ -78,9 +79,9 @@ BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian (max 65535)
     EXTERN W25Q_PAGE_SIZE       ; hardware geometry — write unit
 
 ; Aliases coupling BDFS to W25Q geometry (hardware dependency made explicit)
-_SECTOR_SIZE    EQU W25Q_SECTOR_SIZE
+BDFS_SECTOR_SIZE EQU W25Q_SECTOR_SIZE
 _PAGE_SIZE      EQU W25Q_PAGE_SIZE
-_MAX_ENTRIES    EQU (_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; -1 : header occupies one slot
+_MAX_ENTRIES    EQU (BDFS_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; -1 : header occupies one slot
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
