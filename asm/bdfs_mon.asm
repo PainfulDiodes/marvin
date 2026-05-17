@@ -178,93 +178,91 @@ _drive_bad:
     ret
 
 ; bdfs_mon_save: 's' command — save a region of RAM to the current drive as a named file
-; in:  HL = pointer past 's' in CMD_BUFFER
+; in:  HL = pointer to CMD_BUFFER 
 ; Syntax:  s <name.ext> <hex-address> <hex-length>
 ; Example: s HELLO.BAS 8000 0400
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL, IX
 bdfs_mon_save:
-_bms_skip_sp:
     ld a, (hl)
     cp ' '
-    jr nz, _bms_got_filename
+    jr nz, _save_got_filename
     inc hl
-    jr _bms_skip_sp
-_bms_got_filename:
-    push hl                         ; [FN] save filename ptr
-_bms_scan_name:
+    jr bdfs_mon_save
+_save_got_filename:
+    push hl                         ; save filename ptr
+_save_scan_name:
     ld a, (hl)
     or a
-    jr z, _bms_bad_args_pop         ; null with no space: no args
+    jr z, _save_bad_usage         ; null with no space: no args
     cp ' '
-    jr z, _bms_name_end
+    jr z, _save_name_end
     inc hl
-    jr _bms_scan_name
-_bms_name_end:
+    jr _save_scan_name
+_save_name_end:
     ld (hl), 0                      ; null-terminate filename in CMD_BUFFER
     inc hl
-_bms_skip_sp2:
+_save_find_addr_arg:
     ld a, (hl)
     or a
-    jr z, _bms_bad_args_pop         ; no address argument
+    jr z, _save_bad_usage           ; no address argument
     cp ' '
-    jr nz, _bms_parse_addr
+    jr nz, _save_parse_addr_arg
     inc hl
-    jr _bms_skip_sp2
-_bms_parse_addr:
+    jr _save_find_addr_arg
+_save_parse_addr_arg:
     call hex_byte_val               ; A = addr high byte; HL advances 2
     ld d, a
     call hex_byte_val               ; A = addr low byte; HL advances 2
     ld e, a                         ; DE = source address
-_bms_skip_sp3:
+_save_find_len_arg:
     ld a, (hl)
     or a
-    jr z, _bms_bad_args_pop         ; no length argument
+    jr z, _save_bad_usage           ; no length argument
     cp ' '
-    jr nz, _bms_parse_len
+    jr nz, _save_parse_len_arg
     inc hl
-    jr _bms_skip_sp3
-_bms_parse_len:
+    jr _save_find_len_arg
+_save_parse_len_arg:
     call hex_byte_val               ; A = len high byte; HL advances 2
     ld b, a
     call hex_byte_val               ; A = len low byte; HL advances 2
     ld c, a                         ; BC = length; DE = source; stack: [FN]
+    ; get drive
     call bdfs_get_drive
-    jr z, _bms_has_drive
+    jr z, _save_select_drive
     pop hl                          ; discard filename ptr
-    ld hl, BDFS_NO_DRIVE_MSG
-    call con_puts
+    call _error                     ; A = BDFS_ERR_NO_DRIVE from bdfs_get_drive
     ret
-_bms_has_drive:
+_save_select_drive:
     call bdfs_select_drive
-    jr z, _bms_has_device
+    jr z, _save_excute
     pop hl                          ; discard filename ptr
-    ld hl, _MSG_NO_DEVICE
-    call con_puts
+    call _error                     ; A = BDFS_ERR_NO_DEVICE from bdfs_select_drive
     ret
-_bms_has_device:
+_save_excute:
     pop hl                          ; HL = filename ptr
     call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error
-    jr nz, _bms_write_error
+    jr z, _save_done
+    call _error
+    ret
+_save_done:
     ld hl, _MSG_SAVED
     call con_puts                   ; "Saved "
     call _print_entry_name          ; print filename from BDFS_ENT_BUF
     ld a, CHAR_LF
     call con_putchar
     ret
-_bms_write_error:
+_save_bad_usage:
+    pop hl                          ; discard filename ptr
+    ld a, BDFS_ERR_BAD_ARGS
     call _error
     ret
-_bms_bad_args_pop:
-    pop hl                          ; discard filename ptr
-    ld hl, _MSG_SAVE_USAGE
-    call con_puts
-    ret
 
-; ---- private helpers -------------------------------------------------------
+; helpers
 
 ; _print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
-; destroys: AF, BC, HL (saves/restores all)
+; destroys: -
 _print_entry_name:
     push af
     push bc
@@ -274,13 +272,13 @@ _print_entry_name:
     call _print_entry_name_part
     ld a, (BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET)
     cp ' '                          ; ext field is space-padded: leading space means no extension
-    jr z, _pen_done
+    jr z, _print_entry_name_done
     ld a, '.'
     call con_putchar
     ld hl, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
     ld b, BDFS_EXT_LEN
     call _print_entry_name_part
-_pen_done:
+_print_entry_name_done:
     pop hl
     pop bc
     pop af
@@ -288,30 +286,30 @@ _pen_done:
 
 ; _print_entry_name_part: print at most B chars from (HL), stopping at first space (trims padding)
 ; in:  HL = source, B = max chars
-; destroys: AF, BC, HL (saves/restores all)
+; destroys: -
 _print_entry_name_part:
     push af
     push hl
     push bc
-_penp_loop:
+_print_entry_name_part_loop:
     ld a, b
     or a
-    jr z, _penp_done
+    jr z, _print_entry_name_part_done
     ld a, (hl)
     cp ' '
-    jr z, _penp_done
+    jr z, _print_entry_name_part_done
     call con_putchar
     inc hl
     dec b
-    jr _penp_loop
-_penp_done:
+    jr _print_entry_name_part_loop
+_print_entry_name_part_done:
     pop bc
     pop hl
     pop af
     ret
 
 ; _print_device_info: print JEDEC ID, label, and capacity e.g. "ef4015 W25Q16 2MB\n"
-; destroys: AF, BC, DE (saves/restores all; also preserves HL)
+; destroys: -
 _print_device_info:
     push af
     push bc
@@ -369,6 +367,9 @@ _error:
     jr z, _bdfs_error_print
     cp BDFS_ERR_BAD_DRIVE
     ld hl, _MSG_BAD_DRIVE
+    jr z, _bdfs_error_print
+    cp BDFS_ERR_BAD_ARGS
+    ld hl, _MSG_SAVE_USAGE
     jr z, _bdfs_error_print
     ret                              ; END_OF_DIR and unknown: no message
 _bdfs_error_print:
