@@ -19,15 +19,15 @@ CMD_W_NULL_MSG:
                 db "No data to write\n",0
 
 HELP_MSG:
-                db "r <addr>         read memory\n"
-                db "w <addr> <data>  write memory\n"
-                db "x [addr]         execute (default 8000)\n"
-                db ":                load Intel HEX\n"
-                db "b / B            BASIC cold / warm start\n"
-                db "?                this help\n",0
+                db "r <addr>                   read memory\n"
+                db "w <addr> <data>            write memory\n"
+                db "x [addr]                   execute (default 8000)\n"
+                db ":                          load Intel HEX\n"
+                db "b / B                      BASIC cold / warm start\n"
+                db "?                          this help\n",0
 
 BDFS_HELP_MSG:
-                db "@A-F             select drive\n"
-                db "d                directory\n"
-                db "f [name]         format drive\n"
-                db "s <n.ext> <a> <l> save to file\n",0
+                db "@A-F                       select drive\n"
+                db "d                          directory\n"
+                db "f [name]                   format drive\n"
+                db "s <n.ext> [<addr> [<len>]] save to file\n",0
