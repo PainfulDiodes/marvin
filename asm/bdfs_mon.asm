@@ -246,17 +246,11 @@ _save_select_drive:
     ret
 _save_excute:
     pop hl                          ; HL = filename ptr
-    push de                         ; save source addr for confirmation
-    push bc                         ; save length for confirmation
-    call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error
+    call bdfs_file_write            ; HL=filename, DE=source, BC=length; Z=ok NZ=error; preserves BC, DE
     jr z, _save_done
-    pop bc                          ; discard saved values on error
-    pop de
     call _error
     ret
 _save_done:
-    pop bc                          ; BC = length used
-    pop de                          ; DE = source addr used
     ld hl, _MSG_SAVED
     call con_puts                   ; "Saved "
     call _print_entry_name          ; print filename from BDFS_ENT_BUF
