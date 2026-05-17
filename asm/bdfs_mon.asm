@@ -255,8 +255,8 @@ _save_done:
     ret
 _save_bad_usage:
     pop hl                          ; discard filename ptr
-    ld a, BDFS_ERR_BAD_ARGS
-    call _error
+    ld hl, _MSG_SAVE_USAGE
+    call con_puts
     ret
 
 ; helpers
@@ -367,9 +367,6 @@ _error:
     jr z, _bdfs_error_print
     cp BDFS_ERR_BAD_DRIVE
     ld hl, _MSG_BAD_DRIVE
-    jr z, _bdfs_error_print
-    cp BDFS_ERR_BAD_ARGS
-    ld hl, _MSG_SAVE_USAGE
     jr z, _bdfs_error_print
     ret                              ; END_OF_DIR and unknown: no message
 _bdfs_error_print:
