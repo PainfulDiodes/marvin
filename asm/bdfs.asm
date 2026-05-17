@@ -58,6 +58,7 @@ BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian (max 65535)
     PUBLIC bdfs_dir_open
     PUBLIC bdfs_dir_next
     PUBLIC bdfs_file_write
+    PUBLIC bdfs_file_read
     PUBLIC bdfs_set_drive
     PUBLIC bdfs_get_drive
     PUBLIC BDFS_RAMSIZE
@@ -87,7 +88,9 @@ _MAX_ENTRIES    EQU (BDFS_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; -1 : header occupi
 
 BDFS_HDR_BUF            EQU BDFS_RAMSTART                        ; directory header r/w buffer
 BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE         ; entry scan buffer
-_DIR_SCAN_OFST          EQU BDFS_ENT_BUF + BDFS_ENT_SIZE             ; directory iterator scan offset (2 bytes)
+BDFS_SRCH_BUF           EQU BDFS_ENT_BUF + BDFS_ENT_SIZE         ; 11-byte search key (8 name + 3 ext)
+_SRCH_BUF_LEN           EQU 11
+_DIR_SCAN_OFST          EQU BDFS_SRCH_BUF + _SRCH_BUF_LEN            ; directory iterator scan offset (2 bytes)
 _DIR_SCAN_OFST_LEN      EQU 2
 _ACTIVE_COUNT           EQU _DIR_SCAN_OFST + _DIR_SCAN_OFST_LEN      ; active entry count (1 byte)
 _ACTIVE_COUNT_LEN       EQU 1
@@ -99,7 +102,7 @@ _NEXT_FREE_SECTOR       EQU _FREE_ENTRY_OFFSET + _FREE_ENTRY_OFFSET_LEN         
 _NEXT_FREE_SECTOR_LEN   EQU 2
 _PAGE_ADDR_BANK         EQU _NEXT_FREE_SECTOR + _NEXT_FREE_SECTOR_LEN               ; addr[23:16] during page writes (1 byte)
 _PAGE_ADDR_BANK_LEN     EQU 1
-BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + _DIR_SCAN_OFST_LEN + _ACTIVE_COUNT_LEN + _DRIVE_LEN + _FREE_ENTRY_OFFSET_LEN + _NEXT_FREE_SECTOR_LEN + _PAGE_ADDR_BANK_LEN
+BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + _SRCH_BUF_LEN + _DIR_SCAN_OFST_LEN + _ACTIVE_COUNT_LEN + _DRIVE_LEN + _FREE_ENTRY_OFFSET_LEN + _NEXT_FREE_SECTOR_LEN + _PAGE_ADDR_BANK_LEN
 
 ; ---- bdfs_init / bdfs_set_drive / bdfs_get_drive ---------------------------
 
@@ -377,6 +380,7 @@ bdfs_file_write:
     call _file_write_data               ; BC=length, DE=source; preserves BC
     jr nz, _file_write_data_fail
     pop hl                              ; HL = filename; BC = length preserved
+    ld de, BDFS_ENT_BUF
     call _parse_filename                ; fills BDFS_ENT_BUF bytes 0-10; preserves BC, HL
     ld hl, (_NEXT_FREE_SECTOR)
     ld (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET), hl ; bytes 11-12, little-endian
@@ -413,7 +417,7 @@ _file_write_exit:
 _file_write_data:
     push bc                             ; [BC]        length
     push de                             ; [BC DE]     source
-    call _file_write_verify_format      ; destroys AF
+    call _verify_drive_formatted        ; destroys AF
     jr nz, _file_write_data_abort
     call _file_write_scan_dir           ; destroys AF, B, IX
     jr nz, _file_write_data_abort
@@ -435,11 +439,11 @@ _file_write_data_abort:
     or a                                ; NZ (A = error code)
     ret
 
-; _file_write_verify_format: read sector 0 header and verify BDFS magic bytes
+; _verify_drive_formatted: read sector 0 header and verify BDFS magic bytes
 ; in:  —
 ; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
 ; destroys: AF
-_file_write_verify_format:
+_verify_drive_formatted:
     push bc
     push de
     push hl
@@ -450,15 +454,15 @@ _file_write_verify_format:
     call flash_read
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
     cp BDFS_MAGIC_0
-    jr nz, _file_write_verify_format_fail
+    jr nz, _verify_drive_formatted_fail
     ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
     cp BDFS_MAGIC_1
-    jr nz, _file_write_verify_format_fail
+    jr nz, _verify_drive_formatted_fail
     xor a                           ; Z set, A=0
-    jr _file_write_verify_format_exit
-_file_write_verify_format_fail:
+    jr _verify_drive_formatted_exit
+_verify_drive_formatted_fail:
     ld a, BDFS_ERR_NOT_FORMATTED
-_file_write_verify_format_exit:
+_verify_drive_formatted_exit:
     pop hl
     pop de
     pop bc
@@ -649,16 +653,16 @@ _file_write_prog_pages_exit:
 
 ; ---- _parse_filename --------------------------------------------------
 
-; _parse_filename: parse 8.3 filename string into BDFS_ENT_BUF name/ext fields
+; _parse_filename: parse 8.3 filename string into a caller-supplied buffer
 ; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
-; out: BDFS_ENT_BUF bytes 0-10 filled (name space-padded to 8, ext space-padded to 3)
+;      DE = destination buffer (must hold BDFS_NAME_LEN + BDFS_EXT_LEN = 11 bytes)
+; out: DE[0:7] = name space-padded to 8, DE[8:10] = ext space-padded to 3
 ; destroys: —
 _parse_filename:
     push af
     push bc
     push de
     push hl
-    ld de, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
     ld b, BDFS_NAME_LEN             ; 8 chars remaining in name field
 _parse_filename_name_loop:
     ld a, (hl)
@@ -687,8 +691,7 @@ _parse_filename_name_fill:
     inc de
     djnz _parse_filename_name_fill
 _parse_filename_no_dot:
-    ; no dot in filename: fill ext field with spaces
-    ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
+    ; no dot in filename: fill ext field with spaces (DE is already at base+8)
     ld b, BDFS_EXT_LEN
     ld a, ' '
 _parse_filename_no_dot_fill:
@@ -705,7 +708,7 @@ _parse_filename_name_fill_after_dot:
     inc de
     djnz _parse_filename_name_fill_after_dot
 _parse_filename_ext:
-    ld de, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
+    ; DE is already at base+8 after name fill (DE = ext field start)
     ld b, BDFS_EXT_LEN              ; 3 chars in ext field
 _parse_filename_ext_loop:
     ld a, (hl)
@@ -726,6 +729,95 @@ _parse_filename_exit:
     pop de
     pop bc
     pop af
+    ret
+
+; _compare_name_fields: 11-byte memcmp of BDFS_ENT_BUF[0:10] vs BDFS_SRCH_BUF[0:10]
+; out: Z=match, NZ=no match
+; destroys: AF
+_compare_name_fields:
+    push bc
+    push de
+    push hl
+    ld de, BDFS_ENT_BUF
+    ld hl, BDFS_SRCH_BUF
+    ld b, BDFS_NAME_LEN + BDFS_EXT_LEN     ; 11 bytes
+_compare_name_fields_loop:
+    ld a, (de)
+    cp (hl)
+    jr nz, _compare_name_fields_done
+    inc de
+    inc hl
+    djnz _compare_name_fields_loop
+_compare_name_fields_done:
+    pop hl
+    pop de
+    pop bc
+    ret
+
+; bdfs_file_read: read a named file from the current drive into RAM
+; assumes bdfs_select_drive has been called
+; in:  HL = filename (null-terminated, case-sensitive, e.g. "HELLO.TXT")
+;      DE = destination address
+; out: Z=ok, BC = bytes loaded
+;      NZ=error (A=BDFS_ERR_*)
+; destroys: AF, BC, DE, HL, IX
+bdfs_file_read:
+    push de                               ; save destination
+    push hl                               ; save filename; stack: [HL DE]
+    call _verify_drive_formatted
+    jr nz, _file_read_drive_error
+    pop hl                                ; HL = filename; stack: [DE]
+    ld de, BDFS_SRCH_BUF
+    call _parse_filename                  ; fills BDFS_SRCH_BUF[0:10]; preserves BC, HL
+    ld ix, BDFS_HDR_SIZE                  ; IX = scan_offset (first directory entry)
+    ld b, 0                               ; entry counter
+_file_read_scan_loop:
+    push bc                               ; save B=counter across flash_read
+    push ix
+    pop hl                                ; HL = scan_offset
+    xor a                                 ; addr[23:16] = 0
+    ld de, BDFS_ENT_BUF
+    ld bc, BDFS_ENT_SIZE
+    call flash_read                       ; destroys AF, AF', BC, DE, HL
+    pop bc                                ; restore B=counter
+    ld de, BDFS_ENT_SIZE
+    add ix, de                            ; advance scan_offset for next iteration
+    ; check for end-of-directory sentinel (need to check this before checking  deleted flag)
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
+    cp BDFS_ENT_EMPTY
+    jr z, _file_read_not_found
+    ; skip deleted entries
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
+    bit BDFS_FLAG_DELETED_BIT, a
+    jr nz, _file_read_scan_next
+    ; compare name fields
+    call _compare_name_fields             ; Z=match; preserves BC, DE, HL
+    jr nz, _file_read_scan_next
+    ; match: read file data
+    pop de                                ; restore destination; stack: []
+    ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
+    call flash_sector_to_addr             ; HL=sector → A:HL = 24-bit byte address
+    ld bc, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
+    push bc                               ; save length (flash_read destroys BC)
+    call flash_read                       ; A:HL=addr, DE=dest, BC=len
+    pop bc                                ; BC = bytes loaded
+    xor a                                 ; Z=ok
+    ret
+_file_read_scan_next:
+    inc b
+    ld a, b
+    cp _MAX_ENTRIES
+    jr nc, _file_read_not_found
+    jr _file_read_scan_loop
+_file_read_not_found:
+    ld a, BDFS_ERR_FILE_NOT_FOUND
+    pop de                                ; balance stack (destination)
+    or a                                  ; NZ
+    ret
+_file_read_drive_error:
+    pop hl                                ; discard filename; stack: [DE]
+    pop de                                ; balance stack
+    or a                                  ; NZ (A = error from _verify_drive_formatted)
     ret
 
 ; ---- bdfs_get_err_msg -----------------------------------------------------------
@@ -762,6 +854,9 @@ bdfs_get_err_msg:
     cp BDFS_ERR_BAD_DRIVE
     ld hl, _MSG_BAD_DRIVE
     jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_FILE_NOT_FOUND
+    ld hl, _MSG_FILE_NOT_FOUND
+    jr z, _bdfs_get_err_msg_ret
     ld hl, 0                          ; unknown code: no message
 _bdfs_get_err_msg_ret:
     ret
@@ -777,6 +872,7 @@ _MSG_VERIFY_FAIL:       db "Verify fail", CHAR_LF, 0
 _MSG_DIR_FULL:          db "Directory full", CHAR_LF, 0
 _MSG_DISK_FULL:         db "Disk full", CHAR_LF, 0
 _MSG_BAD_DRIVE:         db "Invalid drive", CHAR_LF, 0
+_MSG_FILE_NOT_FOUND:    db "File not found", CHAR_LF, 0
 
 _BDFS_DEFAULT_PREFIX:       db "BDFS-"
 _BDFS_DEFAULT_PREFIX_LEN    equ $ - _BDFS_DEFAULT_PREFIX

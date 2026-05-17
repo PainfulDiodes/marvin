@@ -27,6 +27,7 @@
     EXTERN bdfs_mon_dir
     EXTERN bdfs_mon_drive
     EXTERN bdfs_mon_save
+    EXTERN bdfs_mon_load
     EXTERN BDFS_HELP_MSG
     ENDIF
 
@@ -165,6 +166,8 @@ _cmd_check:
     jp z,_cmd_drive
     cp 's'
     jp z,_cmd_save
+    cp 'l'
+    jp z,_cmd_file_load
     ENDIF
     cp '?'
     jp z,_cmd_help
@@ -373,6 +376,12 @@ _cmd_drive:
 ; s <name.ext> <addr> <len> = save RAM block to file on current drive
 _cmd_save:
     call bdfs_mon_save
+    jp _prompt
+
+; LOAD
+; l <name.ext> [<addr>] = load file from current drive into RAM
+_cmd_file_load:
+    call bdfs_mon_load
     jp _prompt
 
     ENDIF

@@ -12,6 +12,7 @@
     PUBLIC bdfs_mon_dir
     PUBLIC bdfs_mon_drive
     PUBLIC bdfs_mon_save
+    PUBLIC bdfs_mon_load
 
     EXTERN con_puts
     EXTERN con_putchar
@@ -25,6 +26,7 @@
     EXTERN bdfs_get_drive
     EXTERN bdfs_set_drive
     EXTERN bdfs_file_write
+    EXTERN bdfs_file_read
     EXTERN hex_byte_val
     EXTERN BDFS_DRIVE
     EXTERN BDFS_HDR_BUF
@@ -274,6 +276,92 @@ _save_bad_usage:
     call con_puts
     ret
 
+; bdfs_mon_load: 'l' command — load a named file from the current drive into RAM
+; in:  HL = pointer into CMD_BUFFER past 'l'
+; Syntax:  l <name.ext> [<hex-address>]
+; Example: l HELLO.BAS 8000
+; Default: address = RAMSTART
+; out: — (all output already printed)
+; destroys: AF, BC, DE, HL, IX
+bdfs_mon_load:
+    ld a, (hl)
+    or a
+    jp z, _load_bad_usage           ; null before any filename
+    cp ' '
+    jr nz, _load_got_filename
+    inc hl
+    jr bdfs_mon_load
+_load_got_filename:
+    push hl                         ; save filename ptr
+_load_scan_name:
+    ld a, (hl)
+    or a
+    jr z, _load_default_addr        ; null with no space: filename only, use default
+    cp ' '
+    jr z, _load_name_end
+    inc hl
+    jr _load_scan_name
+_load_name_end:
+    ld (hl), 0                      ; null-terminate filename in CMD_BUFFER
+    inc hl
+_load_find_addr_arg:
+    ld a, (hl)
+    or a
+    jr z, _load_default_addr        ; no address — use RAMSTART
+    cp ' '
+    jr nz, _load_parse_addr_arg
+    inc hl
+    jr _load_find_addr_arg
+_load_default_addr:
+    ld de, RAMSTART
+    jr _load_get_drive
+_load_parse_addr_arg:
+    call hex_byte_val               ; A = addr high byte; HL advances 2
+    ld d, a
+    call hex_byte_val               ; A = addr low byte; HL advances 2
+    ld e, a                         ; DE = destination address
+_load_get_drive:
+    call bdfs_get_drive
+    jr z, _load_select_drive
+    pop hl                          ; discard filename ptr
+    call _error
+    ret
+_load_select_drive:
+    call bdfs_select_drive
+    jr z, _load_execute
+    pop hl                          ; discard filename ptr
+    call _error
+    ret
+_load_execute:
+    pop hl                          ; HL = filename ptr
+    call bdfs_file_read             ; HL=filename, DE=dest; Z=ok BC=bytes, NZ=error A=BDFS_ERR_*
+    jr z, _load_done
+    call _error
+    ret
+_load_done:
+    ld hl, _MSG_LOADED
+    call con_puts                   ; "Loaded "
+    call _print_entry_name          ; print filename from BDFS_ENT_BUF
+    ld a, ' '
+    call con_putchar
+    ld a, d
+    call con_putchar_hex            ; dest addr high byte
+    ld a, e
+    call con_putchar_hex            ; dest addr low byte
+    ld a, ' '
+    call con_putchar
+    ld a, b
+    call con_putchar_hex            ; length high byte
+    ld a, c
+    call con_putchar_hex            ; length low byte
+    ld a, CHAR_LF
+    call con_putchar
+    ret
+_load_bad_usage:
+    ld hl, _MSG_LOAD_USAGE
+    call con_puts
+    ret
+
 ; helpers
 
 ; _print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
@@ -376,5 +464,7 @@ _MSG_MB:                db "MB [", 0
 _MSG_ID_CLOSE:          db "]", CHAR_LF, 0
 _MSG_SAVED:             db "Saved ", 0
 _MSG_SAVE_USAGE:        db "s <name.ext> [<addr> [<len>]]", CHAR_LF, 0
+_MSG_LOADED:            db "Loaded ", 0
+_MSG_LOAD_USAGE:        db "l <name.ext> [<addr>]", CHAR_LF, 0
 
     ENDIF
