@@ -111,15 +111,25 @@ bdfs_init:
     ld (BDFS_DRIVE), a
     ret
 
-; bdfs_set_drive: record the active drive letter
+; bdfs_set_drive: validate and record the active drive letter
 ; NOTE: it is not possible to persistently set the slot - as SPI may also be used for
 ; other purposes - so we set the logical current drive in RAM and set the slot
 ; immediately prior to (and for the duration of) reading/writing to a drive
-; in:  A = drive letter ('A'-'F')
-; out: —
-; destroys: -
+; in:  A = drive letter ('A'-'F', upper or lower case)
+; out: Z=ok; NZ=error, A=BDFS_ERR_BAD_DRIVE
+; destroys: AF
 bdfs_set_drive:
+    and 0dfh                        ; fold lowercase to uppercase
+    cp 'A'
+    jr c, _set_drive_bad
+    cp 'G'
+    jr nc, _set_drive_bad
     ld (BDFS_DRIVE), a
+    cp a                            ; Z=ok
+    ret
+_set_drive_bad:
+    ld a, BDFS_ERR_BAD_DRIVE
+    or a                            ; NZ
     ret
 
 ; bdfs_get_drive: return the current drive letter

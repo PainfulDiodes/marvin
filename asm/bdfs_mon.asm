@@ -164,16 +164,9 @@ _dir_done:
 ; destroys: AF
 bdfs_mon_drive:
     ld a, (hl)
-    and 0dfh                         ; fold lowercase to uppercase
-    cp 'A'
-    jr c, _drive_bad
-    cp 'G'
-    jr nc, _drive_bad
     call bdfs_set_drive
-    ret
-_drive_bad:
-    ld a, BDFS_ERR_BAD_DRIVE
-    call _error
+    ret z
+    call _error                     ; A = BDFS_ERR_BAD_DRIVE from bdfs_set_drive
     ret
 
 ; bdfs_mon_save: 's' command — save a region of RAM to the current drive as a named file
