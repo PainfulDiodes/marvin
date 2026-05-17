@@ -373,7 +373,7 @@ _bdfs_error_print:
     call con_puts
     ret
 
-; ---- strings ---------------------------------------------------------------
+; strings
 
 _MSG_FORMAT_CONF_PRE:   db "Format ", 0
 _MSG_FORMAT_CONF_POST:  db "? y/n ", 0
