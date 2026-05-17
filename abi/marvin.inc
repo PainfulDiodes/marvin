@@ -73,5 +73,6 @@ MARVIN_BDFS_FORMAT            EQU 0x00BB  ; in: HL=vol name (0=default)  out: Z=
 MARVIN_BDFS_DIR_OPEN          EQU 0x00BE  ; out: Z=ok HL=vol name ptr; NZ=BDFS_ERR_NOT_FORMATTED
 MARVIN_BDFS_DIR_NEXT          EQU 0x00C1  ; out: Z=ok HL=entry ptr; NZ=BDFS_ERR_END_OF_DIR C=active count
 MARVIN_BDFS_FILE_WRITE        EQU 0x00C4  ; in: HL=filename DE=src BC=len  out: Z=ok NZ=BDFS_ERR_*
+MARVIN_BDFS_GET_ERR_MSG       EQU 0x00C7  ; in: A=BDFS_ERR_*  out: HL=message string (0 if unknown)
 
 ENDIF ; _MARVIN_INC
