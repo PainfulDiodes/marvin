@@ -334,11 +334,14 @@ _load_select_drive:
     ret
 _load_execute:
     pop hl                          ; HL = filename ptr
+    push de                         ; save original dest addr; flash_read advances DE
     call bdfs_file_read             ; HL=filename, DE=dest; Z=ok BC=bytes, NZ=error A=BDFS_ERR_*
     jr z, _load_done
+    pop de                          ; balance stack
     call _error
     ret
 _load_done:
+    pop de                          ; restore original dest addr for confirmation message
     ld hl, _MSG_LOADED
     call con_puts                   ; "Loaded "
     call _print_entry_name          ; print filename from BDFS_ENT_BUF
