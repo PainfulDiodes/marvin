@@ -17,6 +17,10 @@ BDFS_ENT_NAME_OFFSET         EQU 0       ; 8 bytes, space-padded uppercase basen
 BDFS_ENT_EXT_OFFSET          EQU 8       ; 3 bytes, space-padded uppercase extension
 BDFS_ENT_FLAGS_OFFSET        EQU 15      ; 1 byte
 
+; Drive range
+BDFS_FIRST_DRIVE        EQU 'A'
+BDFS_LAST_DRIVE         EQU 'F'
+
 ; Error codes
 BDFS_ERR_NO_DRIVE       EQU 1
 BDFS_ERR_NO_DEVICE      EQU 2
