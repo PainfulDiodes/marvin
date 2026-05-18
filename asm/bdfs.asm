@@ -107,12 +107,30 @@ BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + _SRCH_BUF_LEN + _DIR
 ; ---- bdfs_init / bdfs_set_drive / bdfs_get_drive ---------------------------
 
 ; bdfs_init: initialise BDFS RAM state; call once at system startup
+; Sets BDFS_DRIVE to the lowest drive letter ('A'-'F') with a device present,
+; or 0 if no device is found.
 ; in:  —
 ; out: —
 ; destroys: AF
 bdfs_init:
-    xor a
+    push bc
+    ld b, BDFS_FIRST_DRIVE
+_bdfs_init_loop:
+    ld a, b
+    call bdfs_select_drive          ; Z=ok (device present), NZ=no device; preserves BC
+    jr z, _bdfs_init_found
+    inc b
+    ld a, b
+    cp BDFS_LAST_DRIVE + 1
+    jr c, _bdfs_init_loop
+    xor a                           ; no device found: drive = 0 (none)
     ld (BDFS_DRIVE), a
+    jr _bdfs_init_exit
+_bdfs_init_found:
+    ld a, b
+    ld (BDFS_DRIVE), a
+_bdfs_init_exit:
+    pop bc
     ret
 
 ; bdfs_set_drive: validate and record the active drive letter
@@ -124,9 +142,9 @@ bdfs_init:
 ; destroys: AF
 bdfs_set_drive:
     and 0dfh                        ; fold lowercase to uppercase
-    cp 'A'
+    cp BDFS_FIRST_DRIVE
     jr c, _set_drive_bad
-    cp 'G'
+    cp BDFS_LAST_DRIVE + 1
     jr nc, _set_drive_bad
     ld (BDFS_DRIVE), a
     cp a                            ; Z=ok
@@ -162,7 +180,7 @@ bdfs_select_drive:
     push bc
     push de
     push hl
-    sub 'A'-1                       ; A = slot number (1-6)
+    sub BDFS_FIRST_DRIVE - 1        ; A = slot number (1-6)
     call flash_select_slot
     call flash_has_device
     jr nz, _bsd_no_device
