@@ -269,7 +269,9 @@ _fpp_loop:
     jr nz, _fpp_loop
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
-    call flash_poll_busy        ; Z=ok NZ=timeout; pop does not disturb flags
+    push de                         ; poll_busy clobbers DE; preserve advanced source pointer
+    call flash_poll_busy            ; Z=ok NZ=timeout; pop does not disturb flags
+    pop de                          ; restore DE = one past last byte written
     pop hl
     pop bc
     ret
