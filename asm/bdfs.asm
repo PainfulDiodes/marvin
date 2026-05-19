@@ -392,6 +392,17 @@ _dir_next_exit:
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
 ; destroys: AF, HL, IX
 bdfs_file_write:
+    ; Reject files > 0xF000 bytes: flash_bytes_to_sectors adds sector_size-1 before
+    ; dividing; HL + 0x0FFF overflows 16 bits for any length above 0xF000.
+    ld a, b
+    cp 0xF1                             ; carry if B <= 0xF0
+    jr nc, _file_write_too_large        ; B >= 0xF1: BC > 0xF0FF > 0xF000
+    cp 0xF0                             ; carry if B < 0xF0, Z if B == 0xF0
+    jr nz, _file_write_size_ok          ; B < 0xF0: BC <= 0xEFFF, OK
+    ld a, c
+    or a
+    jr nz, _file_write_too_large        ; B == 0xF0, C > 0: BC > 0xF000
+_file_write_size_ok:
     push bc                             ; preserve length for caller
     push de                             ; preserve source addr for caller
     push hl                             ; filename — only needed for directory entry
@@ -425,6 +436,10 @@ _file_write_data_fail:
 _file_write_exit:
     pop de
     pop bc
+    ret
+_file_write_too_large:
+    ld a, BDFS_ERR_FILE_TOO_LARGE
+    or a                                ; NZ
     ret
 
 ; _file_write_data: verify format, scan directory, check space, erase and write file data
@@ -875,6 +890,9 @@ bdfs_get_err_msg:
     cp BDFS_ERR_FILE_NOT_FOUND
     ld hl, _MSG_FILE_NOT_FOUND
     jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_FILE_TOO_LARGE
+    ld hl, _MSG_FILE_TOO_LARGE
+    jr z, _bdfs_get_err_msg_ret
     ld hl, 0                          ; unknown code: no message
 _bdfs_get_err_msg_ret:
     ret
@@ -891,6 +909,7 @@ _MSG_DIR_FULL:          db "Directory full", CHAR_LF, 0
 _MSG_DISK_FULL:         db "Disk full", CHAR_LF, 0
 _MSG_BAD_DRIVE:         db "Invalid drive", CHAR_LF, 0
 _MSG_FILE_NOT_FOUND:    db "File not found", CHAR_LF, 0
+_MSG_FILE_TOO_LARGE:    db "File too large", CHAR_LF, 0
 
 _BDFS_DEFAULT_PREFIX:       db "BDFS-"
 _BDFS_DEFAULT_PREFIX_LEN    equ $ - _BDFS_DEFAULT_PREFIX
