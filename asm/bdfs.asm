@@ -1,10 +1,4 @@
-; bdfs.asm - BeanDeck File System (pure data/operation layer)
-;
-; bdfs_init: initialise RAM state; call once at startup.
-; Drive selection: bdfs_set_drive / bdfs_get_drive, letters 'A'-'F' mapped to slots 1-6.
-; bdfs_select_drive: make a drive active ready for read/write
-; bdfs_format: erase and write header; returns Z=ok, NZ=error (A=BDFS_ERR_*).
-; bdfs_dir_open / bdfs_dir_next: iterator for directory entries (no output).
+; bdfs.asm - BeanDeck File System
 ;
 ; Deletion and free-space fragmentation:
 ;   Deleting a file marks its directory entry as deleted but does not erase its sectors.
@@ -86,27 +80,36 @@ _MAX_ENTRIES    EQU (BDFS_SECTOR_SIZE / BDFS_ENT_SIZE) - 1  ; -1 : header occupi
 
 ; ---- RAM layout (private to this module) ------------------------------------
 
-BDFS_HDR_BUF            EQU BDFS_RAMSTART                        ; directory header r/w buffer
-BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE         ; entry scan buffer
-BDFS_SRCH_BUF           EQU BDFS_ENT_BUF + BDFS_ENT_SIZE         ; 11-byte search key (8 name + 3 ext)
+; directory header r/w buffer
+BDFS_HDR_BUF            EQU BDFS_RAMSTART
+; entry scan buffer
+BDFS_ENT_BUF            EQU BDFS_HDR_BUF + BDFS_HDR_SIZE
+; 11-byte search key (8 name + 3 ext)
+BDFS_SRCH_BUF           EQU BDFS_ENT_BUF + BDFS_ENT_SIZE
 _SRCH_BUF_LEN           EQU 11
-_DIR_SCAN_OFST          EQU BDFS_SRCH_BUF + _SRCH_BUF_LEN            ; directory iterator scan offset (2 bytes)
+; directory iterator scan offset (2 bytes)
+_DIR_SCAN_OFST          EQU BDFS_SRCH_BUF + _SRCH_BUF_LEN
 _DIR_SCAN_OFST_LEN      EQU 2
-_ACTIVE_COUNT           EQU _DIR_SCAN_OFST + _DIR_SCAN_OFST_LEN      ; active entry count (1 byte)
+; active entry count (1 byte)
+_ACTIVE_COUNT           EQU _DIR_SCAN_OFST + _DIR_SCAN_OFST_LEN
 _ACTIVE_COUNT_LEN       EQU 1
-BDFS_DRIVE              EQU _ACTIVE_COUNT + _ACTIVE_COUNT_LEN    ; active drive letter ('A'-'F', 0=none)
+; active drive letter ('A'-'F', 0=none)
+BDFS_DRIVE              EQU _ACTIVE_COUNT + _ACTIVE_COUNT_LEN
 _DRIVE_LEN              EQU 1
-_FREE_ENTRY_OFFSET      EQU BDFS_DRIVE + _DRIVE_LEN                                  ; first free dir entry byte offset from scan (2 bytes)
+; first free dir entry byte offset from scan (2 bytes)
+_FREE_ENTRY_OFFSET      EQU BDFS_DRIVE + _DRIVE_LEN
 _FREE_ENTRY_OFFSET_LEN  EQU 2
-_NEXT_FREE_SECTOR       EQU _FREE_ENTRY_OFFSET + _FREE_ENTRY_OFFSET_LEN             ; next free sector number from scan (2 bytes)
+; next free sector number from scan (2 bytes)
+_NEXT_FREE_SECTOR       EQU _FREE_ENTRY_OFFSET + _FREE_ENTRY_OFFSET_LEN
 _NEXT_FREE_SECTOR_LEN   EQU 2
-_PAGE_ADDR_BANK         EQU _NEXT_FREE_SECTOR + _NEXT_FREE_SECTOR_LEN               ; addr[23:16] during page writes (1 byte)
+; addr[23:16] during page writes (1 byte)
+_PAGE_ADDR_BANK         EQU _NEXT_FREE_SECTOR + _NEXT_FREE_SECTOR_LEN
 _PAGE_ADDR_BANK_LEN     EQU 1
+; declared here so that this can be allocated in the monitor
 BDFS_RAMSIZE            EQU BDFS_HDR_SIZE + BDFS_ENT_SIZE + _SRCH_BUF_LEN + _DIR_SCAN_OFST_LEN + _ACTIVE_COUNT_LEN + _DRIVE_LEN + _FREE_ENTRY_OFFSET_LEN + _NEXT_FREE_SECTOR_LEN + _PAGE_ADDR_BANK_LEN
 
-; ---- bdfs_init / bdfs_set_drive / bdfs_get_drive ---------------------------
 
-; bdfs_init: initialise BDFS RAM state; call once at system startup
+; bdfs_init: called once at cold start
 ; Sets BDFS_DRIVE to the lowest drive letter ('A'-'F') with a device present,
 ; or 0 if no device is found.
 ; in:  —
@@ -134,9 +137,6 @@ _bdfs_init_exit:
     ret
 
 ; bdfs_set_drive: validate and record the active drive letter
-; NOTE: it is not possible to persistently set the slot - as SPI may also be used for
-; other purposes - so we set the logical current drive in RAM and set the slot
-; immediately prior to (and for the duration of) reading/writing to a drive
 ; in:  A = drive letter ('A'-'F', upper or lower case)
 ; out: Z=ok; NZ=error, A=BDFS_ERR_BAD_DRIVE
 ; destroys: AF
@@ -194,8 +194,6 @@ _bsd_exit:
     pop bc
     or a
     ret
-
-; ---- bdfs_format -----------------------------------------------------------
 
 ; bdfs_format: erase sector 0 of the current drive and write a BDFS directory header
 ; assumes bdfs_select_drive has been called
@@ -301,8 +299,6 @@ _format_exit:
     or a
     ret
 
-; ---- bdfs_dir_open ---------------------------------------------------------
-
 ; bdfs_dir_open: prepare to iterate the current drive's directory
 ; assumes bdfs_select_drive has been called
 ; in:  —
@@ -336,10 +332,9 @@ _dir_open_not_formatted:
 _dir_open_exit:
     pop de
     pop bc
-    or a                            ; A=0 on success (no return value), non-zero = error code → NZ
+    ; A=0 on success (no return value), non-zero = error code → NZ
+    or a                            
     ret
-
-; ---- bdfs_dir_next ---------------------------------------------------------
 
 ; bdfs_dir_next: read the next directory entry into BDFS_ENT_BUF
 ; in:  — (iterator state in _DIR_SCAN_OFST / _ACTIVE_COUNT, set by bdfs_dir_open)
@@ -381,8 +376,6 @@ _dir_next_exit:
     pop de
     or a
     ret
-
-; ---- bdfs_file_write -------------------------------------------------------
 
 ; bdfs_file_write: write a file to the current drive
 ; assumes bdfs_select_drive has been called
@@ -441,7 +434,6 @@ _file_write_too_large:
     ld a, BDFS_ERR_FILE_TOO_LARGE
     or a                                ; NZ
     ret
-
 ; _file_write_data: verify format, scan directory, check space, erase and write file data
 ; in:  BC = length, DE = source
 ; out: Z=ok; _FREE_ENTRY_OFFSET and _NEXT_FREE_SECTOR populated by scan
@@ -471,7 +463,6 @@ _file_write_data_abort:
     pop bc                              ; discard length
     or a                                ; NZ (A = error code)
     ret
-
 ; _verify_drive_formatted: read sector 0 header and verify BDFS magic bytes
 ; in:  —
 ; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
@@ -501,7 +492,6 @@ _verify_drive_formatted_exit:
     pop bc
     or a
     ret
-
 ; _file_write_scan_dir: scan the directory to locate the first empty slot and last active sector
 ; in:  —
 ; out: Z=ok; _FREE_ENTRY_OFFSET = first empty slot, _NEXT_FREE_SECTOR = first free sector
@@ -534,7 +524,6 @@ _file_write_scan_dir_full:
     ld a, BDFS_ERR_DIR_FULL
     or a                            ; NZ
     ret
-
 ; _file_write_scan_dir_entry: read one directory entry at IX and update scan state
 ; in:  IX = flash byte offset of entry to read
 ; out: Z = occupied (active or deleted); _NEXT_FREE_SECTOR updated if active
@@ -575,7 +564,6 @@ _file_write_scan_dir_entry_exit:
     pop bc
     or a
     ret
-
 ; _file_write_device_full_check: check whether BC bytes fit in remaining device space
 ; in:  BC = file length in bytes
 ; out: Z=ok, B = sectors needed; NZ+A=BDFS_ERR_DISK_FULL
@@ -617,7 +605,6 @@ _file_write_check_device_full_ok:
     pop de
     xor a                           ; Z; B = sectors_needed
     ret
-
 ; _file_write_erase_sectors: erase B sectors starting from _NEXT_FREE_SECTOR
 ; in:  B = sector count
 ; out: Z=ok, NZ+A=BDFS_ERR_ERASE_FAIL
@@ -637,7 +624,6 @@ _file_write_erase_sectors_fail:
     ld a, BDFS_ERR_ERASE_FAIL
     or a                            ; NZ
     ret
-
 ; _file_write_prog_pages: write BC bytes from DE to flash starting at _NEXT_FREE_SECTOR
 ; in:  BC = length, DE = source
 ; out: Z=ok, NZ+A=BDFS_ERR_WRITE_FAIL
@@ -683,8 +669,6 @@ _file_write_prog_pages_fail:
 _file_write_prog_pages_exit:
     pop bc                          ; restore length for caller
     ret
-
-; ---- _parse_filename --------------------------------------------------
 
 ; _parse_filename: parse 8.3 filename string into a caller-supplied buffer
 ; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
@@ -853,8 +837,6 @@ _file_read_drive_error:
     or a                                  ; NZ (A = error from _verify_drive_formatted)
     ret
 
-; ---- bdfs_get_err_msg -----------------------------------------------------------
-
 ; bdfs_get_err_msg: return pointer to error message string for a BDFS_ERR_* code
 ; in:  A = BDFS_ERR_* code
 ; out: HL = pointer to null-terminated message string, or 0 if no message for this code
@@ -897,8 +879,7 @@ bdfs_get_err_msg:
 _bdfs_get_err_msg_ret:
     ret
 
-; ---- strings ---------------------------------------------------------------
-
+; strings
 _MSG_NO_DRIVE:          db "No drive selected", CHAR_LF, 0
 _MSG_NO_DEVICE:         db "No device in slot", CHAR_LF, 0
 _MSG_NOT_FORMATTED:     db "Not formatted", CHAR_LF, 0
@@ -910,6 +891,5 @@ _MSG_DISK_FULL:         db "Disk full", CHAR_LF, 0
 _MSG_BAD_DRIVE:         db "Invalid drive", CHAR_LF, 0
 _MSG_FILE_NOT_FOUND:    db "File not found", CHAR_LF, 0
 _MSG_FILE_TOO_LARGE:    db "File too large", CHAR_LF, 0
-
 _BDFS_DEFAULT_PREFIX:       db "BDFS-"
 _BDFS_DEFAULT_PREFIX_LEN    equ $ - _BDFS_DEFAULT_PREFIX

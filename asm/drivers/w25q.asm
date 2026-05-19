@@ -62,14 +62,12 @@ W25Q_CAP_128MBIT    EQU 0x18    ; W25Q128  - 16 MByte
     PUBLIC W25Q64_NAME
     PUBLIC W25Q128_NAME
 
-; ---- RAM layout (private to this module) ------------------------------------
-
+; RAM layout
 W25Q_CS             equ W25Q_RAMSTART + 0   ; 1 byte: active CS byte for flash_cs_assert
 W25Q_ID_MFR         equ W25Q_RAMSTART + 1   ; 1 byte: JEDEC manufacturer ID (cached by flash_select_slot)
 W25Q_ID_TYPE        equ W25Q_RAMSTART + 2   ; 1 byte: JEDEC memory type
 W25Q_ID_CAP         equ W25Q_RAMSTART + 3   ; 1 byte: JEDEC capacity code (see W25Q_CAP_* in w25q.inc)
 W25Q_RAMSIZE        equ 4
-
 
 ; flash_has_device: check whether a W25Q device was detected when the slot was last selected
 ; in:  — (uses W25Q_ID_MFR cached by flash_select_slot)
@@ -402,8 +400,7 @@ flash_sector_to_addr:
     ld l, 0                         ; L = addr[7:0] = 0
     ret
 
-; ---- strings ---------------------------------------------------------------
-
+; strings
 _MSG_UNKNOWN_DEVICE:    db "unknown", 0
 W25Q80_NAME:    db "W25Q80", 0
 W25Q16_NAME:    db "W25Q16", 0
