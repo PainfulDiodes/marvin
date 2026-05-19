@@ -466,36 +466,6 @@ _file_write_data_abort:
     or a                                ; NZ (A = error code)
     ret
 
-; HELPER
-; _verify_drive_formatted: read sector 0 header and verify BDFS magic bytes
-; in:  —
-; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
-; destroys: AF
-_verify_drive_formatted:
-    push bc
-    push de
-    push hl
-    xor a
-    ld hl, 0x0000
-    ld de, BDFS_HDR_BUF
-    ld bc, BDFS_HDR_SIZE
-    call flash_read
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
-    cp BDFS_MAGIC_0
-    jr nz, _verify_drive_formatted_fail
-    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
-    cp BDFS_MAGIC_1
-    jr nz, _verify_drive_formatted_fail
-    xor a                           ; Z set, A=0
-    jr _verify_drive_formatted_exit
-_verify_drive_formatted_fail:
-    ld a, BDFS_ERR_NOT_FORMATTED
-_verify_drive_formatted_exit:
-    pop hl
-    pop de
-    pop bc
-    or a
-    ret
 
 ; _file_write_scan_dir: scan the directory to locate the first empty slot, check for duplicate
 ; names, and locate last active sector
@@ -687,7 +657,105 @@ _file_write_prog_pages_exit:
     ret
 
 
-; HELPER
+
+; bdfs_file_read: read a named file from the current drive into RAM
+; assumes bdfs_select_drive has been called
+; in:  HL = filename (null-terminated, case-sensitive, e.g. "HELLO.TXT")
+;      DE = destination address
+; out: Z=ok, BC = bytes loaded
+;      NZ=error (A=BDFS_ERR_*)
+; destroys: AF, BC, DE, HL, IX
+bdfs_file_read:
+    push de                               ; save destination
+    push hl                               ; save filename; stack: [HL DE]
+    call _verify_drive_formatted
+    jr nz, _file_read_drive_error
+    pop hl                                ; HL = filename; stack: [DE]
+    ld de, BDFS_SRCH_BUF
+    call _parse_filename                  ; fills BDFS_SRCH_BUF[0:10]; preserves BC, HL
+    ld ix, BDFS_HDR_SIZE                  ; IX = scan_offset (first directory entry)
+    ld b, 0                               ; entry counter
+_file_read_scan_loop:
+    push bc                               ; save B=counter across flash_read
+    push ix
+    pop hl                                ; HL = scan_offset
+    xor a                                 ; addr[23:16] = 0
+    ld de, BDFS_ENT_BUF
+    ld bc, BDFS_ENT_SIZE
+    call flash_read                       ; destroys AF, AF', BC, DE, HL
+    pop bc                                ; restore B=counter
+    ld de, BDFS_ENT_SIZE
+    add ix, de                            ; advance scan_offset for next iteration
+    ; check for end-of-directory sentinel (need to check this before checking  deleted flag)
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
+    cp BDFS_ENT_EMPTY
+    jr z, _file_read_not_found
+    ; skip deleted entries
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
+    bit BDFS_FLAG_DELETED_BIT, a
+    jr nz, _file_read_scan_next
+    ; compare name fields
+    call _compare_name_fields             ; Z=match; preserves BC, DE, HL
+    jr nz, _file_read_scan_next
+    ; match: read file data
+    pop de                                ; restore destination; stack: []
+    ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
+    call flash_sector_to_addr             ; HL=sector → A:HL = 24-bit byte address
+    ld bc, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
+    push bc                               ; save length (flash_read destroys BC)
+    call flash_read                       ; A:HL=addr, DE=dest, BC=len
+    pop bc                                ; BC = bytes loaded
+    xor a                                 ; Z=ok
+    ret
+_file_read_scan_next:
+    inc b
+    ld a, b
+    cp _MAX_ENTRIES
+    jr nc, _file_read_not_found
+    jr _file_read_scan_loop
+_file_read_not_found:
+    ld a, BDFS_ERR_FILE_NOT_FOUND
+    pop de                                ; balance stack (destination)
+    or a                                  ; NZ
+    ret
+_file_read_drive_error:
+    pop hl                                ; discard filename; stack: [DE]
+    pop de                                ; balance stack
+    or a                                  ; NZ (A = error from _verify_drive_formatted)
+    ret
+
+; helpers
+
+; _verify_drive_formatted: read sector 0 header and verify BDFS magic bytes
+; in:  —
+; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
+; destroys: AF
+_verify_drive_formatted:
+    push bc
+    push de
+    push hl
+    xor a
+    ld hl, 0x0000
+    ld de, BDFS_HDR_BUF
+    ld bc, BDFS_HDR_SIZE
+    call flash_read
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET)
+    cp BDFS_MAGIC_0
+    jr nz, _verify_drive_formatted_fail
+    ld a, (BDFS_HDR_BUF + BDFS_HDR_MAGIC_OFFSET + 1)
+    cp BDFS_MAGIC_1
+    jr nz, _verify_drive_formatted_fail
+    xor a                           ; Z set, A=0
+    jr _verify_drive_formatted_exit
+_verify_drive_formatted_fail:
+    ld a, BDFS_ERR_NOT_FORMATTED
+_verify_drive_formatted_exit:
+    pop hl
+    pop de
+    pop bc
+    or a
+    ret
+
 ; _parse_filename: parse 8.3 filename string into a caller-supplied buffer
 ; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
 ;      DE = destination buffer (must hold BDFS_NAME_LEN + BDFS_EXT_LEN = 11 bytes)
@@ -766,7 +834,6 @@ _parse_filename_exit:
     pop af
     ret
 
-;HELPER
 ; _compare_name_fields: 11-byte memcmp of BDFS_ENT_BUF[0:10] vs BDFS_SRCH_BUF[0:10]
 ; out: Z=match, NZ=no match
 ; destroys: AF
@@ -789,76 +856,6 @@ _compare_name_fields_done:
     pop de
     pop bc
     ret
-
-; bdfs_file_read: read a named file from the current drive into RAM
-; assumes bdfs_select_drive has been called
-; in:  HL = filename (null-terminated, case-sensitive, e.g. "HELLO.TXT")
-;      DE = destination address
-; out: Z=ok, BC = bytes loaded
-;      NZ=error (A=BDFS_ERR_*)
-; destroys: AF, BC, DE, HL, IX
-bdfs_file_read:
-    push de                               ; save destination
-    push hl                               ; save filename; stack: [HL DE]
-    call _verify_drive_formatted
-    jr nz, _file_read_drive_error
-    pop hl                                ; HL = filename; stack: [DE]
-    ld de, BDFS_SRCH_BUF
-    call _parse_filename                  ; fills BDFS_SRCH_BUF[0:10]; preserves BC, HL
-    ld ix, BDFS_HDR_SIZE                  ; IX = scan_offset (first directory entry)
-    ld b, 0                               ; entry counter
-_file_read_scan_loop:
-    push bc                               ; save B=counter across flash_read
-    push ix
-    pop hl                                ; HL = scan_offset
-    xor a                                 ; addr[23:16] = 0
-    ld de, BDFS_ENT_BUF
-    ld bc, BDFS_ENT_SIZE
-    call flash_read                       ; destroys AF, AF', BC, DE, HL
-    pop bc                                ; restore B=counter
-    ld de, BDFS_ENT_SIZE
-    add ix, de                            ; advance scan_offset for next iteration
-    ; check for end-of-directory sentinel (need to check this before checking  deleted flag)
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
-    cp BDFS_ENT_EMPTY
-    jr z, _file_read_not_found
-    ; skip deleted entries
-    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
-    bit BDFS_FLAG_DELETED_BIT, a
-    jr nz, _file_read_scan_next
-    ; compare name fields
-    call _compare_name_fields             ; Z=match; preserves BC, DE, HL
-    jr nz, _file_read_scan_next
-    ; match: read file data
-    pop de                                ; restore destination; stack: []
-    ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
-    call flash_sector_to_addr             ; HL=sector → A:HL = 24-bit byte address
-    ld bc, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
-    push bc                               ; save length (flash_read destroys BC)
-    call flash_read                       ; A:HL=addr, DE=dest, BC=len
-    pop bc                                ; BC = bytes loaded
-    xor a                                 ; Z=ok
-    ret
-_file_read_scan_next:
-    inc b
-    ld a, b
-    cp _MAX_ENTRIES
-    jr nc, _file_read_not_found
-    jr _file_read_scan_loop
-_file_read_not_found:
-    ld a, BDFS_ERR_FILE_NOT_FOUND
-    pop de                                ; balance stack (destination)
-    or a                                  ; NZ
-    ret
-_file_read_drive_error:
-    pop hl                                ; discard filename; stack: [DE]
-    pop de                                ; balance stack
-    or a                                  ; NZ (A = error from _verify_drive_formatted)
-    ret
-
-; helpers
-
-
 
 ; bdfs_get_err_msg: return pointer to error message string for a BDFS_ERR_* code
 ; in:  A = BDFS_ERR_* code
