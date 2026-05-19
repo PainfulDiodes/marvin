@@ -1,8 +1,6 @@
 ; bdfs_mon.asm - BDFS monitor layer
 ; Wraps bdfs.asm functions with console output for the monitor.
 
-    IFDEF INCLUDE_BDFS
-
     INCLUDE "asm/chars.inc"
     INCLUDE "asm/bdfs.inc"
 
@@ -466,5 +464,3 @@ _MSG_SAVED:             db "Saved ", 0
 _MSG_SAVE_USAGE:        db "s <name.ext> [<addr> [<len>]]", CHAR_LF, 0
 _MSG_LOADED:            db "Loaded ", 0
 _MSG_LOAD_USAGE:        db "l <name.ext> [<addr>]", CHAR_LF, 0
-
-    ENDIF
