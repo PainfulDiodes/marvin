@@ -28,6 +28,7 @@
     EXTERN bdfs_mon_drive
     EXTERN bdfs_mon_save
     EXTERN bdfs_mon_load
+    EXTERN bdfs_mon_delete
     EXTERN BDFS_HELP_MSG
     ENDIF
 
@@ -168,6 +169,8 @@ _cmd_check:
     jp z,_cmd_save
     cp 'l'
     jp z,_cmd_file_load
+    cp 'k'
+    jp z,_cmd_file_delete
     ENDIF
     cp '?'
     jp z,_cmd_help
@@ -382,6 +385,12 @@ _cmd_save:
 ; l <name.ext> [<addr>] = load file from current drive into RAM
 _cmd_file_load:
     call bdfs_mon_load
+    jp _prompt
+
+; DELETE
+; k <name.ext> = soft-delete a file from the current drive
+_cmd_file_delete:
+    call bdfs_mon_delete
     jp _prompt
 
     ENDIF
