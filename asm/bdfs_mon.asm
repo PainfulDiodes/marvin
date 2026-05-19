@@ -1,7 +1,5 @@
-; bdfs_mon.asm - BDFS monitor presentation layer
-;
-; Wraps bdfs.asm pure functions with console output for the monitor.
-; Command handlers (bdfs_mon_cmd_*) are called from monitor.asm dispatch stubs.
+; bdfs_mon.asm - BDFS monitor layer
+; Wraps bdfs.asm functions with console output for the monitor.
 
     IFDEF INCLUDE_BDFS
 
@@ -455,7 +453,6 @@ _error:
     ret
 
 ; strings
-
 _MSG_FORMAT_CONF_PRE:   db "Format ", 0
 _MSG_FORMAT_CONF_POST:  db "? y/n ", 0
 _MSG_FORMAT_PRE:        db "Formatting drive ", 0
