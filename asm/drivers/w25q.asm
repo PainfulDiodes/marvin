@@ -144,7 +144,7 @@ flash_write_enable:
 ; destroys: AF, BC, DE
 flash_poll_busy:
     ld de, W25Q_POLL_TIMEOUT
-_fpb_loop:
+_flash_poll_busy_loop:
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_RDSR
@@ -155,14 +155,14 @@ _fpb_loop:
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     bit W25Q_BUSY_BIT, b        ; Z=1 if BUSY bit is 0 (not busy)
-    jr z, _fpb_done
+    jr z, _flash_poll_busy_done
     dec de
     ld a, d
     or e
-    jr nz, _fpb_loop
+    jr nz, _flash_poll_busy_loop
     or 1                        ; timeout: set NZ (A was 0, or 1 = 1)
     ret
-_fpb_done:
+_flash_poll_busy_done:
     ret                         ; Z set: operation complete
 
 ; flash_read: read BC bytes from flash address A:HL into RAM at DE
@@ -184,7 +184,7 @@ flash_read:
     call flash_spi_byte         ; send addr[15:8]
     ld a, l
     call flash_spi_byte         ; send addr[7:0]
-_fr_loop:
+_flash_read_loop:
     ld a, 0x00
     call flash_spi_byte         ; clock in received byte
     ld (de), a
@@ -192,7 +192,7 @@ _fr_loop:
     dec bc
     ld a, b
     or c
-    jr nz, _fr_loop
+    jr nz, _flash_read_loop
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     ret
@@ -257,14 +257,14 @@ flash_page_program:
     call flash_spi_byte         ; send addr[15:8]
     ld a, l
     call flash_spi_byte         ; send addr[7:0]
-_fpp_loop:
+_flash_page_program_loop:
     ld a, (de)
     call flash_spi_byte
     inc de
     dec bc
     ld a, b
     or c
-    jr nz, _fpp_loop
+    jr nz, _flash_page_program_loop
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     push de                         ; poll_busy clobbers DE; preserve advanced source pointer
@@ -282,9 +282,9 @@ flash_select_slot:
     inc a                       ; A = slot + 1 (bit position of CS line)
     ld b, a                     ; B = shift count
     ld a, 1
-_fss_loop:
+_flash_select_slot_loop:
     rlca
-    djnz _fss_loop              ; A = 1 << (slot+1): the active-low CS bit for this slot
+    djnz _flash_select_slot_loop              ; A = 1 << (slot+1): the active-low CS bit for this slot
     cpl                         ; invert: 0xFF with CS bit cleared
     ld (W25Q_CS), a
     call flash_read_jedec_id    ; A=mfr, B=type, C=cap (uses W25Q_CS just set)
@@ -330,12 +330,12 @@ flash_get_capacity_mb:
     sub W25Q_CAP_8MBIT               ; shift count (0=1MB, 1=2MB, ...)
     ld b, a
     ld a, 1
-_fgcm_shift:
+_flash_get_capacity_mb_shift:
     dec b
-    jp m, _fgcm_done
+    jp m, _flash_get_capacity_mb_done
     rlca
-    jr _fgcm_shift
-_fgcm_done:
+    jr _flash_get_capacity_mb_shift
+_flash_get_capacity_mb_done:
     ret
 
 ; flash_get_sector_count: return total 4KB sector count for the current device
@@ -347,12 +347,12 @@ flash_get_sector_count:
     sub W25Q_CAP_8MBIT          ; A = shift count (0 for W25Q80, 1 for W25Q16, ...)
     ld b, a
     ld hl, 256                  ; base: W25Q80 has 256 sectors
-_fgsc_shift:
+_flash_get_sector_count_shift:
     dec b
-    jp m, _fgsc_done            ; shifted enough
+    jp m, _flash_get_sector_count_done            ; shifted enough
     add hl, hl                  ; HL <<= 1
-    jr _fgsc_shift
-_fgsc_done:
+    jr _flash_get_sector_count_shift
+_flash_get_sector_count_done:
     ret
 
 ; flash_bytes_to_sectors: ceiling division of a byte count by the sector size
