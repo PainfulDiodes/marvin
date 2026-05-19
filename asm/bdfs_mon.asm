@@ -9,6 +9,7 @@
     PUBLIC bdfs_mon_drive
     PUBLIC bdfs_mon_save
     PUBLIC bdfs_mon_load
+    PUBLIC bdfs_mon_delete
 
     EXTERN con_puts
     EXTERN con_putchar
@@ -23,6 +24,7 @@
     EXTERN bdfs_set_drive
     EXTERN bdfs_file_write
     EXTERN bdfs_file_read
+    EXTERN bdfs_file_delete
     EXTERN hex_byte_val
     EXTERN BDFS_DRIVE
     EXTERN BDFS_HDR_BUF
@@ -136,7 +138,7 @@ _dir_scan:
     ; Z = entry found; check flags for deleted status
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
-    jr nz, _dir_item_deleted
+    jr z, _dir_item_deleted             ; deleted (bit 0 = 0): show as deleted
     ; active entry
     ld hl, _MSG_INDENT
     call con_puts                   ; "  "
@@ -361,6 +363,81 @@ _load_bad_usage:
     call con_puts
     ret
 
+; bdfs_mon_delete: 'k' command — soft-delete a named file from the current drive
+; in:  HL = pointer into CMD_BUFFER past 'k'
+; Syntax:  k <name.ext>
+; Example: k HELLO.BIN
+; out: — (all output already printed)
+; destroys: AF, BC, DE, HL, IX
+bdfs_mon_delete:
+    ld a, (hl)
+    or a
+    jp z, _delete_bad_usage           ; null before any filename
+    cp ' '
+    jr nz, _delete_got_filename
+    inc hl
+    jr bdfs_mon_delete
+_delete_got_filename:
+    push hl                           ; save filename ptr
+_delete_scan_name:
+    ld a, (hl)
+    or a
+    jr z, _delete_get_drive           ; null: end of token
+    cp ' '
+    jr z, _delete_name_end
+    inc hl
+    jr _delete_scan_name
+_delete_name_end:
+    ld (hl), 0                        ; null-terminate filename in CMD_BUFFER
+_delete_get_drive:
+    call bdfs_get_drive
+    jr z, _delete_select_drive
+    pop hl                            ; discard filename ptr
+    call _error
+    ret
+_delete_select_drive:
+    call bdfs_select_drive
+    jr z, _delete_execute
+    pop hl                            ; discard filename ptr
+    call _error
+    ret
+_delete_execute:
+    pop hl                            ; HL = filename ptr
+    push hl                           ; save for bdfs_file_delete
+    ld hl, _MSG_DELETE_CONF_PRE
+    call con_puts                     ; "Delete "
+    pop hl
+    push hl                           ; save for bdfs_file_delete
+    call con_puts                     ; filename (null-terminated in CMD_BUFFER)
+    ld hl, _MSG_FORMAT_CONF_POST
+    call con_puts                     ; "? y/n "
+    call con_getchar
+    ld b, a
+    call con_putchar                  ; echo
+    ld a, CHAR_LF
+    call con_putchar
+    ld a, b
+    cp 'y'
+    pop hl                            ; filename ptr
+    jr nz, _delete_cancelled
+    call bdfs_file_delete             ; HL=filename; Z=ok, NZ=error A=BDFS_ERR_*
+    jr z, _delete_done
+    call _error
+    ret
+_delete_cancelled:
+    ret
+_delete_done:
+    ld hl, _MSG_DEL_OK
+    call con_puts                     ; "Deleted "
+    call _print_entry_name            ; name from BDFS_ENT_BUF (populated by bdfs_file_delete scan)
+    ld a, CHAR_LF
+    call con_putchar
+    ret
+_delete_bad_usage:
+    ld hl, _MSG_DELETE_USAGE
+    call con_puts
+    ret
+
 ; helpers
 
 ; _print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
@@ -464,3 +541,6 @@ _MSG_SAVED:             db "Saved ", 0
 _MSG_SAVE_USAGE:        db "s <name.ext> [<addr> [<len>]]", CHAR_LF, 0
 _MSG_LOADED:            db "Loaded ", 0
 _MSG_LOAD_USAGE:        db "l <name.ext> [<addr>]", CHAR_LF, 0
+_MSG_DELETE_CONF_PRE:   db "Delete ", 0
+_MSG_DEL_OK:            db "Deleted ", 0
+_MSG_DELETE_USAGE:      db "k <name.ext>", CHAR_LF, 0
