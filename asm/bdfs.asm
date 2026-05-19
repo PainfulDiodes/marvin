@@ -183,12 +183,12 @@ bdfs_select_drive:
     sub BDFS_FIRST_DRIVE - 1        ; A = slot number (1-6)
     call flash_select_slot
     call flash_has_device
-    jr nz, _bsd_no_device
+    jr nz, _select_drive_no_device
     xor a
-    jr _bsd_exit
-_bsd_no_device:
+    jr _select_drive_exit
+_select_drive_no_device:
     ld a, BDFS_ERR_NO_DEVICE
-_bsd_exit:
+_select_drive_exit:
     pop hl
     pop de
     pop bc
@@ -465,6 +465,8 @@ _file_write_data_abort:
     pop bc                              ; discard length
     or a                                ; NZ (A = error code)
     ret
+
+; HELPER
 ; _verify_drive_formatted: read sector 0 header and verify BDFS magic bytes
 ; in:  —
 ; out: Z=ok (drive is formatted), NZ+A=BDFS_ERR_NOT_FORMATTED
@@ -494,6 +496,7 @@ _verify_drive_formatted_exit:
     pop bc
     or a
     ret
+
 ; _file_write_scan_dir: scan the directory to locate the first empty slot, check for duplicate
 ; names, and locate last active sector
 ; in:  —
@@ -683,6 +686,8 @@ _file_write_prog_pages_exit:
     pop bc                          ; restore length for caller
     ret
 
+
+; HELPER
 ; _parse_filename: parse 8.3 filename string into a caller-supplied buffer
 ; in:  HL = null-terminated filename (e.g. "HELLO.TXT"); case-sensitive, stored verbatim
 ;      DE = destination buffer (must hold BDFS_NAME_LEN + BDFS_EXT_LEN = 11 bytes)
@@ -761,6 +766,7 @@ _parse_filename_exit:
     pop af
     ret
 
+;HELPER
 ; _compare_name_fields: 11-byte memcmp of BDFS_ENT_BUF[0:10] vs BDFS_SRCH_BUF[0:10]
 ; out: Z=match, NZ=no match
 ; destroys: AF
@@ -849,6 +855,10 @@ _file_read_drive_error:
     pop de                                ; balance stack
     or a                                  ; NZ (A = error from _verify_drive_formatted)
     ret
+
+; helpers
+
+
 
 ; bdfs_get_err_msg: return pointer to error message string for a BDFS_ERR_* code
 ; in:  A = BDFS_ERR_* code
