@@ -398,7 +398,9 @@ bdfs_file_write:
 _file_write_size_ok:
     push bc                             ; preserve length for caller
     push de                             ; preserve source addr for caller
-    push hl                             ; filename — only needed for directory entry
+    ld de, BDFS_SRCH_BUF
+    call _parse_filename                ; fills BDFS_SRCH_BUF[0:10]; preserves BC, DE, HL
+    push hl                             ; filename (still valid after _parse_filename)
     call _file_write_data               ; BC=length, DE=source; preserves BC
     jr nz, _file_write_data_fail
     pop hl                              ; HL = filename; BC = length preserved
@@ -492,7 +494,8 @@ _verify_drive_formatted_exit:
     pop bc
     or a
     ret
-; _file_write_scan_dir: scan the directory to locate the first empty slot and last active sector
+; _file_write_scan_dir: scan the directory to locate the first empty slot, check for duplicate
+; names, and locate last active sector
 ; in:  —
 ; out: Z=ok; _FREE_ENTRY_OFFSET = first empty slot, _NEXT_FREE_SECTOR = first free sector
 ;      NZ+A=BDFS_ERR_DIR_FULL (all 255 entry slots occupied)
@@ -507,6 +510,12 @@ _file_write_scan_dir:
 _file_write_scan_dir_loop:
     call _file_write_scan_dir_entry ; Z=occupied, NZ=empty
     jr nz, _file_write_scan_dir_found_empty
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
+    bit BDFS_FLAG_DELETED_BIT, a
+    jr nz, _file_write_scan_dir_next    ; deleted: skip duplicate check
+    call _compare_name_fields            ; Z=match (BDFS_ENT_BUF vs BDFS_SRCH_BUF)
+    jr z, _file_write_scan_dir_duplicate
+_file_write_scan_dir_next:
     ld de, BDFS_ENT_SIZE
     add ix, de                      ; advance scan_offset
     inc b                           ; entry count
@@ -514,6 +523,10 @@ _file_write_scan_dir_loop:
     cp _MAX_ENTRIES                 ; directory sector full
     jr z, _file_write_scan_dir_full
     jr _file_write_scan_dir_loop
+_file_write_scan_dir_duplicate:
+    ld a, BDFS_ERR_FILE_EXISTS
+    or a                            ; NZ
+    ret
 _file_write_scan_dir_found_empty:
     push ix
     pop hl
@@ -875,6 +888,9 @@ bdfs_get_err_msg:
     cp BDFS_ERR_FILE_TOO_LARGE
     ld hl, _MSG_FILE_TOO_LARGE
     jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_FILE_EXISTS
+    ld hl, _MSG_FILE_EXISTS
+    jr z, _bdfs_get_err_msg_ret
     ld hl, 0                          ; unknown code: no message
 _bdfs_get_err_msg_ret:
     ret
@@ -891,5 +907,6 @@ _MSG_DISK_FULL:         db "Disk full", CHAR_LF, 0
 _MSG_BAD_DRIVE:         db "Invalid drive", CHAR_LF, 0
 _MSG_FILE_NOT_FOUND:    db "File not found", CHAR_LF, 0
 _MSG_FILE_TOO_LARGE:    db "File too large", CHAR_LF, 0
+_MSG_FILE_EXISTS:       db "File exists", CHAR_LF, 0
 _BDFS_DEFAULT_PREFIX:       db "BDFS-"
 _BDFS_DEFAULT_PREFIX_LEN    equ $ - _BDFS_DEFAULT_PREFIX
