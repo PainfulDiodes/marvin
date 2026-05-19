@@ -359,6 +359,7 @@ _fgsc_done:
 
 ; flash_bytes_to_sectors: ceiling division of a byte count by the sector size
 ; in:  HL = byte count - max 0xF000 = 61440; files longer than this will overflow silently
+;      (bdfs_file_write enforces this limit — remove that guard if this is fixed)
 ; out: A  = ceil(HL / W25Q_SECTOR_SIZE)
 ; destroys: AF, DE, HL
 ;
