@@ -372,9 +372,9 @@ _load_bad_usage:
 bdfs_mon_delete:
     ld a, (hl)
     or a
-    jp z, _delete_bad_usage           ; null before any filename
+    jp z, _delete_bad_usage           ; found null
     cp ' '
-    jr nz, _delete_got_filename
+    jr nz, _delete_got_filename       ; found a non-space (and non-null) character - we have a name
     inc hl
     jr bdfs_mon_delete
 _delete_got_filename:
@@ -382,13 +382,13 @@ _delete_got_filename:
 _delete_scan_name:
     ld a, (hl)
     or a
-    jr z, _delete_get_drive           ; null: end of token
+    jr z, _delete_get_drive           ; null: end of name
     cp ' '
-    jr z, _delete_name_end
+    jr z, _delete_name_end            ; trim trailing space
     inc hl
     jr _delete_scan_name
 _delete_name_end:
-    ld (hl), 0                        ; null-terminate filename in CMD_BUFFER
+    ld (hl), 0                        ; null-terminate filename in CMD_BUFFER (trim trailing space)
 _delete_get_drive:
     call bdfs_get_drive
     jr z, _delete_select_drive
@@ -402,11 +402,9 @@ _delete_select_drive:
     call _error
     ret
 _delete_execute:
-    pop hl                            ; HL = filename ptr
-    push hl                           ; save for bdfs_file_delete
     ld hl, _MSG_DELETE_CONF_PRE
     call con_puts                     ; "Delete "
-    pop hl
+    pop hl                            ; HL = filename ptr
     push hl                           ; save for bdfs_file_delete
     call con_puts                     ; filename (null-terminated in CMD_BUFFER)
     ld hl, _MSG_FORMAT_CONF_POST
