@@ -363,10 +363,10 @@ _load_bad_usage:
     call con_puts
     ret
 
-; bdfs_mon_delete: 'k' command — soft-delete a named file from the current drive
-; in:  HL = pointer into CMD_BUFFER past 'k'
-; Syntax:  k <name.ext>
-; Example: k HELLO.BIN
+; bdfs_mon_delete: 'e' erase command — soft-delete a named file from the current drive
+; in:  HL = pointer into CMD_BUFFER past 'e'
+; Syntax:  e <name.ext>
+; Example: e HELLO.BIN
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL, IX
 bdfs_mon_delete:

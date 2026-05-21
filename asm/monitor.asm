@@ -169,7 +169,7 @@ _cmd_check:
     jp z,_cmd_save
     cp 'l'
     jp z,_cmd_file_load
-    cp 'k'
+    cp 'e'
     jp z,_cmd_file_delete
     ENDIF
     cp '?'
@@ -388,7 +388,7 @@ _cmd_file_load:
     jp _prompt
 
 ; DELETE
-; k <name.ext> = soft-delete a file from the current drive
+; e <name.ext> = soft-delete a file from the current drive
 _cmd_file_delete:
     call bdfs_mon_delete
     jp _prompt

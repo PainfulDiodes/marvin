@@ -32,4 +32,4 @@ BDFS_HELP_MSG:
                 db "f [name]                   format drive\n"
                 db "s <n.ext> [<addr> [<len>]] save to file\n"
                 db "l <n.ext> [<addr>]         load from file\n"
-                db "k <n.ext>                  delete file\n",0
+                db "e <n.ext>                  delete file\n",0
