@@ -6,6 +6,7 @@
 
     PUBLIC bdfs_mon_format
     PUBLIC bdfs_mon_dir
+    PUBLIC bdfs_mon_dir_all
     PUBLIC bdfs_mon_drive
     PUBLIC bdfs_mon_save
     PUBLIC bdfs_mon_load
@@ -107,57 +108,104 @@ _format_completed:
     call con_putchar
     ret
 
-; bdfs_mon_dir: 'd' command — list current drive directory
+; bdfs_mon_dir: 'd' command — list active directory entries; deleted count at end
 ; in:  —
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL
 bdfs_mon_dir:
-    call bdfs_get_drive
-    jr z, _dir_has_drive
-    call _error
-    ret
-_dir_has_drive:
-    call bdfs_select_drive
-    jr z, _dir_drive_selected
-    call _error
-    ret
-_dir_drive_selected:
-    call bdfs_dir_open
-    jr z, _dir_opened
-    call _error
-    ret
-_dir_opened:
-    ; HL = vol name ptr from bdfs_dir_open
-    call _print_device_info         ; preserves HL
-    call con_puts                   ; print volume name (HL still points to it)
-    ld a, CHAR_LF
-    call con_putchar
+    call _dir_common_open
+    ret nz
+    ld e, 0                        ; E = deleted entry count
 _dir_scan:
-    call bdfs_dir_next
-    jr nz, _dir_done                ; NZ = BDFS_ERR_END_OF_DIR, C = count
-    ; Z = entry found; check flags for deleted status
+    call bdfs_dir_next             ; preserves DE; NZ = end, C = active count
+    jr nz, _dir_done
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
-    jr z, _dir_item_deleted             ; deleted (bit 0 = 0): show as deleted
-    ; active entry
+    jr z, _dir_count_deleted       ; bit 0 = 0: deleted
+    push de
     ld hl, _MSG_INDENT
-    call con_puts                   ; "  "
+    call con_puts
     call _print_entry_name
     ld a, CHAR_LF
     call con_putchar
+    pop de
     jr _dir_scan
-_dir_item_deleted:
-    ld hl, _MSG_DELETED
-    call con_puts                   ; "  (deleted) "
-    call _print_entry_name
-    ld a, CHAR_LF
-    call con_putchar
+_dir_count_deleted:
+    inc e
     jr _dir_scan
 _dir_done:
+    push de                        ; save E across print calls
     ld a, c
-    call con_putchar_dec            ; C = active entry count from bdfs_dir_next
+    call con_putchar_dec           ; active count
     ld hl, _MSG_FILES
-    call con_puts                   ; " file(s)\n"
+    call con_puts                  ; " file(s)\n"
+    pop de
+    ld a, e
+    or a
+    ret z                          ; no deleted entries
+    call con_putchar_dec
+    ld hl, _MSG_DELETED_COUNT
+    call con_puts                  ; " deleted\n"
+    ret
+
+; bdfs_mon_dir_all: 'D' command — list all directory entries including deleted
+; in:  —
+; out: — (all output already printed)
+; destroys: AF, BC, DE, HL
+bdfs_mon_dir_all:
+    call _dir_common_open
+    ret nz
+_dir_all_scan:
+    call bdfs_dir_next
+    jr nz, _dir_all_done
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
+    bit BDFS_FLAG_DELETED_BIT, a
+    jr z, _dir_all_item_deleted    ; bit 0 = 0: deleted
+    ld hl, _MSG_INDENT
+    call con_puts
+    call _print_entry_name
+    ld a, CHAR_LF
+    call con_putchar
+    jr _dir_all_scan
+_dir_all_item_deleted:
+    ld hl, _MSG_DELETED
+    call con_puts                  ; "  (deleted) "
+    call _print_entry_name
+    ld a, CHAR_LF
+    call con_putchar
+    jr _dir_all_scan
+_dir_all_done:
+    ld a, c
+    call con_putchar_dec           ; C = active entry count
+    ld hl, _MSG_FILES
+    call con_puts                  ; " file(s)\n"
+    ret
+
+; _dir_common_open: shared setup for d/D — selects drive, opens directory,
+; prints device info and volume name
+; out: Z=ok; NZ=error, A=BDFS_ERR_* (already printed)
+; destroys: AF, BC, HL
+_dir_common_open:
+    call bdfs_get_drive
+    jr z, _dir_common_open_has_drive
+    call _error
+    ret
+_dir_common_open_has_drive:
+    call bdfs_select_drive
+    jr z, _dir_common_open_selected
+    call _error
+    ret
+_dir_common_open_selected:
+    call bdfs_dir_open
+    jr z, _dir_common_open_opened
+    call _error
+    ret
+_dir_common_open_opened:
+    call _print_device_info        ; HL = vol name from bdfs_dir_open; preserves HL
+    call con_puts                  ; print volume name
+    ld a, CHAR_LF
+    call con_putchar
+    xor a                          ; Z=ok
     ret
 
 ; bdfs_mon_drive: '@' command — select drive A-F
@@ -516,13 +564,18 @@ _print_device_info:
 
 ; _error: print error message for any BDFS_ERR_* code
 ; in:  A = BDFS_ERR_* code
-; destroys: AF, HL
+; out: A = original error code, NZ set (all BDFS error codes are non-zero)
+; destroys: HL
 _error:
+    push af
     call bdfs_get_err_msg
     ld a, h
     or l
-    ret z                           ; no message for this code
+    jr z, _error_exit              ; no message for this code
     call con_puts
+_error_exit:
+    pop af
+    or a                           ; restore error code; NZ guaranteed
     ret
 
 ; strings
@@ -533,6 +586,7 @@ _MSG_FORMAT_OK:         db "Format ok - ", 0
 _MSG_INDENT:            db "  ", 0
 _MSG_DELETED:           db "  (deleted) ", 0
 _MSG_FILES:             db " file(s)", CHAR_LF, 0
+_MSG_DELETED_COUNT:     db " deleted", CHAR_LF, 0
 _MSG_MB:                db "MB [", 0
 _MSG_ID_CLOSE:          db "]", CHAR_LF, 0
 _MSG_SAVED:             db "Saved ", 0

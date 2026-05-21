@@ -28,7 +28,8 @@ HELP_MSG:
 
 BDFS_HELP_MSG:
                 db "@A-F                       select drive\n"
-                db "d                          directory\n"
+                db "d                          directory (active + deleted count)\n"
+                db "D                          directory (all entries inc deleted)\n"
                 db "f [name]                   format drive\n"
                 db "s <n.ext> [<addr> [<len>]] save to file\n"
                 db "l <n.ext> [<addr>]         load from file\n"

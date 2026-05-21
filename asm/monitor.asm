@@ -25,6 +25,7 @@
     EXTERN bdfs_get_drive
     EXTERN bdfs_mon_format
     EXTERN bdfs_mon_dir
+    EXTERN bdfs_mon_dir_all
     EXTERN bdfs_mon_drive
     EXTERN bdfs_mon_save
     EXTERN bdfs_mon_load
@@ -161,6 +162,8 @@ _cmd_check:
     IFDEF INCLUDE_BDFS
     cp 'f'
     jp z,_cmd_format
+    cp 'D'
+    jp z,_cmd_dir_all
     cp 'd'
     jp z,_cmd_dir
     cp '@'
@@ -364,9 +367,13 @@ _cmd_format:
     jp _prompt
 
 ; DIR
-; d = list directory of current drive (select with @A-@F first)
+; d = list active entries; D = list all entries including deleted
 _cmd_dir:
     call bdfs_mon_dir
+    jp _prompt
+
+_cmd_dir_all:
+    call bdfs_mon_dir_all
     jp _prompt
 
 ; DRIVE SELECT
