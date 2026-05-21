@@ -26,7 +26,6 @@ BDFS_DIR_SECTOR         EQU 0x0000
 BDFS_DATA_START_SECTOR  EQU 0x0001
 
 ; Entry state
-BDFS_FLAG_ACTIVE      EQU 0x01    ; bit 0 set = active; program to 0 to delete (NOR flash: bits go 1→0 only)
 BDFS_ENT_EMPTY        EQU 0xFF    ; name[0] = FF means no more entries; 0xFF is the erased state, names can't include 0xFF
 
 ; Format field sizes
@@ -412,8 +411,8 @@ _file_write_size_ok:
     ld h, b
     ld l, c                             ; HL = length (BC has no ld (nn),bc form)
     ld (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET), hl ; bytes 13-14, little-endian
-    ld a, BDFS_FLAG_ACTIVE
-    ld (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET), a   ; byte 15 = 0x01 (active, bit 0 set)
+    ld a, BDFS_FLAGS_INITIAL
+    ld (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET), a   ; all flag bits unprogrammed (erased state)
     ld hl, (_FREE_ENTRY_OFFSET)         ; flash byte offset of empty directory slot
     ld de, BDFS_ENT_BUF
     ld bc, BDFS_ENT_SIZE
@@ -668,10 +667,8 @@ _file_write_prog_pages_exit:
 ; destroys: AF, BC, DE, HL, IX
 bdfs_file_read:
     push de                               ; save destination
-    push hl                               ; save filename; stack: [HL DE]
     call _verify_drive_formatted
     jr nz, _file_read_drive_error
-    pop hl                                ; HL = filename; stack: [DE]
     ld ix, BDFS_SRCH_BUF
     call _parse_filename                  ; fills BDFS_SRCH_BUF[0:10]; preserves BC, DE, HL
     ld ix, BDFS_HDR_SIZE                  ; IX = scan_offset (first directory entry)
@@ -720,7 +717,6 @@ _file_read_not_found:
     or a                                  ; NZ
     ret
 _file_read_drive_error:
-    pop hl                                ; discard filename; stack: [DE]
     pop de                                ; balance stack
     or a                                  ; NZ (A = error from _verify_drive_formatted)
     ret
@@ -870,50 +866,51 @@ _compare_name_fields_done:
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
 ; destroys: AF, BC, DE, HL, IX
 bdfs_file_delete:
-    push hl                               ; save filename
     call _verify_drive_formatted
     jr nz, _file_delete_drive_error
-    pop hl                                ; HL = filename
     ld ix, BDFS_SRCH_BUF
-    call _parse_filename                  ; fills BDFS_SRCH_BUF[0:10]; preserves BC, DE, HL
-    ld ix, BDFS_HDR_SIZE                  ; IX = scan_offset (first directory entry)
-    ld b, 0                               ; entry counter
+    call _parse_filename            ; fills BDFS_SRCH_BUF[0:10] from filename; preserves BC, DE, HL
+    ld ix, BDFS_HDR_SIZE            ; IX = scan_offset (first directory entry)
+    ld b, 0                         ; entry counter
 _file_delete_scan_loop:
-    push bc                               ; save B=counter across flash_read
     push ix
-    pop hl                                ; HL = scan_offset
-    xor a                                 ; addr[23:16] = 0
+    pop hl                          ; HL = current entry flash address
+    xor a                           ; addr[23:16] = 0
     ld de, BDFS_ENT_BUF
+    push bc                         ; save B=counter across flash_read
     ld bc, BDFS_ENT_SIZE
     call flash_read
-    pop bc                                ; restore B=counter
-    ld de, BDFS_ENT_SIZE
-    add ix, de                            ; advance scan_offset
-    ; check for end-of-directory sentinel (must precede flags check)
+    pop bc                          ; restore B=counter
+    ; check for end-of-directory sentinel
     ld a, (BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET)
     cp BDFS_ENT_EMPTY
     jr z, _file_delete_not_found
     ; skip already-deleted entries (bit 0 = 0 = deleted)
     ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
     bit BDFS_FLAG_DELETED_BIT, a
-    jr z, _file_delete_scan_next          ; bit 0 = 0 = already deleted: skip
+    jr z, _file_delete_advance      ; skip
     ; compare name fields
-    call _compare_name_fields             ; Z=match; preserves BC, DE, HL
-    jr nz, _file_delete_scan_next
-    ; match: program flags byte 0x01→0x00 (bit 0: active→deleted)
-    xor a
-    ld (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET), a   ; 0x00 in RAM buffer
+    call _compare_name_fields       ; Z=match
+    jr nz, _file_delete_advance     ; skip
+    ; mark as deleted in the entry buffer
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET)
+    res BDFS_FLAG_DELETED_BIT, a
+    ld (BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET), a
+    ; save the flags byte to the device
     push ix
     pop hl
-    dec hl                                ; HL = entry_start + BDFS_ENT_FLAGS_OFFSET (IX-1)
-    ; A = 0 = addr[23:16] (from xor a above); directory is in sector 0
+    ld de, BDFS_ENT_FLAGS_OFFSET
+    add hl, de                      ; HL = entry flash addr + BDFS_ENT_FLAGS_OFFSET
+    xor a                           ; set A=0; addr[23:16] = 0; directory is in sector 0
     ld de, BDFS_ENT_BUF + BDFS_ENT_FLAGS_OFFSET
     ld bc, 1
-    call flash_page_program               ; program 1 byte; Z=ok, NZ=timeout
+    call flash_page_program         ; program 1 byte; Z=ok, NZ=timeout
     jr nz, _file_delete_write_fail
-    xor a                                 ; Z=ok
+    xor a                           ; Z=ok
     ret
-_file_delete_scan_next:
+_file_delete_advance:
+    ld de, BDFS_ENT_SIZE
+    add ix, de
     inc b
     ld a, b
     cp _MAX_ENTRIES
@@ -928,7 +925,6 @@ _file_delete_not_found:
     or a                                  ; NZ
     ret
 _file_delete_drive_error:
-    pop hl                                ; discard filename
     or a                                  ; NZ
     ret
 

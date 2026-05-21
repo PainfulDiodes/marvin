@@ -2,8 +2,20 @@
 ;
 ; Included by bdfs.asm (pure data layer) and bdfs_mon.asm (monitor presentation layer).
 
-; Entry flags (bit 0 of flags byte: 0=active, 1=deleted)
-BDFS_FLAG_DELETED_BIT EQU 0
+; Entry flags byte — NOR flash: each bit starts at 1 (erased) and can only be programmed to 0.
+; To trigger a flag: flash_page_program the flags byte with the relevant bit cleared.
+; To check a flag:   bit BDFS_FLAG_x_BIT, a — Z if the bit was programmed (flag triggered).
+BDFS_FLAG_DELETED_BIT EQU 0    ; bit 0: programmed to 0 when file is soft-deleted
+BDFS_FLAG_BIT1        EQU 1    ; reserved
+BDFS_FLAG_BIT2        EQU 2    ; reserved
+BDFS_FLAG_BIT3        EQU 3    ; reserved
+BDFS_FLAG_BIT4        EQU 4    ; reserved
+BDFS_FLAG_BIT5        EQU 5    ; reserved
+BDFS_FLAG_BIT6        EQU 6    ; reserved
+BDFS_FLAG_BIT7        EQU 7    ; reserved
+; Initial flags value written when creating a directory entry — all bits unprogrammed (erased state).
+; Matches the erased flash state so no bits are consumed at creation time.
+BDFS_FLAGS_INITIAL    EQU 0xFF
 
 ; Format field sizes
 BDFS_NAME_LEN         EQU 8
