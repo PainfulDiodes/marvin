@@ -24,6 +24,7 @@ HELP_MSG:
                 db "x [addr]                   execute (default 8000)\n"
                 db ":                          load Intel HEX\n"
                 db "b / B                      BASIC cold / warm start\n"
+                db ";                          comment (ignored)\n"
                 db "?                          this help\n",0
 
 BDFS_HELP_MSG:
