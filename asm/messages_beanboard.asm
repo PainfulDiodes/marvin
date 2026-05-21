@@ -19,7 +19,7 @@ CMD_W_NULL_MSG:
 
 HELP_MSG:
                 db "r=read w=write x=exec\n"
-                db ":=hex b/B=BASIC ?=help\n",0
+                db ":=hex b/B=BASIC ;=comment ?=help\n",0
 
 BDFS_HELP_MSG:
                 db "@=drive d=dir D=dir-all f=fmt s=save\n",0

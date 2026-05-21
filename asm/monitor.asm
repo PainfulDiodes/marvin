@@ -147,7 +147,7 @@ _cmd_check:
     cp 'r'
     jr z,_cmd_read
     cp 'w'
-    jr z,_cmd_write
+    jp z,_cmd_write
     cp 'x'
     jp z,_cmd_execute
     IFDEF INCLUDE_BASIC
@@ -175,6 +175,8 @@ _cmd_check:
     cp 'e'
     jp z,_cmd_file_delete
     ENDIF
+    cp ';'
+    jp z,_prompt
     cp '?'
     jp z,_cmd_help
 _cmd_bad:
