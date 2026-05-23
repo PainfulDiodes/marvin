@@ -46,6 +46,15 @@
     EXTERN con_readchar     ; console - non-blocking read
     EXTERN marvin_warmstart ; monitor - cold start
 ;
+IFDEF INCLUDE_BDFS
+    EXTERN bdfs_select_drive
+    EXTERN bdfs_set_drive
+    EXTERN bdfs_file_write
+    EXTERN bdfs_file_read
+    EXTERN bdfs_get_err_msg
+    EXTERN BDFS_DRIVE
+ENDIF
+;
 ; Character constants
 ;
 CR          EQU 0DH
@@ -323,7 +332,7 @@ OSCALL:
     RET
 ;
 ;
-; ---- File Operations (stubs) ----
+; ---- File Operations ----
 ;
 ;OSSAVE - Save an area of memory to a file.
 ;   Inputs: HL addresses filename (term CR)
@@ -332,11 +341,68 @@ OSCALL:
 ;   Destroys: A,B,C,D,E,H,L,F
 ;
 OSSAVE:
-OSLOAD:
+IFDEF INCLUDE_BDFS
+    push de                     ; save source (_mos_norm_filename destroys DE)
+    call _mos_norm_filename     ; HL→normalised; BC preserved; A=0 or BDFS_ERR_BAD_DRIVE
+    pop de                      ; restore source
+    or a
+    jr nz, _ossave_err
+    ld a, (BDFS_DRIVE)
+    call bdfs_select_drive      ; Z=ok, NZ+A=BDFS_ERR_*
+    jr nz, _ossave_err
+    call bdfs_file_write        ; HL=filename, DE=src, BC=len; Z=ok, NZ+A=BDFS_ERR_*
+    jr nz, _ossave_err
+    ret
+_ossave_err:
+    call _mos_bdfs_exterr       ; does not return
+ELSE
     XOR A
     CALL EXTERR
     DEFM "Sorry"
     DEFB 0
+ENDIF
+;
+;OSLOAD - Load a file into memory.
+;   Inputs: HL addresses filename (term CR)
+;           DE = destination address
+;           BC = maximum space available
+;   Outputs: carry SET = success; carry CLEAR = file too large
+;   Destroys: A,B,C,D,E,H,L,F
+;
+OSLOAD:
+IFDEF INCLUDE_BDFS
+    push de                     ; save dest (_mos_norm_filename destroys DE)
+    call _mos_norm_filename     ; HL→normalised; BC preserved; A=0 or BDFS_ERR_BAD_DRIVE
+    pop de                      ; restore dest
+    or a
+    jr nz, _osload_err_clean
+    ld a, (BDFS_DRIVE)
+    call bdfs_select_drive      ; Z=ok, NZ+A=BDFS_ERR_*
+    jr nz, _osload_err_clean
+    push bc                     ; save max_space (bdfs_file_read returns bytes loaded in BC)
+    call bdfs_file_read         ; HL=filename, DE=dest; Z=ok, BC=bytes_loaded; NZ+A=BDFS_ERR_*
+    jr nz, _osload_err_pop
+    pop hl                      ; max_space → HL; carry if HL < BC (loaded > max)
+    ld a, l
+    sub c
+    ld a, h
+    sbc a, b
+    jr c, _osload_too_large
+    scf                         ; carry SET = success
+    ret
+_osload_too_large:
+    or a                        ; carry CLEAR = file too large
+    ret
+_osload_err_pop:
+    pop bc                      ; clean max_space from stack
+_osload_err_clean:
+    call _mos_bdfs_exterr       ; A = BDFS_ERR_*; does not return
+ELSE
+    XOR A
+    CALL EXTERR
+    DEFM "Sorry"
+    DEFB 0
+ENDIF
 ;
 ;OSOPEN - Open a file for reading or writing.
 ;   Inputs: HL addresses filename (term CR)
@@ -426,5 +492,119 @@ _FLAGS:
 _INKEY:
     DEFB 0
 INILEN  EQU $-_FLAGS
+;
+;
+IFDEF INCLUDE_BDFS
+; ---- BDFS filename normalisation and error bridge ----
+;
+; _mos_norm_filename: normalise a BBC BASIC filename in ACCS
+; in:  HL = CR-terminated filename
+; out: HL = null-terminated normalised filename
+;           (advances past 'X:' drive prefix if present and valid)
+;      A  = 0 (ok) or BDFS_ERR_BAD_DRIVE if drive letter invalid
+; side-effect: calls bdfs_set_drive if drive prefix found
+; preserves: BC; destroys: DE
+;
+_mos_norm_filename:
+    push bc
+    ; Step 1: walk string, upcase letters, replace CR with NUL; DE ends at NUL
+    ld d, h
+    ld e, l
+_norm_upcase_loop:
+    ld a, (de)
+    cp CR
+    jr z, _norm_got_cr
+    cp 'a'
+    jr c, _norm_not_lower
+    cp 'z'+1
+    jr nc, _norm_not_lower
+    sub 'a'-'A'
+_norm_not_lower:
+    ld (de), a
+    inc de
+    jr _norm_upcase_loop
+_norm_got_cr:
+    xor a
+    ld (de), a              ; NUL-terminate; DE = ptr to NUL
+    ; Step 2: check for drive prefix 'X:' (string already upcased)
+    ld a, (hl)
+    cp 'A'
+    jr c, _norm_no_drive
+    cp 'Z'+1
+    jr nc, _norm_no_drive
+    inc hl
+    ld a, (hl)
+    dec hl
+    cp ':'
+    jr nz, _norm_no_drive
+    ld a, (hl)              ; A = drive letter
+    push de                 ; save NUL ptr across call
+    call bdfs_set_drive     ; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE; destroys AF
+    pop de
+    jr nz, _norm_bad_drive
+    inc hl
+    inc hl                  ; advance past 'X:'
+    jr _norm_check_dot
+_norm_bad_drive:
+    pop bc
+    ret                     ; A = BDFS_ERR_BAD_DRIVE, NZ
+_norm_no_drive:
+    ; Step 3: scan from HL for '.'; append ".BBC\0" at DE if none found
+_norm_check_dot:
+    push hl                 ; save filename start for return
+    ld b, h
+    ld c, l                 ; BC = scan pointer
+_norm_dot_scan:
+    ld a, (bc)
+    or a
+    jr z, _norm_no_dot
+    cp '.'
+    jr z, _norm_has_dot
+    inc bc
+    jr _norm_dot_scan
+_norm_has_dot:
+    pop hl
+    xor a                   ; A = 0 (ok)
+    pop bc
+    ret
+_norm_no_dot:
+    ld a, '.'
+    ld (de), a
+    inc de
+    ld a, 'B'
+    ld (de), a
+    inc de
+    ld a, 'B'
+    ld (de), a
+    inc de
+    ld a, 'C'
+    ld (de), a
+    inc de
+    xor a
+    ld (de), a              ; NUL terminator
+    pop hl
+    xor a                   ; A = 0 (ok)
+    pop bc
+    ret
+;
+; _mos_bdfs_exterr: bridge a BDFS error code to BBC BASIC's EXTERR handler
+; in:  A = BDFS_ERR_* code
+; does not return — aborts to BASIC error handler via JP EXTERR
+;
+_mos_bdfs_exterr:
+    push af
+    call bdfs_get_err_msg   ; A → HL = null-terminated message (or 0 if unknown)
+    ld a, h
+    or l
+    jr nz, _bdfs_exterr_go
+    ld hl, _MSG_IO_ERR
+_bdfs_exterr_go:
+    pop af                  ; restore A = BDFS error code (passed to EXTERR as error number)
+    push hl                 ; EXTERR's first instruction is POP HL: picks up our message ptr
+    JP EXTERR               ; no return; BASIC error handler resets SP
+_MSG_IO_ERR:
+    DEFM "I/O error"
+    DEFB 0
+ENDIF
 ;
 FIN:
