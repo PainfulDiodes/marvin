@@ -169,7 +169,7 @@ build_target() {
 
     if needs_rebuild "$OUTDIR/MOS.o" "$BBCZ80_DIR/MOS.asm"; then
         echo "  MOS.asm"
-        z88dk-z80asm -l -m -I"$REPO_DIR" -o"$OUTDIR/MOS.o" "$BBCZ80_DIR/MOS.asm"
+        z88dk-z80asm -l -m -I"$REPO_DIR" $BDFS_FLAG -o"$OUTDIR/MOS.o" "$BBCZ80_DIR/MOS.asm"
     else
         echo "  MOS.asm (cached)"
     fi
