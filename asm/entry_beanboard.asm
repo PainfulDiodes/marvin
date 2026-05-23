@@ -104,6 +104,7 @@ ALIGN 0x0040
     jp _stub             ; 0x00BE - bdfs_dir_open (not available on beanboard)
     jp _stub             ; 0x00C1 - bdfs_dir_next (not available on beanboard)
     jp _stub             ; 0x00C4 - bdfs_file_write (not available on beanboard)
+    jp _stub             ; 0x00C7 - bdfs_get_err_msg (not available on beanboard)
 _stub:
     ret
 ;
