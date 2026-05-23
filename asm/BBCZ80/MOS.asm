@@ -52,7 +52,7 @@ IFDEF INCLUDE_BDFS
     EXTERN bdfs_file_write
     EXTERN bdfs_file_read
     EXTERN bdfs_get_err_msg
-    EXTERN BDFS_DRIVE
+    EXTERN bdfs_get_drive
 ENDIF
 ;
 ; Character constants
@@ -343,11 +343,11 @@ OSCALL:
 OSSAVE:
 IFDEF INCLUDE_BDFS
     push de                     ; save source (_mos_norm_filename destroys DE)
-    call _mos_norm_filename     ; HL→normalised; BC preserved; A=0 or BDFS_ERR_BAD_DRIVE
-    pop de                      ; restore source
-    or a
+    call _mos_norm_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
+    pop de                      ; restore source (does not affect flags)
     jr nz, _ossave_err
-    ld a, (BDFS_DRIVE)
+    call bdfs_get_drive         ; Z=ok A=drive, NZ+A=BDFS_ERR_NO_DRIVE
+    jr nz, _ossave_err
     call bdfs_select_drive      ; Z=ok, NZ+A=BDFS_ERR_*
     jr nz, _ossave_err
     call bdfs_file_write        ; HL=filename, DE=src, BC=len; Z=ok, NZ+A=BDFS_ERR_*
@@ -358,7 +358,7 @@ _ossave_err:
 ELSE
     XOR A
     CALL EXTERR
-    DEFM "Sorry"
+    DEFM "No file system available"
     DEFB 0
 ENDIF
 ;
@@ -372,17 +372,17 @@ ENDIF
 OSLOAD:
 IFDEF INCLUDE_BDFS
     push de                     ; save dest (_mos_norm_filename destroys DE)
-    call _mos_norm_filename     ; HL→normalised; BC preserved; A=0 or BDFS_ERR_BAD_DRIVE
-    pop de                      ; restore dest
-    or a
-    jr nz, _osload_err_clean
-    ld a, (BDFS_DRIVE)
+    call _mos_norm_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
+    pop de                      ; restore dest (does not affect flags)
+    jr nz, _osload_err
+    call bdfs_get_drive         ; Z=ok A=drive, NZ+A=BDFS_ERR_NO_DRIVE
+    jr nz, _osload_err
     call bdfs_select_drive      ; Z=ok, NZ+A=BDFS_ERR_*
-    jr nz, _osload_err_clean
+    jr nz, _osload_err
     push bc                     ; save max_space (bdfs_file_read returns bytes loaded in BC)
     call bdfs_file_read         ; HL=filename, DE=dest; Z=ok, BC=bytes_loaded; NZ+A=BDFS_ERR_*
-    jr nz, _osload_err_pop
-    pop hl                      ; max_space → HL; carry if HL < BC (loaded > max)
+    pop hl                      ; max_space → HL (does not affect flags)
+    jr nz, _osload_err
     ld a, l
     sub c
     ld a, h
@@ -391,16 +391,14 @@ IFDEF INCLUDE_BDFS
     scf                         ; carry SET = success
     ret
 _osload_too_large:
-    or a                        ; carry CLEAR = file too large
+    or a                        ; carry CLEAR = file too large; BASIC raises the error
     ret
-_osload_err_pop:
-    pop bc                      ; clean max_space from stack
-_osload_err_clean:
+_osload_err:
     call _mos_bdfs_exterr       ; A = BDFS_ERR_*; does not return
 ELSE
     XOR A
     CALL EXTERR
-    DEFM "Sorry"
+    DEFM "No file system available"
     DEFB 0
 ENDIF
 ;
@@ -499,9 +497,9 @@ IFDEF INCLUDE_BDFS
 ;
 ; _mos_norm_filename: normalise a BBC BASIC filename in ACCS
 ; in:  HL = CR-terminated filename
-; out: HL = null-terminated normalised filename
+; out: Z=ok, HL = null-terminated normalised filename
 ;           (advances past 'X:' drive prefix if present and valid)
-;      A  = 0 (ok) or BDFS_ERR_BAD_DRIVE if drive letter invalid
+;      NZ+A = BDFS_ERR_BAD_DRIVE if drive letter invalid
 ; side-effect: calls bdfs_set_drive if drive prefix found
 ; preserves: BC; destroys: DE
 ;
