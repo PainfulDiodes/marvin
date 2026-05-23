@@ -52,6 +52,10 @@
     EXTERN bdfs_dir_next        ; bdfs.asm - read next directory entry
     EXTERN bdfs_file_write      ; bdfs.asm - write file to current drive
     EXTERN bdfs_get_err_msg     ; bdfs.asm - error code to message string
+    EXTERN bdfs_file_read       ; bdfs.asm - read file from current drive into RAM
+    EXTERN bdfs_file_delete     ; bdfs.asm - soft-delete file on current drive
+    EXTERN con_putchar_dec      ; string.asm - print byte as decimal
+    EXTERN hex_byte_val         ; string.asm - parse 2 hex chars to byte value
     EXTERN CAPS_LOCK_STATE
 
     PUBLIC START
@@ -122,6 +126,10 @@ ALIGN 0x0040
     jp bdfs_dir_next                 ; 0x00C1 - next directory entry (out: Z=ok HL=entry; NZ=err C=active count)
     jp bdfs_file_write               ; 0x00C4 - write file (in: HL=filename DE=src BC=len out: Z=ok NZ=err)
     jp bdfs_get_err_msg              ; 0x00C7 - error code to message string (in: A=BDFS_ERR_* out: HL=str)
+    jp bdfs_file_read                ; 0x00CA - read file (in: HL=filename DE=dest out: Z=ok BC=bytes NZ=err)
+    jp bdfs_file_delete              ; 0x00CD - delete file (in: HL=filename out: Z=ok NZ=err)
+    jp con_putchar_dec               ; 0x00D0 - print decimal (in: A=value)
+    jp hex_byte_val                  ; 0x00D3 - parse hex byte (in: HL=str out: A=byte HL=advanced)
 _stub:
     ret
 ;

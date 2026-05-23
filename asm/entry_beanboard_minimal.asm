@@ -13,6 +13,8 @@
     EXTERN con_readchar
     EXTERN con_puts
     EXTERN con_putchar_hex
+    EXTERN con_putchar_dec      ; string.asm - print byte as decimal
+    EXTERN hex_byte_val         ; string.asm - parse 2 hex chars to byte value
     EXTERN lcd_init
     EXTERN lcd_putchar
     EXTERN key_readchar
@@ -99,6 +101,10 @@ ALIGN 0x0040
     jp _stub             ; 0x00C1 - bdfs_dir_next (not available on beanboard)
     jp _stub             ; 0x00C4 - bdfs_file_write (not available on beanboard)
     jp _stub             ; 0x00C7 - bdfs_get_err_msg (not available on beanboard)
+    jp _stub             ; 0x00CA - bdfs_file_read (not available on beanboard)
+    jp _stub             ; 0x00CD - bdfs_file_delete (not available on beanboard)
+    jp con_putchar_dec   ; 0x00D0 - print decimal (in: A=value)
+    jp hex_byte_val      ; 0x00D3 - parse hex byte (in: HL=str out: A=byte HL=advanced)
 _stub:
     ret
 ;
