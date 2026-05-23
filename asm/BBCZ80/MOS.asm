@@ -342,8 +342,8 @@ OSCALL:
 ;
 OSSAVE:
 IFDEF INCLUDE_BDFS
-    push de                     ; save source (_mos_norm_filename destroys DE)
-    call _mos_norm_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
+    push de                     ; save source (_normalise_filename destroys DE)
+    call _normalise_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
     pop de                      ; restore source (does not affect flags)
     jr nz, _ossave_err
     call bdfs_get_drive         ; Z=ok A=drive, NZ+A=BDFS_ERR_NO_DRIVE
@@ -354,7 +354,7 @@ IFDEF INCLUDE_BDFS
     jr nz, _ossave_err
     ret
 _ossave_err:
-    call _mos_bdfs_exterr       ; does not return
+    call _bdfs_error       ; does not return
 ELSE
     XOR A
     CALL EXTERR
@@ -371,8 +371,8 @@ ENDIF
 ;
 OSLOAD:
 IFDEF INCLUDE_BDFS
-    push de                     ; save dest (_mos_norm_filename destroys DE)
-    call _mos_norm_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
+    push de                     ; save dest (_normalise_filename destroys DE)
+    call _normalise_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
     pop de                      ; restore dest (does not affect flags)
     jr nz, _osload_err
     call bdfs_get_drive         ; Z=ok A=drive, NZ+A=BDFS_ERR_NO_DRIVE
@@ -394,7 +394,7 @@ _osload_too_large:
     or a                        ; carry CLEAR = file too large; BASIC raises the error
     ret
 _osload_err:
-    call _mos_bdfs_exterr       ; A = BDFS_ERR_*; does not return
+    call _bdfs_error       ; A = BDFS_ERR_*; does not return
 ELSE
     XOR A
     CALL EXTERR
@@ -495,7 +495,7 @@ INILEN  EQU $-_FLAGS
 IFDEF INCLUDE_BDFS
 ; ---- BDFS filename normalisation and error bridge ----
 ;
-; _mos_norm_filename: normalise a BBC BASIC filename in ACCS
+; _normalise_filename: normalise a BBC BASIC filename in ACCS
 ; in:  HL = CR-terminated filename
 ; out: Z=ok, HL = null-terminated normalised filename
 ;           (advances past 'X:' drive prefix if present and valid)
@@ -503,7 +503,7 @@ IFDEF INCLUDE_BDFS
 ; side-effect: calls bdfs_set_drive if drive prefix found
 ; preserves: BC; destroys: DE
 ;
-_mos_norm_filename:
+_normalise_filename:
     push bc
     ; Step 1: walk string, upcase letters, replace CR with NUL; DE ends at NUL
     ld d, h
@@ -516,7 +516,7 @@ _norm_upcase_loop:
     jr c, _norm_not_lower
     cp 'z'+1
     jr nc, _norm_not_lower
-    sub 'a'-'A'
+    sub 'a'-'A'             ; convert to upper
 _norm_not_lower:
     ld (de), a
     inc de
@@ -585,18 +585,18 @@ _norm_no_dot:
     pop bc
     ret
 ;
-; _mos_bdfs_exterr: bridge a BDFS error code to BBC BASIC's EXTERR handler
+; _bdfs_error: bridge a BDFS error code to BBC BASIC's EXTERR handler
 ; in:  A = BDFS_ERR_* code
 ; does not return — aborts to BASIC error handler via JP EXTERR
 ;
-_mos_bdfs_exterr:
+_bdfs_error:
     push af
     call bdfs_get_err_msg   ; A → HL = null-terminated message (or 0 if unknown)
     ld a, h
     or l
-    jr nz, _bdfs_exterr_go
+    jr nz, _bdfs_error_go
     ld hl, _MSG_IO_ERR
-_bdfs_exterr_go:
+_bdfs_error_go:
     pop af                  ; restore A = BDFS error code (passed to EXTERR as error number)
     push hl                 ; EXTERR's first instruction is POP HL: picks up our message ptr
     JP EXTERR               ; no return; BASIC error handler resets SP
