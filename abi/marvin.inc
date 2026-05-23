@@ -74,5 +74,11 @@ MARVIN_BDFS_DIR_OPEN          EQU 0x00BE  ; out: Z=ok HL=vol name ptr; NZ=BDFS_E
 MARVIN_BDFS_DIR_NEXT          EQU 0x00C1  ; out: Z=ok HL=entry ptr; NZ=BDFS_ERR_END_OF_DIR C=active count
 MARVIN_BDFS_FILE_WRITE        EQU 0x00C4  ; in: HL=filename DE=src BC=len  out: Z=ok NZ=BDFS_ERR_*
 MARVIN_BDFS_GET_ERR_MSG       EQU 0x00C7  ; in: A=BDFS_ERR_*  out: HL=message string (0 if unknown)
+MARVIN_BDFS_FILE_READ         EQU 0x00CA  ; in: HL=filename DE=dest  out: Z=ok BC=bytes NZ=BDFS_ERR_*  read file into RAM
+MARVIN_BDFS_FILE_DELETE       EQU 0x00CD  ; in: HL=filename  out: Z=ok NZ=BDFS_ERR_*  soft-delete file
+
+; String utilities  (all targets)
+MARVIN_PUTCHAR_DEC            EQU 0x00D0  ; in: A=value               print byte as decimal (no leading zeros)
+MARVIN_HEX_BYTE_VAL           EQU 0x00D3  ; in: HL=hex_str  out: A=byte HL=advanced  parse 2 hex chars to byte
 
 ENDIF ; _MARVIN_INC
