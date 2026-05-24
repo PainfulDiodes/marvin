@@ -166,19 +166,19 @@ _cmd_check:
     jp z,_cmd_load
     IFDEF INCLUDE_BDFS
     cp 'f'
-    jp z,_cmd_format
+    jp z,bdfs_mon_format
     cp 'D'
-    jp z,_cmd_dir_all
+    jp z,bdfs_mon_dir_all
     cp 'd'
-    jp z,_cmd_dir
+    jp z,bdfs_mon_dir
     cp '@'
-    jp z,_cmd_drive
+    jp z,bdfs_mon_drive
     cp 's'
-    jp z,_cmd_save
+    jp z,bdfs_mon_save
     cp 'l'
-    jp z,_cmd_file_load
+    jp z,bdfs_mon_load
     cp 'e'
-    jp z,_cmd_file_delete
+    jp z,bdfs_mon_delete
     ENDIF
     cp ';'
     ret z
@@ -188,6 +188,7 @@ _cmd_bad:
     ; otherwise error
     ld hl,BAD_CMD_MSG
     call con_puts
+    or 0FFh             ; NZ = error
     ret
 
 ; COMMANDS
@@ -240,6 +241,7 @@ _cmd_read_byte:
     ; otherwise, new line
     ld a,CHAR_LF
     call con_putchar
+    cp a                ; Z = success
     ret
 
 ; WRITE
@@ -275,11 +277,13 @@ _cmd_write_data:
     inc de
     jr _cmd_write_data
 _cmd_write_end:
+    cp a                ; Z = success
     ret
     ; w with no data
 _cmd_write_null:
     ld hl,CMD_W_NULL_MSG
     call con_puts
+    cp a                ; Z = success
     ret
 
 ; EXECUTE
@@ -360,51 +364,8 @@ _cmd_load_data:
     ; if byte counter not zero then go again
     jr nz,_cmd_load_data
 _cmd_load_end:
+    cp a                ; Z = success
     ret
-
-    IFDEF INCLUDE_BDFS
-
-; FORMAT
-; f [name] = format current drive (select with @A-@F first); prompts for confirmation
-_cmd_format:
-    call bdfs_mon_format
-    ret
-
-; DIR
-; d = list active entries; D = list all entries including deleted
-_cmd_dir:
-    call bdfs_mon_dir
-    ret
-
-_cmd_dir_all:
-    call bdfs_mon_dir_all
-    ret
-
-; DRIVE SELECT
-; @A-@F or @a-@f = select drive A-F
-_cmd_drive:
-    call bdfs_mon_drive
-    ret
-
-; SAVE
-; s <name.ext> <addr> <len> = save RAM block to file on current drive
-_cmd_save:
-    call bdfs_mon_save
-    ret
-
-; LOAD
-; l <name.ext> [<addr>] = load file from current drive into RAM
-_cmd_file_load:
-    call bdfs_mon_load
-    ret
-
-; DELETE
-; e <name.ext> = soft-delete a file from the current drive
-_cmd_file_delete:
-    call bdfs_mon_delete
-    ret
-
-    ENDIF
 
     IFDEF INCLUDE_BASIC
 
@@ -432,4 +393,5 @@ _cmd_help:
     ld hl, BDFS_HELP_MSG
     call con_puts
     ENDIF
+    cp a                ; Z = success
     ret
