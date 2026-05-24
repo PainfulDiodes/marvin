@@ -4,13 +4,13 @@
     INCLUDE "asm/chars.inc"
     INCLUDE "asm/bdfs.inc"
 
-    PUBLIC bdfs_mon_format
-    PUBLIC bdfs_mon_dir
-    PUBLIC bdfs_mon_dir_all
-    PUBLIC bdfs_mon_drive
-    PUBLIC bdfs_mon_save
-    PUBLIC bdfs_mon_load
-    PUBLIC bdfs_mon_delete
+    PUBLIC monitor_bdfs_format
+    PUBLIC monitor_bdfs_dir
+    PUBLIC monitor_bdfs_dir_all
+    PUBLIC monitor_bdfs_drive
+    PUBLIC monitor_bdfs_save
+    PUBLIC monitor_bdfs_load
+    PUBLIC monitor_bdfs_delete
 
     EXTERN con_puts
     EXTERN con_putchar
@@ -37,16 +37,16 @@
     EXTERN RAMSTART
     EXTERN BDFS_SECTOR_SIZE
 
-; bdfs_mon_format: 'f' command — confirm and format the current drive
+; monitor_bdfs_format: 'f' command — confirm and format the current drive
 ; in:  HL = pointer into CMD_BUFFER past 'f' (optional volume name arg follows)
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL
-bdfs_mon_format:
+monitor_bdfs_format:
     ld a, (hl)
     cp ' '
     jr nz, _format_get_drive
     inc hl
-    jr bdfs_mon_format
+    jr monitor_bdfs_format
 _format_get_drive:
     push hl                          ; save name pointer
     call bdfs_get_drive
@@ -110,11 +110,11 @@ _format_completed:
     cp a                             ; Z = success
     ret
 
-; bdfs_mon_dir: 'd' command — list active directory entries; deleted count at end
+; monitor_bdfs_dir: 'd' command — list active directory entries; deleted count at end
 ; in:  —
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL
-bdfs_mon_dir:
+monitor_bdfs_dir:
     call _dir_common_open
     ret nz
     ld e, 0                        ; E = deleted entry count
@@ -151,11 +151,11 @@ _dir_done:
     cp a                             ; Z = success
     ret
 
-; bdfs_mon_dir_all: 'D' command — list all directory entries including deleted
+; monitor_bdfs_dir_all: 'D' command — list all directory entries including deleted
 ; in:  —
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL
-bdfs_mon_dir_all:
+monitor_bdfs_dir_all:
     call _dir_common_open
     ret nz
 _dir_all_scan:
@@ -212,32 +212,32 @@ _dir_common_open_opened:
     xor a                          ; Z=ok
     ret
 
-; bdfs_mon_drive: '@' command — select drive A-F
+; monitor_bdfs_drive: '@' command — select drive A-F
 ; in:  HL = pointer to drive letter char in CMD_BUFFER
 ; out: — (error message printed on invalid input)
 ; destroys: AF
-bdfs_mon_drive:
+monitor_bdfs_drive:
     ld a, (hl)
     call bdfs_set_drive
     ret z
     call _error                     ; A = BDFS_ERR_BAD_DRIVE from bdfs_set_drive
     ret
 
-; bdfs_mon_save: 's' command — save a region of RAM to the current drive as a named file
+; monitor_bdfs_save: 's' command — save a region of RAM to the current drive as a named file
 ; in:  HL = pointer to CMD_BUFFER
 ; Syntax:  s <name.ext> [<hex-address> [<hex-length>]]
 ; Example: s HELLO.BAS 8000 0400
 ; Defaults: address=RAMSTART (8000), length=BDFS_SECTOR_SIZE (1000)
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL, IX
-bdfs_mon_save:
+monitor_bdfs_save:
     ld a, (hl)
     or a
     jp z, _save_bad_usage           ; null before any filename
     cp ' '
     jr nz, _save_got_filename
     inc hl
-    jr bdfs_mon_save
+    jr monitor_bdfs_save
 _save_got_filename:
     push hl                         ; save filename ptr
 _save_scan_name:
@@ -328,21 +328,21 @@ _save_bad_usage:
     or 0FFh                          ; NZ = error
     ret
 
-; bdfs_mon_load: 'l' command — load a named file from the current drive into RAM
+; monitor_bdfs_load: 'l' command — load a named file from the current drive into RAM
 ; in:  HL = pointer into CMD_BUFFER past 'l'
 ; Syntax:  l <name.ext> [<hex-address>]
 ; Example: l HELLO.BAS 8000
 ; Default: address = RAMSTART
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL, IX
-bdfs_mon_load:
+monitor_bdfs_load:
     ld a, (hl)
     or a
     jp z, _load_bad_usage           ; null before any filename
     cp ' '
     jr nz, _load_got_filename
     inc hl
-    jr bdfs_mon_load
+    jr monitor_bdfs_load
 _load_got_filename:
     push hl                         ; save filename ptr
 _load_scan_name:
@@ -419,20 +419,20 @@ _load_bad_usage:
     or 0FFh                          ; NZ = error
     ret
 
-; bdfs_mon_delete: 'e' erase command — soft-delete a named file from the current drive
+; monitor_bdfs_delete: 'e' erase command — soft-delete a named file from the current drive
 ; in:  HL = pointer into CMD_BUFFER past 'e'
 ; Syntax:  e <name.ext>
 ; Example: e HELLO.BIN
 ; out: — (all output already printed)
 ; destroys: AF, BC, DE, HL, IX
-bdfs_mon_delete:
+monitor_bdfs_delete:
     ld a, (hl)
     or a
     jp z, _delete_bad_usage           ; found null
     cp ' '
     jr nz, _delete_got_filename       ; found a non-space (and non-null) character - we have a name
     inc hl
-    jr bdfs_mon_delete
+    jr monitor_bdfs_delete
 _delete_got_filename:
     push hl                           ; save filename ptr
 _delete_scan_name:

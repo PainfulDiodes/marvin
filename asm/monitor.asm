@@ -24,13 +24,13 @@
     IFDEF INCLUDE_BDFS
     EXTERN bdfs_init
     EXTERN bdfs_get_drive
-    EXTERN bdfs_mon_format
-    EXTERN bdfs_mon_dir
-    EXTERN bdfs_mon_dir_all
-    EXTERN bdfs_mon_drive
-    EXTERN bdfs_mon_save
-    EXTERN bdfs_mon_load
-    EXTERN bdfs_mon_delete
+    EXTERN monitor_bdfs_format
+    EXTERN monitor_bdfs_dir
+    EXTERN monitor_bdfs_dir_all
+    EXTERN monitor_bdfs_drive
+    EXTERN monitor_bdfs_save
+    EXTERN monitor_bdfs_load
+    EXTERN monitor_bdfs_delete
     EXTERN BDFS_HELP_MSG
     ENDIF
 
@@ -166,19 +166,19 @@ _cmd_check:
     jp z,_cmd_load
     IFDEF INCLUDE_BDFS
     cp 'f'
-    jp z,bdfs_mon_format
+    jp z,monitor_bdfs_format
     cp 'D'
-    jp z,bdfs_mon_dir_all
+    jp z,monitor_bdfs_dir_all
     cp 'd'
-    jp z,bdfs_mon_dir
+    jp z,monitor_bdfs_dir
     cp '@'
-    jp z,bdfs_mon_drive
+    jp z,monitor_bdfs_drive
     cp 's'
-    jp z,bdfs_mon_save
+    jp z,monitor_bdfs_save
     cp 'l'
-    jp z,bdfs_mon_load
+    jp z,monitor_bdfs_load
     cp 'e'
-    jp z,bdfs_mon_delete
+    jp z,monitor_bdfs_delete
     ENDIF
     cp ';'
     ret z
