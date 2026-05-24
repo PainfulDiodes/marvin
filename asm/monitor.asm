@@ -185,9 +185,14 @@ _cmd_check:
     cp '?'
     jp z,_cmd_help
 _cmd_bad:
-    ; otherwise error
     ld hl,BAD_CMD_MSG
     call con_puts
+    ld a,' '
+    call con_putchar
+    ld hl,CMD_BUFFER
+    call con_puts
+    ld a,CHAR_LF
+    call con_putchar
     or 0FFh             ; NZ = error
     ret
 

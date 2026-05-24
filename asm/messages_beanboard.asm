@@ -12,7 +12,7 @@ WELCOME_MSG:
 
 
 BAD_CMD_MSG:    
-                db "Bad command\n",0
+                db "Bad command:\n",0
 
 CMD_W_NULL_MSG:
                 db "No data\n",0

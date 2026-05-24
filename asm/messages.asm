@@ -13,7 +13,7 @@ WELCOME_MSG:
                 db "https://github.com/PainfulDiodes\n",0
 
 BAD_CMD_MSG:    
-                db "Command not recognised\n",0
+                db "Command not recognised:\n",0
 
 CMD_W_NULL_MSG:
                 db "No data to write\n",0

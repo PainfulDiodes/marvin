@@ -65,6 +65,10 @@ ESC         EQU 1BH
 BS          EQU 08H
 DEL         EQU 7FH
 ;
+; Error constants
+;
+ERR_EXTERNAL EQU 254    ; error number for externally-generated errors passed to EXTERR
+;
 ;
 ; ---- OS Initialisation ----
 ;
@@ -292,7 +296,7 @@ BYE:
     JP marvin_warmstart ; Enter Marvin prompt
 ;
 ;OSCLI - Process an "operating system" command.
-;   Inputs: HL addresses command string (after '*')
+;   Inputs: HL addresses command string (after '*'), CR terminated
 ;
 OSCLI:
     ld de,CMD_BUFFER     ; copy command string into monitor buffer,
@@ -308,7 +312,12 @@ _OSCLI_DONE:
     xor a
     ld (de),a            ; NUL terminator
     ld hl,CMD_BUFFER
-    JP mon_dispatch      ; tail call: mon_dispatch RET returns directly to BASIC caller
+    call mon_dispatch
+    ret z                ; Z = success: return to BASIC
+    ld a,ERR_EXTERNAL
+    call EXTERR
+    DEFM "OSCLI error"
+    DEFB 0
 ;
 ;OSCALL - Call OS function (not used).
 ;
