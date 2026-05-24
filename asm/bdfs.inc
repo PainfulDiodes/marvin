@@ -1,6 +1,6 @@
 ; bdfs.inc - BeanDeck File System constants
 ;
-; Included by bdfs.asm (pure data layer) and bdfs_mon.asm (monitor presentation layer).
+; Included by bdfs.asm (pure data layer) and monitor_bdfs.asm (monitor presentation layer).
 
 ; Entry flags byte — NOR flash: each bit starts at 1 (erased) and can only be programmed to 0.
 ; To trigger a flag: flash_page_program the flags byte with the relevant bit cleared.

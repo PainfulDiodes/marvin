@@ -1,4 +1,4 @@
-; bdfs_mon.asm - BDFS monitor layer
+; monitor_bdfs.asm - BDFS monitor layer
 ; Wraps bdfs.asm functions with console output for the monitor.
 
     INCLUDE "asm/chars.inc"

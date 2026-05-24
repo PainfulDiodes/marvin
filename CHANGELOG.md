@@ -5,7 +5,7 @@
 BeanDeck File System (BDFS) — NOR flash cartridge storage
 
 * W25Q NOR flash driver (`w25q.asm`): JEDEC ID probe, read, sector erase, page program, busy poll, slot selection via `flash_select_slot` / `W25Q_CS` RAM variable. Supports 6 BeanBoardSPI cartridge slots; W25Q80–W25Q128 identified by capacity code
-* Layered architecture: `bdfs.asm` (pure FS functions, no console output), `bdfs_mon.asm` (monitor presentation layer), `monitor.asm` (dispatch only)
+* Layered architecture: `bdfs.asm` (pure FS functions, no console output), `monitor_bdfs.asm` (monitor presentation layer), `monitor.asm` (dispatch only)
 * BDFS filesystem: format, directory iterator (`bdfs_dir_open` / `bdfs_dir_next`), file write, file read, file delete
 * CP/M-style drive letters A–F; drive auto-selected on cold start by scanning for first present device
 * NOR-correct flags convention: erased state (0xFF) = active; soft-delete programs bit 0 from 1→0 (no sector erase required)
@@ -32,7 +32,7 @@ Build
 
 * `string.asm` consolidates string/decimal/hex helpers (absorbed `hex.asm`)
 * Incremental build caching in `build.sh`: BBC BASIC and RA8875 submodule objects skipped when up to date
-* `bdfs`, `bdfs_mon`, `string` modules added to all six build targets (combined + minimal × beanzee, beanboard, beandeck)
+* `bdfs`, `monitor_bdfs`, `string` modules added to all six build targets (combined + minimal × beanzee, beanboard, beandeck)
 
 ## 1.3
 

@@ -64,12 +64,12 @@ modules_for_target() {
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
-            MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q bdfs bdfs_mon string monitor messages"
+            MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q bdfs monitor_bdfs string monitor messages"
             RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
             LCD_MODULES=""
             BASIC_MAIN="MAIN"
             MINIMAL_ENTRY="entry_beandeck_minimal"
-            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q bdfs bdfs_mon string monitor messages"
+            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q bdfs monitor_bdfs string monitor messages"
             MINIMAL_RA8875_MODULES="asm/ra8875 asm/console targets/beanboardspi"
             MINIMAL_LCD_MODULES=""
             INCLUDE_BDFS=1
