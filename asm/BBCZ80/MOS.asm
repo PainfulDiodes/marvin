@@ -45,6 +45,7 @@
     EXTERN con_getchar      ; console - blocking read
     EXTERN con_readchar     ; console - non-blocking read
     EXTERN marvin_warmstart ; monitor - cold start
+    EXTERN mon_dispatch     ; monitor - parse and dispatch command from HL
 ;
 IFDEF INCLUDE_BDFS
     EXTERN bdfs_select_drive
@@ -293,38 +294,7 @@ BYE:
 ;   Inputs: HL addresses command string (after '*')
 ;
 OSCLI:
-_OSCLI_SKIP:
-    LD A,(HL)
-    CP ' '
-    JR NZ,_OSCLI_CHECK
-    INC HL
-    JR _OSCLI_SKIP
-_OSCLI_CHECK:
-    CP CR
-    RET Z               ; Empty command
-    CP '|'
-    RET Z               ; Comment
-    ; Check for *MON / *MONITOR
-    AND 0DFH            ; Force uppercase
-    CP 'M'
-    JR NZ,_OSCLI_BAD
-    INC HL
-    LD A,(HL)
-    AND 0DFH
-    CP 'O'
-    JR NZ,_OSCLI_BAD
-    INC HL
-    LD A,(HL)
-    AND 0DFH
-    CP 'N'
-    JR NZ,_OSCLI_BAD
-    JP marvin_warmstart ; *MON matched - enter monitor
-;
-_OSCLI_BAD:
-    LD A,254
-    CALL EXTERR
-    DEFM "Bad command"
-    DEFB 0
+    JP mon_dispatch     ; tail call: mon_dispatch RET returns directly to BASIC caller
 ;
 ;OSCALL - Call OS function (not used).
 ;

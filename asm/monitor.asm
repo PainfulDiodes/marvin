@@ -127,13 +127,13 @@ _get_cmd_end:
     ld a,0
     ; add terminator to end of buffer
     ld(hl),a
+    ld hl,CMD_BUFFER
     call mon_dispatch
     jp _prompt
 
 ; process command from buffer
+; HL = pointer to command string
 mon_dispatch:
-    ; point to start of buffer
-    ld hl,CMD_BUFFER
 _cmd_skip_space:
     ; load character from buffer
     ld a,(hl)
