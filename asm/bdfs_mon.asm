@@ -71,6 +71,7 @@ _format_confirm:
     cp 'y'
     jr z, _format_confirmed
     pop hl                           ; discard name ptr: user declined
+    cp a                             ; Z = success (user declined, not an error)
     ret
 _format_confirmed:
     pop hl                           ; restore name pointer
@@ -106,6 +107,7 @@ _format_completed:
     call con_puts
     ld a, CHAR_LF
     call con_putchar
+    cp a                             ; Z = success
     ret
 
 ; bdfs_mon_dir: 'd' command — list active directory entries; deleted count at end
@@ -146,6 +148,7 @@ _dir_done:
     call con_putchar_dec
     ld hl, _MSG_DELETED_COUNT
     call con_puts                  ; " deleted\n"
+    cp a                             ; Z = success
     ret
 
 ; bdfs_mon_dir_all: 'D' command — list all directory entries including deleted
@@ -179,6 +182,7 @@ _dir_all_done:
     call con_putchar_dec           ; C = active entry count
     ld hl, _MSG_FILES
     call con_puts                  ; " file(s)\n"
+    cp a                             ; Z = success
     ret
 
 ; _dir_common_open: shared setup for d/D — selects drive, opens directory,
@@ -316,10 +320,12 @@ _save_done:
     call con_putchar_hex            ; length low byte
     ld a, CHAR_LF
     call con_putchar
+    cp a                             ; Z = success
     ret
 _save_bad_usage:
     ld hl, _MSG_SAVE_USAGE
     call con_puts
+    or 0FFh                          ; NZ = error
     ret
 
 ; bdfs_mon_load: 'l' command — load a named file from the current drive into RAM
@@ -405,10 +411,12 @@ _load_done:
     call con_putchar_hex            ; length low byte
     ld a, CHAR_LF
     call con_putchar
+    cp a                             ; Z = success
     ret
 _load_bad_usage:
     ld hl, _MSG_LOAD_USAGE
     call con_puts
+    or 0FFh                          ; NZ = error
     ret
 
 ; bdfs_mon_delete: 'e' erase command — soft-delete a named file from the current drive
@@ -471,6 +479,7 @@ _delete_execute:
     call _error
     ret
 _delete_cancelled:
+    cp a                             ; Z = success (user declined, not an error)
     ret
 _delete_done:
     ld hl, _MSG_DEL_OK
@@ -478,10 +487,12 @@ _delete_done:
     call _print_entry_name            ; name from BDFS_ENT_BUF (populated by bdfs_file_delete scan)
     ld a, CHAR_LF
     call con_putchar
+    cp a                             ; Z = success
     ret
 _delete_bad_usage:
     ld hl, _MSG_DELETE_USAGE
     call con_puts
+    or 0FFh                          ; NZ = error
     ret
 
 ; helpers
