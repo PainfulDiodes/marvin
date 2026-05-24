@@ -46,6 +46,7 @@
     EXTERN con_readchar     ; console - non-blocking read
     EXTERN marvin_warmstart ; monitor - cold start
     EXTERN mon_dispatch     ; monitor - parse and dispatch command from HL
+    EXTERN CMD_BUFFER       ; monitor - command buffer
 ;
 IFDEF INCLUDE_BDFS
     EXTERN bdfs_select_drive
@@ -294,7 +295,20 @@ BYE:
 ;   Inputs: HL addresses command string (after '*')
 ;
 OSCLI:
-    JP mon_dispatch     ; tail call: mon_dispatch RET returns directly to BASIC caller
+    ld de,CMD_BUFFER     ; copy command string into monitor buffer,
+_OSCLI_COPY:             ; translating CR terminator to NUL
+    ld a,(hl)
+    cp CR
+    jr z,_OSCLI_DONE
+    ld (de),a
+    inc hl
+    inc de
+    jr _OSCLI_COPY
+_OSCLI_DONE:
+    xor a
+    ld (de),a            ; NUL terminator
+    ld hl,CMD_BUFFER
+    JP mon_dispatch      ; tail call: mon_dispatch RET returns directly to BASIC caller
 ;
 ;OSCALL - Call OS function (not used).
 ;
