@@ -5,6 +5,7 @@
 
     PUBLIC marvin_coldstart
     PUBLIC marvin_warmstart
+    PUBLIC mon_dispatch
 
     EXTERN con_puts
     EXTERN con_putchar
@@ -123,10 +124,14 @@ _get_cmd_esc:
     jr _prompt
 _get_cmd_end:
     ; string terminator
-    ld a,0                  
+    ld a,0
     ; add terminator to end of buffer
     ld(hl),a
+    call mon_dispatch
+    jp _prompt
+
 ; process command from buffer
+mon_dispatch:
     ; point to start of buffer
     ld hl,CMD_BUFFER
 _cmd_skip_space:
@@ -140,8 +145,8 @@ _cmd_skip_space:
 _cmd_check:
     ; end of string?
     cp 0
-    ; yes - empty line - go back to prompt
-    jr z,_prompt
+    ; yes - empty line - return to caller
+    ret z
     ; advance the buffer pointer
     inc hl
     cp 'r'
@@ -176,15 +181,14 @@ _cmd_check:
     jp z,_cmd_file_delete
     ENDIF
     cp ';'
-    jp z,_prompt
+    ret z
     cp '?'
     jp z,_cmd_help
 _cmd_bad:
     ; otherwise error
     ld hl,BAD_CMD_MSG
     call con_puts
-    ; loop back to the prompt
-    jp _prompt
+    ret
 
 ; COMMANDS
 
@@ -236,8 +240,7 @@ _cmd_read_byte:
     ; otherwise, new line
     ld a,CHAR_LF
     call con_putchar
-    ; and back to prompt
-    jp _prompt
+    ret
 
 ; WRITE
 
@@ -272,13 +275,12 @@ _cmd_write_data:
     inc de
     jr _cmd_write_data
 _cmd_write_end:
-    jp _prompt
+    ret
     ; w with no data
-_cmd_write_null:        
+_cmd_write_null:
     ld hl,CMD_W_NULL_MSG
     call con_puts
-    ; and back to prompt
-    jp _prompt
+    ret
 
 ; EXECUTE
 
@@ -358,7 +360,7 @@ _cmd_load_data:
     ; if byte counter not zero then go again
     jr nz,_cmd_load_data
 _cmd_load_end:
-    jp _prompt
+    ret
 
     IFDEF INCLUDE_BDFS
 
@@ -366,41 +368,41 @@ _cmd_load_end:
 ; f [name] = format current drive (select with @A-@F first); prompts for confirmation
 _cmd_format:
     call bdfs_mon_format
-    jp _prompt
+    ret
 
 ; DIR
 ; d = list active entries; D = list all entries including deleted
 _cmd_dir:
     call bdfs_mon_dir
-    jp _prompt
+    ret
 
 _cmd_dir_all:
     call bdfs_mon_dir_all
-    jp _prompt
+    ret
 
 ; DRIVE SELECT
 ; @A-@F or @a-@f = select drive A-F
 _cmd_drive:
     call bdfs_mon_drive
-    jp _prompt
+    ret
 
 ; SAVE
 ; s <name.ext> <addr> <len> = save RAM block to file on current drive
 _cmd_save:
     call bdfs_mon_save
-    jp _prompt
+    ret
 
 ; LOAD
 ; l <name.ext> [<addr>] = load file from current drive into RAM
 _cmd_file_load:
     call bdfs_mon_load
-    jp _prompt
+    ret
 
 ; DELETE
 ; e <name.ext> = soft-delete a file from the current drive
 _cmd_file_delete:
     call bdfs_mon_delete
-    jp _prompt
+    ret
 
     ENDIF
 
@@ -430,4 +432,4 @@ _cmd_help:
     ld hl, BDFS_HELP_MSG
     call con_puts
     ENDIF
-    jp _prompt
+    ret
