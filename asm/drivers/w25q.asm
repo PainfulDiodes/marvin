@@ -173,6 +173,9 @@ _flash_poll_busy_done:
 ; out: DE = one past last byte written, BC = 0
 ; destroys: AF, AF', BC, DE, HL
 flash_read:
+    ld a, b
+    or c
+    ret z                         ; BC=0: nothing to read; dec bc would underflow to 0xFFFF
     ex af, af'                  ; A' = addr[23:16]; save before CS assert clobbers A
     ld a, (W25Q_CS)
     out (SPI_CTRL), a

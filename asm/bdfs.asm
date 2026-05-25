@@ -382,6 +382,12 @@ _dir_next_exit:
 ; out: Z=ok, NZ=error (A=BDFS_ERR_*)
 ; destroys: AF, HL, IX
 bdfs_file_write:
+    ; Reject BC=0: flash_read with BC=0 underflows the loop counter to 0xFFFF and
+    ; reads 65536 bytes, overwriting all RAM. Also _file_write_erase_sectors with B=0
+    ; uses djnz which loops 256 times.
+    ld a, b
+    or c
+    jr z, _file_write_empty             ; BC=0: reject zero-length files
     ; Reject files > 0xF000 bytes: flash_bytes_to_sectors adds sector_size-1 before
     ; dividing; HL + 0x0FFF overflows 16 bits for any length above 0xF000.
     ld a, b
@@ -428,6 +434,10 @@ _file_write_data_fail:
 _file_write_exit:
     pop de
     pop bc
+    ret
+_file_write_empty:
+    ld a, BDFS_ERR_EMPTY_FILE
+    or a                                ; NZ
     ret
 _file_write_too_large:
     ld a, BDFS_ERR_FILE_TOO_LARGE
@@ -593,6 +603,9 @@ _file_write_check_device_full_ok:
 ; out: Z=ok, NZ+A=BDFS_ERR_ERASE_FAIL
 ; destroys: AF, B, IX
 _file_write_erase_sectors:
+    ld a, b
+    or a
+    ret z                              ; B=0: nothing to erase; djnz would loop 256 times
     ld ix, (_NEXT_FREE_SECTOR)
 _file_write_erase_sectors_loop:
     push ix
@@ -985,6 +998,9 @@ bdfs_get_err_msg:
     cp BDFS_ERR_FILE_EXISTS
     ld hl, _MSG_FILE_EXISTS
     jr z, _bdfs_get_err_msg_ret
+    cp BDFS_ERR_EMPTY_FILE
+    ld hl, _MSG_EMPTY_FILE
+    jr z, _bdfs_get_err_msg_ret
     ld hl, 0                          ; unknown code: no message
 _bdfs_get_err_msg_ret:
     ret
@@ -1002,5 +1018,6 @@ _MSG_BAD_DRIVE:         db "Invalid drive", CHAR_LF, 0
 _MSG_FILE_NOT_FOUND:    db "File not found", CHAR_LF, 0
 _MSG_FILE_TOO_LARGE:    db "File too large", CHAR_LF, 0
 _MSG_FILE_EXISTS:       db "File exists", CHAR_LF, 0
+_MSG_EMPTY_FILE:        db "Empty file", CHAR_LF, 0
 _BDFS_DEFAULT_PREFIX:       db "BDFS-"
 _BDFS_DEFAULT_PREFIX_LEN    equ $ - _BDFS_DEFAULT_PREFIX
