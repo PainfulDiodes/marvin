@@ -47,6 +47,7 @@
     EXTERN marvin_warmstart ; monitor - cold start
     EXTERN mon_dispatch     ; monitor - parse and dispatch command from HL
     EXTERN CMD_BUFFER       ; monitor - command buffer
+    EXTERN SYSTEM_RAMSTART  ; system - start of Marvin system RAM
 ;
 IFDEF INCLUDE_BDFS
     EXTERN bdfs_select_drive
@@ -82,13 +83,13 @@ OSINIT:
     LD B,INILEN
     LD HL,_FLAGS
 CLRTAB:
-    LD (HL),A           ; Clear local state
+    LD (HL),A               ; Clear local state
     INC HL
     DJNZ CLRTAB
     LD HL,ACCS
-    LD (HL),CR          ; No auto-run file
-    LD DE,0F000H        ; HIMEM - reserve 0xF000-0xFFFF for Marvin + stack
-    LD HL,USER          ; PAGE  - start of user program area
+    LD (HL),CR              ; No auto-run file
+    LD DE,SYSTEM_RAMSTART   ; HIMEM - reserve Marvin system RAM and stack
+    LD HL,USER              ; PAGE  - start of user program area
     RET
 ;
 ;
