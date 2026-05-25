@@ -173,10 +173,10 @@ _flash_poll_busy_done:
 ; out: DE = one past last byte written, BC = 0
 ; destroys: AF, AF', BC, DE, HL
 flash_read:
+    ex af, af'                  ; A' = addr[23:16]; save BEFORE BC check clobbers A
     ld a, b
     or c
-    ret z                         ; BC=0: nothing to read; dec bc would underflow to 0xFFFF
-    ex af, af'                  ; A' = addr[23:16]; save before CS assert clobbers A
+    jr z, _flash_read_empty     ; BC=0: nothing to read; dec bc would underflow to 0xFFFF
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_READ
@@ -198,6 +198,8 @@ _flash_read_loop:
     jr nz, _flash_read_loop
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
+    ret
+_flash_read_empty:
     ret
 
 ; flash_sector_erase: send Write Enable, erase a 4KB sector, poll until done
