@@ -367,7 +367,7 @@ OSLOAD:
 IFDEF INCLUDE_BDFS
     push de                     ; save dest (_normalise_filename destroys DE)
     call _normalise_filename     ; HL→normalised; BC preserved; Z=ok, NZ+A=BDFS_ERR_BAD_DRIVE
-    pop de                      ; restore dest (does not affect flags)
+    pop de                      ; restore dest
     jr nz, _osload_err
     call bdfs_get_drive         ; Z=ok A=drive, NZ+A=BDFS_ERR_NO_DRIVE
     jr nz, _osload_err
