@@ -715,10 +715,10 @@ _file_read_scan_loop:
     ld a, h
     or l
     jr z, _file_read_load                 ; max_size = 0: skip check
-    ld a, c
-    sub l
-    ld a, b
-    sbc a, h                              ; HL - BC: carry if file_len > max_size
+    ld a, l
+    sub c
+    ld a, h
+    sbc a, b                              ; max_size - file_len: carry if file_len > max_size
     jr c, _file_read_too_large
 _file_read_load:
     ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
