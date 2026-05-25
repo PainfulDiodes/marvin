@@ -40,9 +40,6 @@ BDFS_ENT_SIZE         EQU 16   ; 8 (name) + 3 (ext) + 2 (sector) + 2 (length) + 
 BDFS_HDR_MAGIC_OFFSET        EQU 0       ; 2 bytes
 BDFS_HDR_RESERVED_OFFSET     EQU 14      ; 2 bytes
 
-; Directory entry offsets (additional to those shared via bdfs.inc)
-BDFS_ENT_SECTOR_OFFSET       EQU 11      ; 2 bytes, little-endian
-BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian (max 65535)
 
     PUBLIC bdfs_get_err_msg
     PUBLIC bdfs_init

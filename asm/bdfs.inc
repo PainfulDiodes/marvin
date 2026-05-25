@@ -27,6 +27,8 @@ BDFS_HDR_VOL_NAME_OFFSET     EQU 2       ; 12 bytes
 ; Directory entry offsets (8.3 filename: name and ext fields, space-padded, no dot stored)
 BDFS_ENT_NAME_OFFSET         EQU 0       ; 8 bytes, space-padded uppercase basename
 BDFS_ENT_EXT_OFFSET          EQU 8       ; 3 bytes, space-padded uppercase extension
+BDFS_ENT_SECTOR_OFFSET       EQU 11      ; 2 bytes, little-endian start sector
+BDFS_ENT_LENGTH_OFFSET       EQU 13      ; 2 bytes, little-endian file length in bytes
 BDFS_ENT_FLAGS_OFFSET        EQU 15      ; 1 byte
 
 ; Drive range

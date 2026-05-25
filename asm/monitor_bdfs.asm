@@ -127,7 +127,8 @@ _dir_scan:
     push de
     ld hl, _MSG_INDENT
     call con_puts
-    call _print_entry_name
+    call _print_entry_name_fixed
+    call _print_entry_size
     ld a, CHAR_LF
     call con_putchar
     pop de
@@ -166,14 +167,18 @@ _dir_all_scan:
     jr z, _dir_all_item_deleted    ; bit 0 = 0: deleted
     ld hl, _MSG_INDENT
     call con_puts
-    call _print_entry_name
+    call _print_entry_name_fixed
+    call _print_entry_size
     ld a, CHAR_LF
     call con_putchar
     jr _dir_all_scan
 _dir_all_item_deleted:
+    ld hl, _MSG_INDENT
+    call con_puts
+    call _print_entry_name_fixed
+    call _print_entry_size
     ld hl, _MSG_DELETED
-    call con_puts                  ; "  (deleted) "
-    call _print_entry_name
+    call con_puts                  ; " (deleted)"
     ld a, CHAR_LF
     call con_putchar
     jr _dir_all_scan
@@ -498,8 +503,8 @@ _delete_bad_usage:
 
 ; helpers
 
-; _print_entry_name: print 8.3 filename from BDFS_ENT_BUF (e.g. "HELLO.TXT")
-; destroys: -
+; _print_entry_name: print 8.3 filename from BDFS_ENT_BUF, trimmed (e.g. "HELLO.TXT")
+; destroys: AF, BC, HL
 _print_entry_name:
     push af
     push bc
@@ -508,7 +513,7 @@ _print_entry_name:
     ld b, BDFS_NAME_LEN
     call _print_entry_name_part
     ld a, (BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET)
-    cp ' '                          ; ext field is space-padded: leading space means no extension
+    cp ' '                          ; leading space means no extension
     jr z, _print_entry_name_done
     ld a, '.'
     call con_putchar
@@ -521,9 +526,39 @@ _print_entry_name_done:
     pop af
     ret
 
-; _print_entry_name_part: print at most B chars from (HL), stopping at first space (trims padding)
+; _print_entry_name_fixed: print 8.3 filename from BDFS_ENT_BUF, fixed width (always 12 chars)
+; Format: "NAME     EXT" — name space-padded to 8, space separator, ext space-padded to 3
+; destroys: AF, BC, HL
+_print_entry_name_fixed:
+    push af
+    push bc
+    push hl
+    ld hl, BDFS_ENT_BUF + BDFS_ENT_NAME_OFFSET
+    ld b, BDFS_NAME_LEN
+_print_entry_name_fixed_name:
+    ld a, (hl)
+    call con_putchar
+    inc hl
+    dec b
+    jr nz, _print_entry_name_fixed_name
+    ld a, ' '
+    call con_putchar
+    ld hl, BDFS_ENT_BUF + BDFS_ENT_EXT_OFFSET
+    ld b, BDFS_EXT_LEN
+_print_entry_name_fixed_ext:
+    ld a, (hl)
+    call con_putchar
+    inc hl
+    dec b
+    jr nz, _print_entry_name_fixed_ext
+    pop hl
+    pop bc
+    pop af
+    ret
+
+; _print_entry_name_part: print up to B chars from (HL), stopping at first space (trims padding)
 ; in:  HL = source, B = max chars
-; destroys: -
+; destroys: AF, BC, HL
 _print_entry_name_part:
     push af
     push hl
@@ -543,6 +578,17 @@ _print_entry_name_part_done:
     pop bc
     pop hl
     pop af
+    ret
+
+; _print_entry_size: print file size from BDFS_ENT_BUF as " XXXX" (space + 4 hex digits)
+; destroys: AF, BC
+_print_entry_size:
+    ld a, ' '
+    call con_putchar
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET + 1)  ; high byte
+    call con_putchar_hex
+    ld a, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)      ; low byte
+    call con_putchar_hex
     ret
 
 ; _print_device_info: print label, capacity, and JEDEC ID e.g. "W25Q16 2MB [ef4015]\n"
@@ -596,7 +642,7 @@ _MSG_FORMAT_CONF_POST:  db "? y/n ", 0
 _MSG_FORMAT_PRE:        db "Formatting drive ", 0
 _MSG_FORMAT_OK:         db "Format ok - ", 0
 _MSG_INDENT:            db "  ", 0
-_MSG_DELETED:           db "  (deleted) ", 0
+_MSG_DELETED:           db " (deleted)", 0
 _MSG_FILES:             db " file(s)", CHAR_LF, 0
 _MSG_DELETED_COUNT:     db " deleted", CHAR_LF, 0
 _MSG_MB:                db "MB [", 0
