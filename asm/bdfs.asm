@@ -662,11 +662,13 @@ _file_write_prog_pages_exit:
 ; assumes bdfs_select_drive has been called
 ; in:  HL = filename (null-terminated, case-sensitive, e.g. "HELLO.TXT")
 ;      DE = destination address
+;      BC = max_size (0 = no limit); BDFS_ERR_FILE_TOO_LARGE if file exceeds this
 ; out: Z=ok, BC = bytes loaded
 ;      NZ=error (A=BDFS_ERR_*)
 ; destroys: AF, BC, DE, HL, IX
 bdfs_file_read:
     push de                               ; save destination
+    push bc                               ; save max_size
     call _verify_drive_formatted
     jr nz, _file_read_drive_error
     ld ix, BDFS_SRCH_BUF
@@ -696,14 +698,29 @@ _file_read_scan_loop:
     call _compare_name_fields             ; Z=match; preserves BC, DE, HL
     jr nz, _file_read_scan_next
     ; match: read file data
+    pop hl                                ; HL = max_size; stack: [DE]
     pop de                                ; restore destination; stack: []
+    ld bc, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
+    ; check file length against max_size (0 = no limit)
+    ld a, h
+    or l
+    jr z, _file_read_load                 ; max_size = 0: skip check
+    ld a, c
+    sub l
+    ld a, b
+    sbc a, h                              ; HL - BC: carry if file_len > max_size
+    jr c, _file_read_too_large
+_file_read_load:
     ld hl, (BDFS_ENT_BUF + BDFS_ENT_SECTOR_OFFSET)
     call flash_sector_to_addr             ; HL=sector → A:HL = 24-bit byte address
-    ld bc, (BDFS_ENT_BUF + BDFS_ENT_LENGTH_OFFSET)
     push bc                               ; save length (flash_read destroys BC)
     call flash_read                       ; A:HL=addr, DE=dest, BC=len
     pop bc                                ; BC = bytes loaded
     xor a                                 ; Z=ok
+    ret
+_file_read_too_large:
+    ld a, BDFS_ERR_FILE_TOO_LARGE
+    or a                                  ; NZ
     ret
 _file_read_scan_next:
     inc b
@@ -713,11 +730,13 @@ _file_read_scan_next:
     jr _file_read_scan_loop
 _file_read_not_found:
     ld a, BDFS_ERR_FILE_NOT_FOUND
-    pop de                                ; balance stack (destination)
+    pop hl                                ; balance max_size push
+    pop de                                ; balance destination push
     or a                                  ; NZ
     ret
 _file_read_drive_error:
-    pop de                                ; balance stack
+    pop hl                                ; balance max_size push
+    pop de                                ; balance destination push
     or a                                  ; NZ (A = error from _verify_drive_formatted)
     ret
 

@@ -50,6 +50,7 @@
     EXTERN SYSTEM_RAMSTART  ; system - start of Marvin system RAM
 ;
 IFDEF INCLUDE_BDFS
+    INCLUDE "asm/bdfs.inc"
     EXTERN bdfs_select_drive
     EXTERN bdfs_set_drive
     EXTERN bdfs_file_write
@@ -373,22 +374,20 @@ IFDEF INCLUDE_BDFS
     jr nz, _osload_err
     call bdfs_select_drive      ; Z=ok, NZ+A=BDFS_ERR_*
     jr nz, _osload_err
-    push bc                     ; save max_space (bdfs_file_read returns bytes loaded in BC)
-    call bdfs_file_read         ; HL=filename, DE=dest; Z=ok, BC=bytes_loaded; NZ+A=BDFS_ERR_*
-    pop hl                      ; max_space → HL (does not affect flags)
+    call bdfs_file_read         ; HL=filename, DE=dest, BC=max_space; Z=ok, BC=bytes_loaded; NZ+A=BDFS_ERR_*
     jr nz, _osload_err
-    ld a, l
-    sub c
-    ld a, h
-    sbc a, b
-    jr c, _osload_too_large
     scf                         ; carry SET = success
     ret
+_osload_err:
+    ; OSLOAD is supposed to signal "file too large" by returning carry clear, 
+    ; letting BASIC raise its own "Too big" error rather than an OS-level error. 
+    ; The carry-clear convention comes from the BBC BASIC MOS spec
+    cp BDFS_ERR_FILE_TOO_LARGE
+    jr z, _osload_too_large
+    call _bdfs_error            ; A = BDFS_ERR_*; does not return
 _osload_too_large:
     or a                        ; carry CLEAR = file too large; BASIC raises the error
     ret
-_osload_err:
-    call _bdfs_error       ; A = BDFS_ERR_*; does not return
 ELSE
     XOR A
     CALL EXTERR

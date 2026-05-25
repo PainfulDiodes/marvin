@@ -387,7 +387,8 @@ _load_select_drive:
 _load_execute:
     pop hl                          ; HL = filename ptr
     push de                         ; save original dest addr; flash_read advances DE
-    call bdfs_file_read             ; HL=filename, DE=dest; Z=ok BC=bytes, NZ=error A=BDFS_ERR_*
+    ld bc, 0                        ; no size limit
+    call bdfs_file_read             ; HL=filename, DE=dest, BC=max_size; Z=ok BC=bytes, NZ=error A=BDFS_ERR_*
     jr z, _load_done
     pop de                          ; balance stack
     call _error
