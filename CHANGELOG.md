@@ -4,18 +4,19 @@
 
 BeanDeck File System (BDFS) — NOR flash cartridge storage
 
-* W25Q NOR flash driver (`w25q.asm`): JEDEC ID probe, read, sector erase, page program, busy poll, slot selection via `flash_select_slot` / `W25Q_CS` RAM variable. Supports 6 BeanBoardSPI cartridge slots; W25Q80–W25Q128 identified by capacity code
-* Layered architecture: `bdfs.asm` (pure FS functions, no console output), `monitor_bdfs.asm` (monitor presentation layer), `monitor.asm` (dispatch only)
+* W25Q NOR flash driver (`w25q.asm`): JEDEC ID probe, read, sector erase, page program, busy poll, slot selection via `flash_select_slot`. Supports the 6 BeanBoardSPI cartridge slots; supports devices W25Q80–W25Q128 identified by capacity code (although not making full use of the larger devices)
+* Layered file system architecture: `w25q.asm`, `bdfs.asm`, `monitor_bdfs.asm` monitor presentation layer
 * BDFS filesystem: format, directory iterator (`bdfs_dir_open` / `bdfs_dir_next`), file write, file read, file delete
 * CP/M-style drive letters A–F; drive auto-selected on cold start by scanning for first present device
 * NOR-correct flags convention: erased state (0xFF) = active; soft-delete programs bit 0 from 1→0 (no sector erase required)
-* Write-time guards: file size limit, duplicate filename detection
-* `bdfs.inc` holds all shared constants and error codes
-* New ABI trampoline entries: `flash_read` (0x008B), `flash_page_program` (0x008E), `flash_sector_erase` (0x0091), `flash_select_slot` (0x0094)
+* Write-time guards: file size limit, duplicate filename detection, empty file rejection
+* Directory listings include file size alongside filename
+* `bdfs_file_read` accepts optional `max_size` in BC (0 = no limit); returns `BDFS_ERR_FILE_TOO_LARGE` if exceeded - used by BBC BASIC LOAD
+* New ABI trampoline entries: `flash_read` (0x008B), `flash_page_program` (0x008E), `flash_sector_erase` (0x0091), `flash_select_slot` (0x0094), `bdfs_file_read` (0x00CA), `bdfs_file_delete` (0x00CD)
 
 Monitor commands (BDFS)
 
-* `@A–F` / `@a–f` — select drive; drive letter shown in prompt (`A>`)
+* `@A–F` / `@a–f` — select drive; drive letter shown in prompt (`A]`)
 * `f [name]` — format current drive (y/n confirmation prompt)
 * `d` — directory (active files + deleted count)
 * `D` — directory (all entries including deleted)
@@ -27,6 +28,13 @@ Monitor improvements
 
 * `?` — help command listing all available commands
 * `;` — comment command (line silently ignored)
+* Monitor prompt changed from `>` to `]` (to distinguish from BBC BASIC `>` prompt); drive prompt follows suit (`A]`)
+
+BBC BASIC
+
+* `*` commands dispatched to Marvin monitor via `OSCLI` — all monitor commands usable from BASIC (but not all commands the BASIC expects are available)
+* `SAVE "name.ext"` writes the current BASIC program to BDFS
+* `LOAD "name.ext"` reads a file from BDFS; returns FS errors or BASIC error if file exceeds the load buffer
 
 Build
 
