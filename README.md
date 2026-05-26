@@ -1,4 +1,4 @@
-# Marvin 1.3
+# Marvin 1.4
 
 Firmware for the BeanZee Z80 family: a simple [monitor program](./monitor.md), with submodule extensions.
 
@@ -6,13 +6,13 @@ Firmware for the BeanZee Z80 family: a simple [monitor program](./monitor.md), w
 
 - [beanzee](https://github.com/PainfulDiodes/BeanZee) is a small Z80 single board computer which is accessible only via a USB interface and a host computer with a console emulator
 - [beanboard](https://github.com/PainfulDiodes/BeanBoard) adds a small LCD display and self-contained keyboard to BeanZee, providing direct interaction with the computer in addition to USB; there's also a GPIO to facilitate experimentation
-- *beandeck* is a *work-in-progress* and incorporates [BeanBoardSPI](https://github.com/PainfulDiodes/BeanBoardSPI) through which a 7" 800x480 colour TFT and flash storage is added to the beanboard, making a self-contained Z80 computer
+- *beandeck* is a *work-in-progress* and incorporates [BeanBoardSPI](https://github.com/PainfulDiodes/BeanBoardSPI) through which a 7" 800x480 colour TFT and flash storage is added to the beanboard, making a self-contained Z80 computer (BeanBoard LCD display is removed to install this board)
 
 ## Submodules
 
 The build optionally embeds *RT Russell's [BBCZ80](https://github.com/PainfulDiodes/BBCZ80) BASIC interpreter* in a git submodule.
 
-Marvin provides the glue between BBCZ80 and the hardware - *currently the integration is a work-in-progress - I have not attempted anything beyond the simplest of BASIC test programs*.
+Marvin provides the glue between BBCZ80 and the hardware. Marvin console I/O and BFDS filesystem are connected:`SAVE` and `LOAD` read and write BDFS files and `*` commands are dispatched to the Marvin monitor (e.g. file directory)
 
 A second [ra8875-z80 driver](https://github.com/PainfulDiodes/ra8875-z80) git submodule is added for the beandeck target. This provides low-level interaction with an Adafruit RA8875 TFT controller, configured for an 800x480 TFT display, and a simple console layer for the display supporting a software cursor, wrapping and scrolling.
 
@@ -72,9 +72,11 @@ RT Russell's Z80 BASIC interpreter can be launched from the monitor prompt:
 - `b` - cold start (clears variables and program)
 - `B` - warm start (retains existing program)
 
-From BASIC you can return to the monitor with:
+From BASIC you can access BDFS with `SAVE "name.ext"` and `LOAD "name.ext"`, and use `*` to run any monitor command.
 
-- `*MON`
+Return to the monitor with:
+
+- EXIT
 
 ## Links
 
