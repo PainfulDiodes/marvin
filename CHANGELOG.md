@@ -2,6 +2,10 @@
 
 ## 1.4
 
+Hardware Support
+
+* BeanBoardSPI Rev B - increased software delays (also in ra8875-z80 1.3.1) for serialisation to be compatible with BeanBoardSPI Rev B (with CLK/4) as well as Rev A (with CLK/2).
+
 BeanDeck File System (BDFS) — NOR flash cartridge storage
 
 * W25Q NOR flash driver (`w25q.asm`): JEDEC ID probe, read, sector erase, page program, busy poll, slot selection via `flash_select_slot`. Supports the 6 BeanBoardSPI cartridge slots; supports devices W25Q80–W25Q128 identified by capacity code (although not making full use of the larger devices)
