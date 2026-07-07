@@ -96,7 +96,12 @@ flash_get_device_id:
 ; TODO: move to central BeanBoardSPI source
 flash_spi_byte:
     out (SPI_DATA), a
-    nop                     ; wait for serialisation (CLK/2 = 5 MHz)
+    nop                     ; wait for serialisation (CLK/4 = 2.5 MHz)
+    nop
+    nop
+    nop
+    nop
+    nop
     nop
     nop
     in a, (SPI_DATA)
