@@ -72,11 +72,11 @@ RT Russell's Z80 BASIC interpreter can be launched from the monitor prompt:
 - `b` - cold start (clears variables and program)
 - `B` - warm start (retains existing program)
 
-From BASIC you can access BDFS with `SAVE "name.ext"` and `LOAD "name.ext"`, and use `*` to run any monitor command.
+From BASIC you can access BDFS with `SAVE "name.ext"` and `LOAD "name.ext"`. If the filename extension is missed, ".BBC" is assumed. You may also use `*` to run any monitor command.
 
 Return to the monitor with:
 
-- EXIT
+- QUIT
 
 ## Links
 
