@@ -41,6 +41,8 @@ W25Q_CAP_128MBIT    EQU 0x18    ; W25Q128  - 16 MByte
     EXTERN SPI_CTRL, SPI_DATA, SPI_CS_IDLE  ; system.asm - BeanBoardSPI port addresses
     EXTERN W25Q_RAMSTART                    ; system.asm - base address of W25Q RAM block
 
+SPI_STAT_READY      equ 0x01    ; status register bit 0 (~SER_EN): high = serialisation complete
+
     PUBLIC flash_read
     PUBLIC flash_read_jedec_id
     PUBLIC flash_sector_erase
@@ -96,14 +98,10 @@ flash_get_device_id:
 ; TODO: move to central BeanBoardSPI source
 flash_spi_byte:
     out (SPI_DATA), a
-    nop                     ; wait for serialisation (CLK/4 = 2.5 MHz)
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+_flash_spi_byte_wait:
+    in a, (SPI_CTRL)
+    bit 0, a
+    jr z, _flash_spi_byte_wait  ; bit 0 low = serialising
     in a, (SPI_DATA)
     ret
 

@@ -1,5 +1,11 @@
 # Marvin CHANGELOG
 
+## 1.5
+
+Hardware Support
+
+* BeanBoardSPI Rev B - added polling status register.
+
 ## 1.4
 
 Hardware Support
@@ -146,7 +152,7 @@ Build
 * Fixed Beanboard keyboard debounce delay
 
 ## v1.1.0
- 
+
 Add support for BeanBoard  
 
 Tested On: BeanZee v1, BeanBoard prototype, BeanBoard v1  
@@ -190,7 +196,7 @@ Compatibility with z88dk-z80asm and sjasmplus.
 Tested on: BeanZee v1
 
 ## v0.9.0
- 
+
 x: eXecute command - enter an address to execute from
 
 Tested on BeanZee v1
