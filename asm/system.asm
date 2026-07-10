@@ -87,11 +87,10 @@ SPI_CS_SLOT4        equ 0xDF    ; bit 5 low: slot 4
 SPI_CS_SLOT5        equ 0xBF    ; bit 6 low: slot 5
 SPI_CS_SLOT6        equ 0x7F    ; bit 7 low: slot 6
 
-; RA8875 submodule aliases — ra8875-z80-repo EXTERNs these labels
-; Keep them even if unused in marvin
-RA8875_GPIO         equ GPIO_OUT    ; GPIO port for RA8875 bit-bang SPI
-RA8875_SPI_CTRL     equ SPI_CTRL    ; hardware SPI control port
-RA8875_SPI_DATA     equ SPI_DATA    ; hardware SPI data port
+; RA8875 transport aliases — used by asm/drivers/beanboardspi.asm and asm/drivers/ra8875_beanboard.asm
+RA8875_GPIO         equ GPIO_OUT    ; GPIO port for RA8875 bit-bang SPI (ra8875_beanboard.asm)
+RA8875_SPI_CTRL     equ SPI_CTRL    ; hardware SPI control port (ra8875_beanboardspi.asm)
+RA8875_SPI_DATA     equ SPI_DATA    ; hardware SPI data port (ra8875_beanboardspi.asm)
 
 ; console selection
 CONSOLE_STATUS_USB       equ 1
