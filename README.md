@@ -1,4 +1,4 @@
-# Marvin 1.4
+# Marvin 1.5
 
 Firmware for the BeanZee Z80 family: a simple [monitor program](./monitor.md), with submodule extensions.
 
@@ -7,6 +7,7 @@ Firmware for the BeanZee Z80 family: a simple [monitor program](./monitor.md), w
 - [beanzee](https://github.com/PainfulDiodes/BeanZee) is a small Z80 single board computer which is accessible only via a USB interface and a host computer with a console emulator
 - [beanboard](https://github.com/PainfulDiodes/BeanBoard) adds a small LCD display and self-contained keyboard to BeanZee, providing direct interaction with the computer in addition to USB; there's also a GPIO to facilitate experimentation
 - *beandeck* is a *work-in-progress* and incorporates [BeanBoardSPI](https://github.com/PainfulDiodes/BeanBoardSPI) through which a 7" 800x480 colour TFT and flash storage is added to the beanboard, making a self-contained Z80 computer (BeanBoard LCD display is removed to install this board)
+- *beandeck_reva* incorporates [BeanBoardSPI Rev A](https://github.com/PainfulDiodes/BeanBoardSPI/tree/v1-rev-a) - the original revision of the board which should NOT be used, and is provided for interest only - this first revision requires software delays while hardware serialisation occurs, whereas subsequent revisions poll a status register
 
 ## Submodules
 
