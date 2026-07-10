@@ -28,7 +28,7 @@
     PUBLIC ra8875_write
     PUBLIC ra8875_read
 
-    EXTERN RA8875_GPIO          ; system.asm - GPIO port for bit-bang SPI
+    EXTERN GPIO_OUT             ; system.asm - GPIO port for bit-bang SPI
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -62,7 +62,7 @@ RA8875_GPO_HIGH_STATE       equ 1 << RA8875_GPO_BIT_MOSI | 1 << RA8875_GPO_BIT_R
 ra8875_reset_assert:
     push af
     ld a,RA8875_GPO_RESET_STATE
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     pop af
     ret
 
@@ -72,7 +72,7 @@ ra8875_reset_assert:
 ra8875_reset_deassert:
     push af
     ld a,RA8875_GPO_INACTIVE_STATE
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     pop af
     ret
 
@@ -82,7 +82,7 @@ ra8875_reset_deassert:
 ra8875_cs_start:
     push af
     ld a,RA8875_GPO_ACTIVE_STATE
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     pop af
     ret
 
@@ -92,7 +92,7 @@ ra8875_cs_start:
 ra8875_cs_end:
     push af
     ld a,RA8875_GPO_INACTIVE_STATE
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     pop af
     ret
 
@@ -109,11 +109,11 @@ _ra8875_write_loop:
     jr nc,_ra8875_write_bit
     ld a,RA8875_GPO_HIGH_STATE
 _ra8875_write_bit:
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     or 1 << RA8875_GPO_BIT_SCK
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     and ~(1 << RA8875_GPO_BIT_SCK)
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     ld a,d
     djnz _ra8875_write_loop
     ret
@@ -129,10 +129,10 @@ _ra8875_read_loop:
     sla a
     ld d,a
     ld a,RA8875_GPO_LOW_STATE
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     or 1 << RA8875_GPO_BIT_SCK
-    out (RA8875_GPIO),a
-    in a,(RA8875_GPIO)
+    out (GPIO_OUT),a
+    in a,(GPIO_OUT)
     bit RA8875_GPI_BIT_MISO,a
     jr z,_ra8875_read_low
     ld a,d
@@ -143,7 +143,7 @@ _ra8875_read_low:
 _ra8875_read_bit_done:
     ld d,a
     ld a,RA8875_GPO_LOW_STATE
-    out (RA8875_GPIO),a
+    out (GPIO_OUT),a
     ld a,d
     djnz _ra8875_read_loop
     ret

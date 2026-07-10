@@ -21,8 +21,8 @@
     PUBLIC ra8875_write
     PUBLIC ra8875_read
 
-    EXTERN RA8875_SPI_CTRL      ; system.asm - SPI control/status port
-    EXTERN RA8875_SPI_DATA      ; system.asm - SPI data port
+    EXTERN SPI_CTRL             ; system.asm - SPI control/status port
+    EXTERN SPI_DATA             ; system.asm - SPI data port
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -48,7 +48,7 @@ SPI_STAT_READY      equ 0x01       ; bit 0 (~SER_EN): high = serialisation compl
 ra8875_reset_assert:
     push af
     ld a,RA8875_SPI_RESET
-    out (RA8875_SPI_CTRL),a
+    out (SPI_CTRL),a
     pop af
     ret
 
@@ -58,7 +58,7 @@ ra8875_reset_assert:
 ra8875_reset_deassert:
     push af
     ld a,RA8875_SPI_IDLE
-    out (RA8875_SPI_CTRL),a
+    out (SPI_CTRL),a
     pop af
     ret
 
@@ -68,7 +68,7 @@ ra8875_reset_deassert:
 ra8875_cs_start:
     push af
     ld a,RA8875_SPI_SELECT_0
-    out (RA8875_SPI_CTRL),a
+    out (SPI_CTRL),a
     pop af
     ret
 
@@ -78,7 +78,7 @@ ra8875_cs_start:
 ra8875_cs_end:
     push af
     ld a,RA8875_SPI_IDLE
-    out (RA8875_SPI_CTRL),a
+    out (SPI_CTRL),a
     pop af
     ret
 
@@ -87,9 +87,9 @@ ra8875_cs_end:
 ; Input: A = byte to send
 ; Destroys: AF
 ra8875_write:
-    out (RA8875_SPI_DATA),a
+    out (SPI_DATA),a
 _ra8875_write_wait:
-    in a,(RA8875_SPI_CTRL)
+    in a,(SPI_CTRL)
     bit 0,a
     jr z,_ra8875_write_wait     ; bit 0 low = serialising
     ret
@@ -101,10 +101,10 @@ _ra8875_write_wait:
 ; Destroys: AF
 ra8875_read:
     ld a,0x00
-    out (RA8875_SPI_DATA),a
+    out (SPI_DATA),a
 _ra8875_read_wait:
-    in a,(RA8875_SPI_CTRL)
+    in a,(SPI_CTRL)
     bit 0,a
     jr z,_ra8875_read_wait      ; bit 0 low = serialising
-    in a,(RA8875_SPI_DATA)
+    in a,(SPI_DATA)
     ret

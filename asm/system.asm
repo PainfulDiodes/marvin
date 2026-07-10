@@ -9,7 +9,7 @@
     PUBLIC GPIO_OUT, GPIO_IN
     PUBLIC SPI_CTRL, SPI_DATA
     PUBLIC SPI_CS_IDLE, SPI_CS_RESET, SPI_CS_SLOT0, SPI_CS_SLOT1, SPI_CS_SLOT2, SPI_CS_SLOT3, SPI_CS_SLOT4, SPI_CS_SLOT5, SPI_CS_SLOT6
-    PUBLIC RA8875_GPIO, RA8875_SPI_CTRL, RA8875_SPI_DATA, RA8875_RAMSTART
+    PUBLIC RA8875_RAMSTART
     PUBLIC SYSTEM_RAMSTART
     PUBLIC CONSOLE_STATUS_USB, CONSOLE_STATUS_BEANBOARD
     PUBLIC W25Q_RAMSTART
@@ -86,11 +86,6 @@ SPI_CS_SLOT3        equ 0xEF    ; bit 4 low: slot 3
 SPI_CS_SLOT4        equ 0xDF    ; bit 5 low: slot 4
 SPI_CS_SLOT5        equ 0xBF    ; bit 6 low: slot 5
 SPI_CS_SLOT6        equ 0x7F    ; bit 7 low: slot 6
-
-; RA8875 transport aliases — used by asm/drivers/beanboardspi.asm and asm/drivers/ra8875_beanboard.asm
-RA8875_GPIO         equ GPIO_OUT    ; GPIO port for RA8875 bit-bang SPI (ra8875_beanboard.asm)
-RA8875_SPI_CTRL     equ SPI_CTRL    ; hardware SPI control port (ra8875_beanboardspi.asm)
-RA8875_SPI_DATA     equ SPI_DATA    ; hardware SPI data port (ra8875_beanboardspi.asm)
 
 ; console selection
 CONSOLE_STATUS_USB       equ 1
