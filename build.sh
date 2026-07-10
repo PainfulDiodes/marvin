@@ -64,19 +64,33 @@ modules_for_target() {
             ;;
         beandeck)
             COMBINED_ENTRY="entry_beandeck"
-            MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q drivers/ra8875_beanboardspi bdfs monitor_bdfs string monitor messages"
+            # TODO: reconsider how the active SPI channel is specified per target
+            MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/spi_beanboardspi_revb drivers/ra8875_beanboardspi drivers/w25q bdfs monitor_bdfs string monitor messages"
             RA8875_MODULES="asm/ra8875 asm/console"
             LCD_MODULES=""
             BASIC_MAIN="MAIN"
             MINIMAL_ENTRY="entry_beandeck_minimal"
-            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/w25q drivers/ra8875_beanboardspi bdfs monitor_bdfs string monitor messages"
+            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/spi_beanboardspi_revb drivers/ra8875_beanboardspi drivers/w25q bdfs monitor_bdfs string monitor messages"
+            MINIMAL_RA8875_MODULES="asm/ra8875 asm/console"
+            MINIMAL_LCD_MODULES=""
+            INCLUDE_BDFS=1
+            ;;
+        beandeck_reva)
+            COMBINED_ENTRY="entry_beandeck"
+            # TODO: reconsider how the active SPI channel is specified per target
+            MARVIN_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/spi_beanboardspi_reva drivers/ra8875_beanboardspi drivers/w25q bdfs monitor_bdfs string monitor messages"
+            RA8875_MODULES="asm/ra8875 asm/console"
+            LCD_MODULES=""
+            BASIC_MAIN="MAIN"
+            MINIMAL_ENTRY="entry_beandeck_minimal"
+            MINIMAL_MODULES="system console_beandeck console_select drivers/um245r drivers/keymatrix drivers/spi_beanboardspi_reva drivers/ra8875_beanboardspi drivers/w25q bdfs monitor_bdfs string monitor messages"
             MINIMAL_RA8875_MODULES="asm/ra8875 asm/console"
             MINIMAL_LCD_MODULES=""
             INCLUDE_BDFS=1
             ;;
         *)
             echo "Error: unknown target '$1'"
-            echo "Valid targets: beanzee, beanboard, beandeck"
+            echo "Valid targets: beanzee, beanboard, beandeck, beandeck_reva"
             exit 1
             ;;
     esac
@@ -352,7 +366,7 @@ if [ $# -gt 0 ]; then
     echo ""
     build_minimal "$1"
 else
-    for target in beanzee beanboard beandeck; do
+    for target in beanzee beanboard beandeck beandeck_reva; do
         build_target "$target"
         echo ""
         build_minimal "$target"

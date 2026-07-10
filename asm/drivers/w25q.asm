@@ -38,10 +38,9 @@ W25Q_CAP_64MBIT     EQU 0x17    ; W25Q64   - 8 MByte
 W25Q_CAP_128MBIT    EQU 0x18    ; W25Q128  - 16 MByte
 ; W25Q_CAP_256MBIT EQU 0x19  ; W25Q256 - 32 MByte - not supported: requires 4-byte addressing above 16MB
 
-    EXTERN SPI_CTRL, SPI_DATA, SPI_CS_IDLE  ; system.asm - BeanBoardSPI port addresses
+    EXTERN SPI_CTRL, SPI_CS_IDLE            ; system.asm - BeanBoardSPI port addresses
     EXTERN W25Q_RAMSTART                    ; system.asm - base address of W25Q RAM block
-
-SPI_STAT_READY      equ 0x01    ; status register bit 0 (~SER_EN): high = serialisation complete
+    EXTERN spi_byte                         ; spi_beanboardspi_rev*.asm - SPI byte transfer
 
     PUBLIC flash_read
     PUBLIC flash_read_jedec_id
@@ -91,20 +90,6 @@ flash_get_device_id:
     ld a, (W25Q_ID_MFR)
     ret
 
-; flash_spi_byte: full-duplex SPI byte transfer via BeanBoardSPI interface
-; in:  A = byte to transmit
-; out: A = byte received
-; destroys: AF
-; TODO: move to central BeanBoardSPI source
-flash_spi_byte:
-    out (SPI_DATA), a
-_flash_spi_byte_wait:
-    in a, (SPI_CTRL)
-    bit 0, a
-    jr z, _flash_spi_byte_wait  ; bit 0 low = serialising
-    in a, (SPI_DATA)
-    ret
-
 ; flash_read_jedec_id: read 3-byte JEDEC ID
 ; out: A = manufacturer ID, B = memory type, C = capacity
 ; destroys: AF, BC, DE, HL
@@ -112,15 +97,15 @@ flash_read_jedec_id:
     ld a, (W25Q_CS)             ; RAM var selected status for current slot
     out (SPI_CTRL), a
     ld a, W25Q_CMD_JEDEC_ID
-    call flash_spi_byte         ; received byte discarded
+    call spi_byte         ; received byte discarded
     ld a, 0x00
-    call flash_spi_byte
+    call spi_byte
     ld d, a                     ; manufacturer in D
     ld a, 0x00
-    call flash_spi_byte
+    call spi_byte
     ld e, a                     ; memory type in E
     ld a, 0x00
-    call flash_spi_byte
+    call spi_byte
     ld l, a                     ; capacity in L
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
@@ -136,7 +121,7 @@ flash_write_enable:
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_WREN
-    call flash_spi_byte
+    call spi_byte
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     pop af
@@ -151,9 +136,9 @@ _flash_poll_busy_loop:
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_RDSR
-    call flash_spi_byte
+    call spi_byte
     ld a, 0x00
-    call flash_spi_byte         ; A = status register byte
+    call spi_byte         ; A = status register byte
     ld b, a                     ; save in B before deassert clobbers A
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
@@ -183,16 +168,16 @@ flash_read:
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_READ
-    call flash_spi_byte
+    call spi_byte
     ex af, af'                  ; A = addr[23:16]
-    call flash_spi_byte         ; send addr[23:16]
+    call spi_byte         ; send addr[23:16]
     ld a, h
-    call flash_spi_byte         ; send addr[15:8]
+    call spi_byte         ; send addr[15:8]
     ld a, l
-    call flash_spi_byte         ; send addr[7:0]
+    call spi_byte         ; send addr[7:0]
 _flash_read_loop:
     ld a, 0x00
-    call flash_spi_byte         ; clock in received byte
+    call spi_byte         ; clock in received byte
     ld (de), a
     inc de
     dec bc
@@ -227,13 +212,13 @@ flash_sector_erase:
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_SE
-    call flash_spi_byte
+    call spi_byte
     ld a, h
-    call flash_spi_byte         ; addr[23:16]
+    call spi_byte         ; addr[23:16]
     ld a, l
-    call flash_spi_byte         ; addr[15:8]
+    call spi_byte         ; addr[15:8]
     ld a, 0x00
-    call flash_spi_byte         ; addr[7:0] = 0
+    call spi_byte         ; addr[7:0] = 0
     ld a, SPI_CS_IDLE
     out (SPI_CTRL), a
     call flash_poll_busy        ; Z=ok NZ=timeout
@@ -258,16 +243,16 @@ flash_page_program:
     ld a, (W25Q_CS)
     out (SPI_CTRL), a
     ld a, W25Q_CMD_PP
-    call flash_spi_byte
+    call spi_byte
     ex af, af'                  ; A = addr[23:16]
-    call flash_spi_byte         ; send addr[23:16]
+    call spi_byte         ; send addr[23:16]
     ld a, h
-    call flash_spi_byte         ; send addr[15:8]
+    call spi_byte         ; send addr[15:8]
     ld a, l
-    call flash_spi_byte         ; send addr[7:0]
+    call spi_byte         ; send addr[7:0]
 _flash_page_program_loop:
     ld a, (de)
-    call flash_spi_byte
+    call spi_byte
     inc de
     dec bc
     ld a, b

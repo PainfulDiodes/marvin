@@ -1,17 +1,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ra8875_beanboardspi.asm - RA8875 SPI transport for BeanBoardSPI hardware
+; ra8875_beanboardspi.asm - RA8875 transport shim for BeanBoardSPI hardware
 ;
-; Low-level SPI transport for ra8875.asm.
-; Written for BeanBoardSPI: hardware SPI interface with a status register
-; (bit 0 = ~SER_EN) that signals when serialisation is complete.
+; Provides the ra8875.asm transport interface for BeanBoardSPI targets.
+; CS and RESET are controlled via the SPI control register (SPI_CTRL).
+; Data transfer is delegated to spi_byte/spi_read, which are provided
+; by the linked SPI module (spi_beanboardspi_reva or spi_beanboardspi_revb).
 ;
 ; Interface (PUBLIC):
 ;   ra8875_reset_assert   - Assert RESET via SPI control register
 ;   ra8875_reset_deassert - Deassert RESET via SPI control register
 ;   ra8875_cs_start       - Assert SPI0 chip select
 ;   ra8875_cs_end         - Deassert SPI0 chip select
-;   ra8875_write          - Write byte via hardware SPI, polling for completion
-;   ra8875_read           - Read byte via hardware SPI, polling for completion
+;   ra8875_write          - Write byte via SPI (delegates to spi_byte)
+;   ra8875_read           - Read byte via SPI (delegates to spi_read)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     PUBLIC ra8875_reset_assert
@@ -22,7 +23,8 @@
     PUBLIC ra8875_read
 
     EXTERN SPI_CTRL             ; system.asm - SPI control/status port
-    EXTERN SPI_DATA             ; system.asm - SPI data port
+    EXTERN spi_byte             ; spi_beanboardspi_rev*.asm - full-duplex SPI transfer
+    EXTERN spi_read             ; spi_beanboardspi_rev*.asm - receive one byte
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -34,9 +36,6 @@
 RA8875_SPI_IDLE     equ 0xFF       ; all deselected, reset released
 RA8875_SPI_RESET    equ 0xFE       ; bit 0 low = reset asserted
 RA8875_SPI_SELECT_0 equ 0xFD       ; bit 1 low = SPI0 selected
-
-; Status register (read from same port as control register)
-SPI_STAT_READY      equ 0x01       ; bit 0 (~SER_EN): high = serialisation complete
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -83,28 +82,14 @@ ra8875_cs_end:
     ret
 
 
-; Write a byte over hardware SPI, poll status register for completion
+; Write a byte over SPI
 ; Input: A = byte to send
 ; Destroys: AF
 ra8875_write:
-    out (SPI_DATA),a
-_ra8875_write_wait:
-    in a,(SPI_CTRL)
-    bit 0,a
-    jr z,_ra8875_write_wait     ; bit 0 low = serialising
-    ret
+    jp spi_byte             ; trampoline - pure tail call, no local logic
 
-
-; Read a byte over hardware SPI, poll status register for completion
-; Sends a dummy byte (0x00) to clock in the response
+; Read a byte over SPI (transmits 0x00, returns received byte)
 ; Output: A = byte received
 ; Destroys: AF
 ra8875_read:
-    ld a,0x00
-    out (SPI_DATA),a
-_ra8875_read_wait:
-    in a,(SPI_CTRL)
-    bit 0,a
-    jr z,_ra8875_read_wait      ; bit 0 low = serialising
-    in a,(SPI_DATA)
-    ret
+    jp spi_read             ; trampoline - pure tail call, no local logic

@@ -5,12 +5,7 @@
 ; BeanBoard does not have hardware SPI; this implementation bit-bangs
 ; the SPI protocol over the BeanBoard GPIO port (GPIO_OUT/GPIO_IN).
 ;
-; Pin assignments on GPIO port:
-;   Bit 0 (GPO): SCK
-;   Bit 1 (GPO): MOSI
-;   Bit 2 (GPO): RESET (active low)
-;   Bit 3 (GPO): CS (active low)
-;   Bit 0 (GPI): MISO
+; Pin assignments: see asm/drivers/beanboard.inc
 ;
 ; Interface (PUBLIC):
 ;   ra8875_reset_assert   - Assert RESET via GPIO
@@ -28,29 +23,12 @@
     PUBLIC ra8875_write
     PUBLIC ra8875_read
 
-    EXTERN GPIO_OUT             ; system.asm - GPIO port for bit-bang SPI
+    EXTERN GPIO_OUT             ; system.asm - GPIO output port
+    EXTERN spi_byte             ; spi_beanboard.asm - full-duplex SPI transfer
+    EXTERN spi_read             ; spi_beanboard.asm - receive one byte
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; definitions
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RA8875_GPO_BIT_SCK   equ 0
-RA8875_GPO_BIT_MOSI  equ 1
-RA8875_GPO_BIT_RESET equ 2
-RA8875_GPO_BIT_CS    equ 3
-RA8875_GPI_BIT_MISO  equ 0
-
-; RESET low (active), CS high (inactive)
-RA8875_GPO_RESET_STATE      equ 1 << RA8875_GPO_BIT_CS
-; RESET high (inactive), CS high (inactive)
-RA8875_GPO_INACTIVE_STATE   equ 1 << RA8875_GPO_BIT_CS | 1 << RA8875_GPO_BIT_RESET
-; RESET high (inactive), CS low (active)
-RA8875_GPO_ACTIVE_STATE     equ 1 << RA8875_GPO_BIT_RESET
-; RESET high (inactive), CS low (active), MOSI low
-RA8875_GPO_LOW_STATE        equ 1 << RA8875_GPO_BIT_RESET
-; RESET high (inactive), CS low (active), MOSI high
-RA8875_GPO_HIGH_STATE       equ 1 << RA8875_GPO_BIT_MOSI | 1 << RA8875_GPO_BIT_RESET
+    INCLUDE "asm/drivers/beanboard.inc"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -61,7 +39,7 @@ RA8875_GPO_HIGH_STATE       equ 1 << RA8875_GPO_BIT_MOSI | 1 << RA8875_GPO_BIT_R
 ; Destroys: AF
 ra8875_reset_assert:
     push af
-    ld a,RA8875_GPO_RESET_STATE
+    ld a,GPO_RESET_STATE
     out (GPIO_OUT),a
     pop af
     ret
@@ -71,7 +49,7 @@ ra8875_reset_assert:
 ; Destroys: AF
 ra8875_reset_deassert:
     push af
-    ld a,RA8875_GPO_INACTIVE_STATE
+    ld a,GPO_INACTIVE_STATE
     out (GPIO_OUT),a
     pop af
     ret
@@ -81,7 +59,7 @@ ra8875_reset_deassert:
 ; Destroys: AF
 ra8875_cs_start:
     push af
-    ld a,RA8875_GPO_ACTIVE_STATE
+    ld a,GPO_ACTIVE_STATE
     out (GPIO_OUT),a
     pop af
     ret
@@ -91,59 +69,20 @@ ra8875_cs_start:
 ; Destroys: AF
 ra8875_cs_end:
     push af
-    ld a,RA8875_GPO_INACTIVE_STATE
+    ld a,GPO_INACTIVE_STATE
     out (GPIO_OUT),a
     pop af
     ret
 
 
-; Write a byte over bit-bang SPI (MSB first)
+; Write a byte over SPI
 ; Input: A = byte to send
-; Destroys: AF, B, D
+; Destroys: AF
 ra8875_write:
-    ld b,8
-_ra8875_write_loop:
-    rlca
-    ld d,a
-    ld a,RA8875_GPO_LOW_STATE
-    jr nc,_ra8875_write_bit
-    ld a,RA8875_GPO_HIGH_STATE
-_ra8875_write_bit:
-    out (GPIO_OUT),a
-    or 1 << RA8875_GPO_BIT_SCK
-    out (GPIO_OUT),a
-    and ~(1 << RA8875_GPO_BIT_SCK)
-    out (GPIO_OUT),a
-    ld a,d
-    djnz _ra8875_write_loop
-    ret
+    jp spi_byte             ; trampoline - pure tail call, no local logic
 
-
-; Read a byte over bit-bang SPI (MSB first, sends 0x00 dummy)
+; Read a byte over SPI (transmits 0x00, returns received byte)
 ; Output: A = byte received
-; Destroys: AF, B, D
+; Destroys: AF
 ra8875_read:
-    ld b,8
-    ld a,0
-_ra8875_read_loop:
-    sla a
-    ld d,a
-    ld a,RA8875_GPO_LOW_STATE
-    out (GPIO_OUT),a
-    or 1 << RA8875_GPO_BIT_SCK
-    out (GPIO_OUT),a
-    in a,(GPIO_OUT)
-    bit RA8875_GPI_BIT_MISO,a
-    jr z,_ra8875_read_low
-    ld a,d
-    or 1
-    jr _ra8875_read_bit_done
-_ra8875_read_low:
-    ld a,d
-_ra8875_read_bit_done:
-    ld d,a
-    ld a,RA8875_GPO_LOW_STATE
-    out (GPIO_OUT),a
-    ld a,d
-    djnz _ra8875_read_loop
-    ret
+    jp spi_read             ; trampoline - pure tail call, no local logic
