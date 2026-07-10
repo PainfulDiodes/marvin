@@ -4,7 +4,22 @@
 
 Hardware Support
 
-* BeanBoardSPI Rev B - added polling status register.
+* BeanBoardSPI Rev B — SPI transport now polls the status register (bit 0 = ~SER_EN) instead of using software delays; `spi_beanboardspi_revb.asm`
+* BeanBoardSPI Rev A — SPI transport with NOP delays retained as `spi_beanboardspi_reva.asm`; `beandeck_reva` build target added
+* BeanBoard bitbang SPI — `spi_beanboard.asm` placeholder added with GPIO bit-bang framework; MISO sampling not yet implemented, not linked into any build
+
+Drivers
+
+* SPI transport moved from ra8875-z80 submodule into Marvin (`asm/drivers/`); ra8875-z80 `targets/` directory removed and replaced with a stub
+* `spi_byte` and `spi_read` are now the shared SPI entry points used by both the RA8875 and W25Q drivers; only one SPI module is linked per build, enforced by duplicate-symbol detection at link time
+* `flash_spi_byte` removed from `w25q.asm`; W25Q driver now uses the shared `spi_byte`
+* RA8875 transport files renamed to `ra8875_beanboardspi.asm` / `ra8875_beanboard.asm` (driver\_hardwaretarget convention); each is a thin shim providing CS/RESET management and delegating data transfer to `spi_byte`/`spi_read`
+* `RA8875_GPIO`, `RA8875_SPI_CTRL`, `RA8875_SPI_DATA` aliases removed from `system.asm`; transport files EXTERN port constants directly
+* BeanBoard GPIO pin assignments extracted to `beanboard.inc`; shared between `ra8875_beanboard.asm` and `spi_beanboard.asm`
+
+Build
+
+* `beandeck_reva` build target added (BeanBoardSPI Rev A hardware; uses `spi_beanboardspi_reva` in place of `spi_beanboardspi_revb`)
 
 ## 1.4
 
